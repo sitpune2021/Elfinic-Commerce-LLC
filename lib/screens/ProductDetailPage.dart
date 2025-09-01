@@ -433,31 +433,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             hintText: "Name",
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
 
-                            // default border (when not focused)
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                            ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.grey, width: 1.5),
+                              borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
                             ),
-
-                            // focused border (when you tap inside)
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+                              borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
                             ),
-
-                            // error border (optional)
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.red, width: 1.5),
-                            ),
-
-                            // focused error border
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.red, width: 2),
-                            ),
-                          ),
-                        ),
+                        ),),
 
                       ],
                     ),
@@ -474,28 +462,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             hintText: "Email",
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
 
-                            // default border (when not focused)
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                            ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.grey, width: 1.5),
+                              borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
                             ),
-
-                            // focused border (when you tap inside)
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
-                            ),
-
-                            // error border (optional)
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.red, width: 1.5),
-                            ),
-
-                            // focused error border
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: const BorderSide(color: Colors.red, width: 2),
+                              borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
                             ),
                           ),
                         ),
@@ -518,32 +495,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   alignLabelWithHint: true,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.blueAccent),
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
                   ),
-
-                  // default border (when not focused)
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
-                    borderSide: const BorderSide(color: Colors.grey, width: 1.5),
+                    borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
                   ),
-
-                  // focused border (when you tap inside)
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
-                    borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
-                  ),
-
-                  // error border (optional)
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: const BorderSide(color: Colors.red, width: 1.5),
-                  ),
-
-                  // focused error border
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                    borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
                   ),
                 ),
               ),
@@ -565,7 +526,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   onPressed: () {},
                   child: const Text(
                     "Publish",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500,color: Colors.white),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800,color: Colors.white),
                   ),
                 ),
               )
@@ -704,7 +665,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 const SizedBox(width: 20),
                 _socialButton(Icons.apple, Colors.black),
                 const SizedBox(width: 20),
-                _socialButton(Icons.g_mobiledata, Colors.red),
+                ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(15),
+                      backgroundColor: Colors.white,
+                    ),
+                    child:   ClipOval(
+                      child: Image.asset(
+                        "assets/icons/google.png",
+                        width: 18,
+                        height: 18,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                ),
               ],
             )
           ],
@@ -742,18 +718,50 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         decoration: TextDecoration.lineThrough)),
               ],
             ),
-            ElevatedButton.icon(
+            Spacer(),
+            Container(
+              padding: const EdgeInsets.all(8), // space around the icon
+              decoration: BoxDecoration(
+                color: const Color(0xFF050040), // circle background color
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.shopping_cart_outlined,
+                color: Colors.white, // icon color
+                size: 24, // adjust size if needed
+              ),
+            ),
+            SizedBox(width: 10,),
+            ElevatedButton(
               onPressed: () {},
-              icon: const Icon(Icons.shopping_cart_outlined),
-              label: const Text("BUY NOW"),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
+                backgroundColor: const Color(0xFFD39841), // custom color
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 28, vertical: 14),
+                  horizontal: 28,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(30), // rounded corners
+                ),
+                elevation: 4, // shadow (optional)
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min, // keeps button compact
+                children: const [
+
+                  SizedBox(width: 8), // space between icon & text
+                  Text(
+                    "BUY NOW",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             )
+
           ],
         ),
       ),
@@ -767,8 +775,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 Widget _socialButton(IconData icon, Color color) {
   return CircleAvatar(
     radius: 22,
-    backgroundColor: color.withOpacity(0.1),
-    child: Icon(icon, color: color, size: 28),
+    backgroundColor: color.withOpacity(0.9),
+    child: Icon(
+      icon,
+      color: Colors.white, // ✅ white icon
+      size: 28,
+    ),
   );
 }
 

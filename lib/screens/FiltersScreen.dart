@@ -438,8 +438,25 @@ class _FiltersScreenState extends State<FiltersScreen> {
                           rating = "";
                         });
                       },
-                      child: const Text("CLEAR ALL"),
-                    ),
+                      style: OutlinedButton.styleFrom(
+                        side:  BorderSide(
+                          color: Colors.blue.shade900, // border color
+                          width: 1.5,         // border thickness
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30), // rounded corners
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                      child:  Text(
+                        "CLEAR ALL",
+                        style: TextStyle(
+                          color: Colors.indigo[900], // text color matches border
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )
+
                   ),
                   const SizedBox(width: 12),
                   Expanded(

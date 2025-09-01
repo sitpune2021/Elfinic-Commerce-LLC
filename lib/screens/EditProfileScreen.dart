@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -23,6 +24,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: const Color(0xFFFCF8F3),
+        surfaceTintColor:Color(0xFFFCF8F3),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
@@ -100,6 +102,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             const SizedBox(height: 10),
             _buildLabel("Phone"),
             _buildPhoneField(),
+
 
             const SizedBox(height: 10),
             _buildLabel("Email ID"),
@@ -217,23 +220,53 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildPhoneField() {
-    return TextField(
+    return IntlPhoneField(
       controller: _phoneController,
       keyboardType: TextInputType.phone,
       decoration: InputDecoration(
-        prefixIcon: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text("+91", style: TextStyle(fontSize: 14, color: Colors.black87)),
-        ),
-        suffixIcon: const Icon(Icons.verified_outlined, color: Colors.green, size: 20),
+        hintText: "Enter your mobile number",
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Colors.white, // background color
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30), // rounded corners
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       ),
+      initialCountryCode: 'IN', // default country
+      dropdownIcon: const Icon(
+        Icons.arrow_drop_down,
+        color: Colors.black54,
+      ),
+      dropdownDecoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+      ),
+      flagsButtonPadding: const EdgeInsets.only(left: 12),
+      style: const TextStyle(fontSize: 14, color: Colors.black87),
+      onChanged: (phone) {
+        print(phone.completeNumber); // full number with country code
+      },
     );
   }
+
+  // Widget _buildPhoneField() {
+  //   return TextField(
+  //     controller: _phoneController,
+  //     keyboardType: TextInputType.phone,
+  //     decoration: InputDecoration(
+  //       prefixIcon: Padding(
+  //         padding: const EdgeInsets.all(12.0),
+  //         child: Text("+91", style: TextStyle(fontSize: 14, color: Colors.black87)),
+  //       ),
+  //       suffixIcon: const Icon(Icons.verified_outlined, color: Colors.green, size: 20),
+  //       filled: true,
+  //       fillColor: Colors.white,
+  //       border: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(30),
+  //         borderSide: BorderSide.none,
+  //       ),
+  //       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+  //     ),
+  //   );
+  // }
 }

@@ -46,17 +46,20 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
       body: Column(
         children: [
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _tabButton("ACTIVE", isActive, () {
-                setState(() => isActive = true);
-              }),
-              const SizedBox(width: 12),
-              _tabButton("EXPIRED", !isActive, () {
-                setState(() => isActive = false);
-              }),
-            ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _tabButton("ACTIVE", isActive, () {
+                  setState(() => isActive = true);
+                }),
+                const SizedBox(width: 12),
+                _tabButton("EXPIRED", !isActive, () {
+                  setState(() => isActive = false);
+                }),
+              ],
+            ),
           ),
           const Spacer(),
           const Text(
@@ -81,7 +84,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
             ),
             onPressed: () {},
-            child: const Text("CHECK SUBSCRIPTIONS"),
+            child: const Text("CHECK SUBSCRIPTIONS",style: TextStyle(color: Colors.white,fontWeight: FontWeight.w600),),
           ),
           const Spacer(),
         ],

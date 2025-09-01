@@ -63,7 +63,7 @@ class ProfileScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "Shubham Gone",
+                      "Shubham Chavan",
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,

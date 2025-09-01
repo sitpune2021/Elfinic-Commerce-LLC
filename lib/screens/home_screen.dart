@@ -95,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   children: [
                     // Logo
-                    Image.asset("assets/images/splash_screen.png", height: 40),
+                    Image.asset("assets/images/splash_screen_1.png", height: 40),
                     const SizedBox(width: 10),
 
 

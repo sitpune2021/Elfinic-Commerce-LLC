@@ -83,7 +83,7 @@ class _CartScreenState extends State<CartScreen> {
               },
               child: const Text(
                 "CHECKOUT (1 item)",
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                style: TextStyle(fontSize: 16, color: Colors.white,fontWeight: FontWeight.bold),
               ),
             )
           ],
@@ -182,16 +182,51 @@ class _CartScreenState extends State<CartScreen> {
                         Row(
                           children: [
                             Expanded(
-                              child: TextField(
+                              child:TextField(
                                 decoration: InputDecoration(
                                   hintText: "e.g. SAVE50",
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 12),
+                                  hintStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black54,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white, // background color
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
                                   border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(30)),
-                                      borderSide: BorderSide(color: Colors.grey)),
+                                    borderRadius: BorderRadius.circular(30),
+                                    borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                    borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                    borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                                  ),
+                                  suffixIcon: const Icon(
+                                    Icons.local_offer_outlined,
+                                    color: Colors.grey,
+                                  ),
                                 ),
-                              ),
+                                keyboardType: TextInputType.text,
+                                textInputAction: TextInputAction.done,
+                              )
+
+                              // TextField(
+                              //   decoration: InputDecoration(
+                              //     hintText: "e.g. SAVE50",
+                              //     contentPadding: EdgeInsets.symmetric(
+                              //         horizontal: 16, vertical: 12),
+                              //     border: OutlineInputBorder(
+                              //         borderRadius: BorderRadius.all(Radius.circular(30)),
+                              //         borderSide: BorderSide(color: Colors.grey)),
+                              //   ),
+                              // ),
                             ),
                             const SizedBox(width: 8),
                             ElevatedButton(
@@ -232,8 +267,17 @@ class _CartScreenState extends State<CartScreen> {
                             contentPadding:
                             EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                             border: OutlineInputBorder(
-                                borderRadius: BorderRadius.all(Radius.circular(12)),
-                                borderSide: BorderSide(color: Colors.grey)),
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
