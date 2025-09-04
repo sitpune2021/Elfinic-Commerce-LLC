@@ -16,6 +16,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:video_player/video_player.dart';
 
+import 'category_list.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -95,7 +97,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   children: [
                     // Logo
-                    Image.asset("assets/images/splash_screen_1.png", height: 40),
+                    // Image.asset("assets/images/splash_screen_1.png", height: 40),
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle, // or rectangle depending on your icon
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.1), // shadow color
+                            blurRadius: 6, // softness
+                            spreadRadius: 1, // spread
+                            offset: const Offset(4, 4), // 👉 shadow on right & bottom
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        "assets/images/splash_screen_1.png",
+                        height: 40,
+                      ),
+                    ),
+
                     const SizedBox(width: 10),
 
 
@@ -210,13 +230,13 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 15),
 
               // Recently Viewed
-              _buildSectionTitle("Recently Viewed"),
+              _buildSectionTitle("Recently Viewed",context, HomeCategoriesScreen()),
               _buildProductList(),
 
               const SizedBox(height: 10),
 
               // Explore Fresh Styles
-              _buildSectionTitle("Explore fresh styles"),
+              _buildSectionTitle("Explore fresh styles",context, HomeCategoriesScreen()),
               _buildProductList(),
 
               const SizedBox(height: 15),
@@ -422,9 +442,14 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 6),
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundImage: AssetImage(img),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10), // for rounded square corners
+            child: Image.asset(
+              img,
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+            ),
           ),
           const SizedBox(height: 5),
           Text(
@@ -440,6 +465,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
   // Widget _buildCategory(String title, String img) {
   //   return Container(
@@ -458,7 +484,7 @@ class _HomeScreenState extends State<HomeScreen> {
   //   );
   // }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, BuildContext context, Widget navigateTo) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Row(
@@ -472,18 +498,27 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.black,
             ),
           ),
-          Text(
-            "View All",
-            style: GoogleFonts.amiri(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.indigo,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => navigateTo),
+              );
+            },
+            child: Text(
+              "View All",
+              style: GoogleFonts.amiri(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.indigo,
+              ),
             ),
           ),
         ],
       ),
     );
   }
+
 
   // Widget _buildSectionTitle(String title) {
   //   return Padding(

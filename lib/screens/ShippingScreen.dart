@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../utils/BaseScreen.dart';
+
 
 
 
@@ -21,147 +23,149 @@ class _ShippingScreenState extends State<ShippingScreen> {
   String? selectedRegion;
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xfffdf6ef),
-      appBar: AppBar(
+    return BaseScreen(
+      child: Scaffold(
         backgroundColor: const Color(0xfffdf6ef),
-        surfaceTintColor:Color(0xfffdf6ef),
-        elevation: 0,
-        // leading: const Icon(Icons.arrow_back, color: Colors.black),
-        leading:  IconButton(
-          icon: Icon(
-            Icons.arrow_back_sharp,
-            color: Colors.black,
-            // size: screenWidth * 0.07,
-          ),
-          onPressed: () {
-            Navigator.pop(context); // go back to previous screen
-          },
-        ),
-        title: const Text("Checkout",
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("₹299,38",
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold)),
-                Text("Estimated Total",
-                    style: TextStyle(fontSize: 12, color: Colors.black54)),
-              ],
+        appBar: AppBar(
+          backgroundColor: const Color(0xfffdf6ef),
+          surfaceTintColor:Color(0xfffdf6ef),
+          elevation: 0,
+          // leading: const Icon(Icons.arrow_back, color: Colors.black),
+          leading:  IconButton(
+            icon: Icon(
+              Icons.arrow_back_sharp,
+              color: Colors.black,
+              // size: screenWidth * 0.07,
             ),
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Step Indicator
-              Row(
+            onPressed: () {
+              Navigator.pop(context); // go back to previous screen
+            },
+          ),
+          title: const Text("Checkout",
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          actions: const [
+            Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  stepBox("1 SHIPPING", true),
-                  stepBox("2 DELIVERY", false),
-                  stepBox("3 REVIEW", false),
+                  Text("₹299,38",
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text("Estimated Total",
+                      style: TextStyle(fontSize: 12, color: Colors.black54)),
                 ],
               ),
-              const SizedBox(height: 20),
-              _label("First Name*"),
-              _textField(hint: "Shubham"),
-
-              _label("Last Name*"),
-              _textField(hint: "Shubham"),
-              _label("Mobile Number"),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade400),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: const Row(
-                      children: [
-                        Text("+91"),
-                        Icon(Icons.arrow_drop_down),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(child: _textField(hint: "Mobile Number")),
-                ],
-              ),
-
-              _label("Do you have GST Number*"),
-              _dropdown(["Yes", "No"], gstOption, (val) {
-                setState(() => gstOption = val);
-              }),
-              _label("Company Name*"),
-              _textField(hint: "Shubham"),
-
-              _label("Enter your GST Number*"),
-              _textField(hint: "Shubham"),
-              const SizedBox(height: 20),
-              const Text(
-                "Residential Details",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.black87,
+            )
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Step Indicator
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    stepBox("1 SHIPPING", true),
+                    stepBox("2 DELIVERY", false),
+                    stepBox("3 REVIEW", false),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 10),
-
-              _label("Country/ Region*"),
-              _dropdown(["India(IN)"], "India(IN)", (val) {}),
-
-              _label("Address*"),
-              _textField(
-                hint: "Satara Road, Pune",
-                suffixIcon: const Icon(Icons.location_on_outlined),
-              ),
-
-              _label("Address Line 2*"),
-              _textField(),
-
-              _label("City*"),
-              _dropdown(["Pune", "Mumbai", "Delhi"], selectedCity, (val) {
-                setState(() => selectedCity = val);
-              }),
-
-              _label("Region*"),
-              _dropdown(["Maharashtra", "Karnataka"], selectedRegion, (val) {
-                setState(() => selectedRegion = val);
-              }),
-
-              _label("Zip/ Postal Code*"),
-              _textField(hint: "411038"),
-
-
-              Row(
-                children: [
-                  Checkbox(
-                    value: useBillingAddress,
-                    onChanged: (val) {
-                      setState(() => useBillingAddress = val!);
-                    },
+                const SizedBox(height: 20),
+                _label("First Name*"),
+                _textField(hint: "Shubham"),
+      
+                _label("Last Name*"),
+                _textField(hint: "Shubham"),
+                _label("Mobile Number"),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const Row(
+                        children: [
+                          Text("+91"),
+                          Icon(Icons.arrow_drop_down),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(child: _textField(hint: "Mobile Number")),
+                  ],
+                ),
+      
+                _label("Do you have GST Number*"),
+                _dropdown(["Yes", "No"], gstOption, (val) {
+                  setState(() => gstOption = val);
+                }),
+                _label("Company Name*"),
+                _textField(hint: "Shubham"),
+      
+                _label("Enter your GST Number*"),
+                _textField(hint: "Shubham"),
+                const SizedBox(height: 20),
+                const Text(
+                  "Residential Details",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.black87,
                   ),
-                  const Text("Use as Billing Address"),
-                ],
-              ),
-              const SizedBox(height: 20),
-              mainButton("CONTINUE", () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const DeliveryScreen()));
-              }),
-            ],
+                ),
+                const SizedBox(height: 10),
+      
+                _label("Country/ Region*"),
+                _dropdown(["India(IN)"], "India(IN)", (val) {}),
+      
+                _label("Address*"),
+                _textField(
+                  hint: "Satara Road, Pune",
+                  suffixIcon: const Icon(Icons.location_on_outlined),
+                ),
+      
+                _label("Address Line 2*"),
+                _textField(),
+      
+                _label("City*"),
+                _dropdown(["Pune", "Mumbai", "Delhi"], selectedCity, (val) {
+                  setState(() => selectedCity = val);
+                }),
+      
+                _label("Region*"),
+                _dropdown(["Maharashtra", "Karnataka"], selectedRegion, (val) {
+                  setState(() => selectedRegion = val);
+                }),
+      
+                _label("Zip/ Postal Code*"),
+                _textField(hint: "411038"),
+      
+      
+                Row(
+                  children: [
+                    Checkbox(
+                      value: useBillingAddress,
+                      onChanged: (val) {
+                        setState(() => useBillingAddress = val!);
+                      },
+                    ),
+                    const Text("Use as Billing Address"),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                mainButton("CONTINUE", () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const DeliveryScreen()));
+                }),
+              ],
+            ),
           ),
         ),
       ),
@@ -247,7 +251,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BaseScreen(child: Scaffold(
       backgroundColor: const Color(0xfffdf6ef),
       appBar: AppBar(
         backgroundColor: const Color(0xfffdf6ef),
@@ -323,7 +327,8 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
           ],
         ),
       ),
-    );
+    ),);
+
   }
 }
 
@@ -333,149 +338,151 @@ class ReviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xfffdf6ef),
-      appBar: AppBar(
-        surfaceTintColor:Color(0xfffdf6ef),
+    return BaseScreen(
+      child: Scaffold(
         backgroundColor: const Color(0xfffdf6ef),
-        elevation: 0,
-        // leading: const Icon(Icons.arrow_back, color: Colors.black),
-        leading:  IconButton(
-          icon: Icon(
-            Icons.arrow_back_sharp,
-            color: Colors.black,
-            // size: screenWidth * 0.07,
+        appBar: AppBar(
+          surfaceTintColor:Color(0xfffdf6ef),
+          backgroundColor: const Color(0xfffdf6ef),
+          elevation: 0,
+          // leading: const Icon(Icons.arrow_back, color: Colors.black),
+          leading:  IconButton(
+            icon: Icon(
+              Icons.arrow_back_sharp,
+              color: Colors.black,
+              // size: screenWidth * 0.07,
+            ),
+            onPressed: () {
+              Navigator.pop(context); // go back to previous screen
+            },
           ),
-          onPressed: () {
-            Navigator.pop(context); // go back to previous screen
-          },
-        ),
-
-        title: const Text("Checkout",
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("₹299,38",
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold)),
-                Text("Estimated Total",
-                    style: TextStyle(fontSize: 12, color: Colors.black54)),
-              ],
-            ),
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                stepBox("1 SHIPPING", false),
-                stepBox("2 DELIVERY", false),
-                stepBox("3 REVIEW", true),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            const Text("Order Summary",
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            ListTile(
-              leading: Image.asset("assets/images/w1.png"),
-              title: const Text("Lorem ipsum dolor sit amet consectetur."),
-              subtitle: const Text("Size: 09"),
-              trailing: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: const [
-                  Text("₹1,500.00",
-                      style:
-                      TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text("₹4,148.00",
+      
+          title: const Text("Checkout",
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          actions: const [
+            Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("₹299,38",
                       style: TextStyle(
-                          fontSize: 12,
-                          decoration: TextDecoration.lineThrough,
-                          color: Colors.grey)),
+                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text("Estimated Total",
+                      style: TextStyle(fontSize: 12, color: Colors.black54)),
                 ],
               ),
-            ),
-            const Divider(),
-
-            const Text("Promo Code"),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    decoration: inputDecoration("e.g. SAVE50"),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade400),
-                  onPressed: () {},
-                  child: const Text("APPLY"),
-                )
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            const Text("Add Note"),
-            TextFormField(
-              decoration:
-              inputDecoration("e.g. Leave outside the door"),
-            ),
-            const SizedBox(height: 20),
-
-            const Text("Payment Detail",
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            summaryRow("Subtotal", "₹1,823.90"),
-            summaryRow("Shipment Fee", "Free", color: Colors.green),
-            summaryRow("GST", "₹344.59"),
-            const Divider(),
-            summaryRow("Total Payment", "₹2,485.23",
-                isBold: true, fontSize: 18),
-
-            const SizedBox(height: 20),
-            CheckboxListTile(
-              value: false,
-              onChanged: (v) {},
-              title: const Text.rich(TextSpan(children: [
-                TextSpan(text: "I agree to the "),
-                TextSpan(
-                    text: "Terms & Conditions, Privacy Policy, Return Policy",
-                    style: TextStyle(color: Colors.blue)),
-                TextSpan(text: " and "),
-                TextSpan(
-                    text: "Contact Seller",
-                    style: TextStyle(color: Colors.blue)),
-              ])),
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-            CheckboxListTile(
-              value: false,
-              onChanged: (v) {},
-              title: const Text(
-                  "Send me marketing communications via email and SMS"),
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-
-            const SizedBox(height: 20),
-            mainButton("CONTINUE TO PAYMENT", () {
-              showDialog(
-                context: context,
-                builder: (context) => const OrderSuccessDialog(),
-              );
-
-            }),
+            )
           ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  stepBox("1 SHIPPING", false),
+                  stepBox("2 DELIVERY", false),
+                  stepBox("3 REVIEW", true),
+                ],
+              ),
+              const SizedBox(height: 20),
+      
+              const Text("Order Summary",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              ListTile(
+                leading: Image.asset("assets/images/w1.png"),
+                title: const Text("Lorem ipsum dolor sit amet consectetur."),
+                subtitle: const Text("Size: 09"),
+                trailing: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: const [
+                    Text("₹1,500.00",
+                        style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text("₹4,148.00",
+                        style: TextStyle(
+                            fontSize: 12,
+                            decoration: TextDecoration.lineThrough,
+                            color: Colors.grey)),
+                  ],
+                ),
+              ),
+              const Divider(),
+      
+              const Text("Promo Code"),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      decoration: inputDecoration("e.g. SAVE50"),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade400),
+                    onPressed: () {},
+                    child: const Text("APPLY"),
+                  )
+                ],
+              ),
+              const SizedBox(height: 20),
+      
+              const Text("Add Note"),
+              TextFormField(
+                decoration:
+                inputDecoration("e.g. Leave outside the door"),
+              ),
+              const SizedBox(height: 20),
+      
+              const Text("Payment Detail",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              summaryRow("Subtotal", "₹1,823.90"),
+              summaryRow("Shipment Fee", "Free", color: Colors.green),
+              summaryRow("GST", "₹344.59"),
+              const Divider(),
+              summaryRow("Total Payment", "₹2,485.23",
+                  isBold: true, fontSize: 18),
+      
+              const SizedBox(height: 20),
+              CheckboxListTile(
+                value: false,
+                onChanged: (v) {},
+                title: const Text.rich(TextSpan(children: [
+                  TextSpan(text: "I agree to the "),
+                  TextSpan(
+                      text: "Terms & Conditions, Privacy Policy, Return Policy",
+                      style: TextStyle(color: Colors.blue)),
+                  TextSpan(text: " and "),
+                  TextSpan(
+                      text: "Contact Seller",
+                      style: TextStyle(color: Colors.blue)),
+                ])),
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+              CheckboxListTile(
+                value: false,
+                onChanged: (v) {},
+                title: const Text(
+                    "Send me marketing communications via email and SMS"),
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+      
+              const SizedBox(height: 20),
+              mainButton("CONTINUE TO PAYMENT", () {
+                showDialog(
+                  context: context,
+                  builder: (context) => const OrderSuccessDialog(),
+                );
+      
+              }),
+            ],
+          ),
         ),
       ),
     );

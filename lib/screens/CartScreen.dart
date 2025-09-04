@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../utils/BaseScreen.dart';
 import 'ShippingScreen.dart';
 
 class CartScreen extends StatefulWidget {
@@ -46,249 +47,251 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xfffdf6ef),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text("₹4,000.00",
-                    style:
-                    TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text("Subtotal", style: TextStyle(color: Colors.grey)),
-              ],
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber.shade700,
-                padding:
-                const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30)),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ShippingScreen()),
-                );
-              },
-              child: const Text(
-                "CHECKOUT (1 item)",
-                style: TextStyle(fontSize: 16, color: Colors.white,fontWeight: FontWeight.bold),
-              ),
-            )
-          ],
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children:  [
-                  // Icon(Icons.close, size: 26),
-                  IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      color: Colors.black,
-                      // size: screenWidth * 0.07,
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context); // go back to previous screen
-                    },
-                  ),
-                  SizedBox(width: 12),
-                  Text(
-                    "Cart (3 items)",
-                    style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Spacer(),
-                  Text("Select all items",
-                      style: TextStyle(color: Colors.orange)),
+    return BaseScreen(
+      child: Scaffold(
+        backgroundColor: const Color(0xfffdf6ef),
+        bottomNavigationBar: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Text("₹4,000.00",
+                      style:
+                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text("Subtotal", style: TextStyle(color: Colors.grey)),
                 ],
               ),
-            ),
-
-            Expanded(
-              child: Column(
-                children: [
-                  // Cart Items List
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      children: [
-                        _cartItem(
-                            selected: true,
-                            image: "assets/images/w1.png",
-                            name: "Lorem ipsum dolor sit amet consectetur.",
-                            oldPrice: "₹4,148.00",
-                            price: "₹2,000.00",
-                            size: "09",
-                            quantity: 2,
-                            total: "₹4,000.00"),
-                        _cartItem(
-                            selected: false,
-                            image: "assets/images/w1.png",
-                            name: "Lorem ipsum dolor sit amet consectetur.",
-                            oldPrice: "₹4,148.00",
-                            price: "₹1,500.00",
-                            size: "09",
-                            quantity: 1,
-                            total: "₹1,500.00"),
-                        _cartItem(
-                            selected: false,
-                            image: "assets/images/w1.png",
-                            name: "Lorem ipsum dolor sit amet consectetur.",
-                            oldPrice: "₹4,148.00",
-                            price: "₹1,500.00",
-                            size: "09",
-                            quantity: 1,
-                            total: "₹1,500.00"),
-                      ],
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber.shade700,
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ShippingScreen()),
+                  );
+                },
+                child: const Text(
+                  "CHECKOUT (1 item)",
+                  style: TextStyle(fontSize: 16, color: Colors.white,fontWeight: FontWeight.bold),
+                ),
+              )
+            ],
+          ),
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children:  [
+                    // Icon(Icons.close, size: 26),
+                    IconButton(
+                      icon: Icon(
+                        Icons.close,
+                        color: Colors.black,
+                        // size: screenWidth * 0.07,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context); // go back to previous screen
+                      },
                     ),
-                  ),
-
-                  const Divider(thickness: 1),
-
-                  // Promo Code + Add Note Section (separate from cart list)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Promo Code
-                        Row(
-                          children: const [
-                            Icon(Icons.star, color: Colors.black54),
-                            SizedBox(width: 8),
-                            Text("Promo Code",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 14)),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child:TextField(
-                                decoration: InputDecoration(
-                                  hintText: "e.g. SAVE50",
-                                  hintStyle: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black54,
-                                    fontWeight: FontWeight.w400,
+                    SizedBox(width: 12),
+                    Text(
+                      "Cart (3 items)",
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    Spacer(),
+                    Text("Select all items",
+                        style: TextStyle(color: Colors.orange)),
+                  ],
+                ),
+              ),
+      
+              Expanded(
+                child: Column(
+                  children: [
+                    // Cart Items List
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        children: [
+                          _cartItem(
+                              selected: true,
+                              image: "assets/images/w1.png",
+                              name: "Lorem ipsum dolor sit amet consectetur.",
+                              oldPrice: "₹4,148.00",
+                              price: "₹2,000.00",
+                              size: "09",
+                              quantity: 2,
+                              total: "₹4,000.00"),
+                          _cartItem(
+                              selected: false,
+                              image: "assets/images/w1.png",
+                              name: "Lorem ipsum dolor sit amet consectetur.",
+                              oldPrice: "₹4,148.00",
+                              price: "₹1,500.00",
+                              size: "09",
+                              quantity: 1,
+                              total: "₹1,500.00"),
+                          _cartItem(
+                              selected: false,
+                              image: "assets/images/w1.png",
+                              name: "Lorem ipsum dolor sit amet consectetur.",
+                              oldPrice: "₹4,148.00",
+                              price: "₹1,500.00",
+                              size: "09",
+                              quantity: 1,
+                              total: "₹1,500.00"),
+                        ],
+                      ),
+                    ),
+      
+                    const Divider(thickness: 1),
+      
+                    // Promo Code + Add Note Section (separate from cart list)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Promo Code
+                          Row(
+                            children: const [
+                              Icon(Icons.star, color: Colors.black54),
+                              SizedBox(width: 8),
+                              Text("Promo Code",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 14)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child:TextField(
+                                  decoration: InputDecoration(
+                                    hintText: "e.g. SAVE50",
+                                    hintStyle: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black54,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.white, // background color
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                      borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                      borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                      borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                                    ),
+                                    suffixIcon: const Icon(
+                                      Icons.local_offer_outlined,
+                                      color: Colors.grey,
+                                    ),
                                   ),
-                                  filled: true,
-                                  fillColor: Colors.white, // background color
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  border: OutlineInputBorder(
+                                  keyboardType: TextInputType.text,
+                                  textInputAction: TextInputAction.done,
+                                )
+      
+                                // TextField(
+                                //   decoration: InputDecoration(
+                                //     hintText: "e.g. SAVE50",
+                                //     contentPadding: EdgeInsets.symmetric(
+                                //         horizontal: 16, vertical: 12),
+                                //     border: OutlineInputBorder(
+                                //         borderRadius: BorderRadius.all(Radius.circular(30)),
+                                //         borderSide: BorderSide(color: Colors.grey)),
+                                //   ),
+                                // ),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF050040),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 22, vertical: 14),
+                                  shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(30),
-                                    borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                    borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                    borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
-                                  ),
-                                  suffixIcon: const Icon(
-                                    Icons.local_offer_outlined,
-                                    color: Colors.grey,
                                   ),
                                 ),
-                                keyboardType: TextInputType.text,
-                                textInputAction: TextInputAction.done,
-                              )
-
-                              // TextField(
-                              //   decoration: InputDecoration(
-                              //     hintText: "e.g. SAVE50",
-                              //     contentPadding: EdgeInsets.symmetric(
-                              //         horizontal: 16, vertical: 12),
-                              //     border: OutlineInputBorder(
-                              //         borderRadius: BorderRadius.all(Radius.circular(30)),
-                              //         borderSide: BorderSide(color: Colors.grey)),
-                              //   ),
-                              // ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF050040),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 22, vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
+                                onPressed: () {},
+                                child: const Text(
+                                  "APPLY",
+                                  style: TextStyle(color: Colors.white),
                                 ),
                               ),
-                              onPressed: () {},
-                              child: const Text(
-                                "APPLY",
-                                style: TextStyle(color: Colors.white),
+                            ],
+                          ),
+      
+                          const SizedBox(height: 20),
+      
+                          // Add Note
+                          Row(
+                            children: const [
+                              Icon(Icons.note_add_outlined, color: Colors.black54),
+                              SizedBox(width: 8),
+                              Text("Add Note",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 14)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            maxLines: 3,
+                            decoration: InputDecoration(
+                              hintText: "e.g. Leave outside the door",
+                              contentPadding:
+                              EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
                               ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // Add Note
-                        Row(
-                          children: const [
-                            Icon(Icons.note_add_outlined, color: Colors.black54),
-                            SizedBox(width: 8),
-                            Text("Add Note",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 14)),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          maxLines: 3,
-                          decoration: InputDecoration(
-                            hintText: "e.g. Leave outside the door",
-                            contentPadding:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide:  BorderSide(color: Colors.blue.shade300, width: 1),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
+                          const SizedBox(height: 20),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            )
-
-          ],
+                  ],
+                ),
+              )
+      
+            ],
+          ),
         ),
       ),
     );

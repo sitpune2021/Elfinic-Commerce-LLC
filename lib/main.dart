@@ -1,4 +1,5 @@
 import 'package:elfinic_commerce_llc/screens/ProductDetailPage.dart';
+import 'package:elfinic_commerce_llc/screens/category_list.dart';
 import 'package:elfinic_commerce_llc/screens/home_screen.dart';
 import 'package:elfinic_commerce_llc/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +30,7 @@ class MyApp extends StatelessWidget {
         textTheme: GoogleFonts.amiriTextTheme(),
       ),
       home:  SplashScreen(),
-      // home:  ProductDetailScreen(),
+      // home:  CategoriesScreen(),
     );
   }
 }
