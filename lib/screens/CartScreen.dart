@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../utils/BaseScreen.dart';
-import 'ShippingScreen.dart';
+import 'ShoppingScreen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
