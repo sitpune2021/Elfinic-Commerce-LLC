@@ -1,187 +1,612 @@
 import 'package:flutter/material.dart';
-import 'package:line_icons/line_icons.dart';
-
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart' as dashboard;
+import '../providers/ShippingProvider.dart';
+import 'address_screen.dart';
 import 'EditProfileScreen.dart';
 import 'OrdersScreen.dart';
-import 'SubscriptionsScreen.dart';
 import 'WishlistScreen.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  Future<void> _logout(BuildContext context) async {
+    final confirmed = await showDialog(
+      context: context,
+      builder: (context) => _buildLogoutDialog(context),
+    );
+
+    if (confirmed == true) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove("auth_token");
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (route) => false,
+      );
+    }
+  }
+
+  void _onPopInvoked(BuildContext context) {
+    Navigator.popUntil(context, (route) => route.isFirst);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => dashboard.DashboardScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          // Top profile section
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.amber.shade700, Colors.orange.shade300],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (!didPop) {
+          _onPopInvoked(context);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Column(
+          children: [
+            // Header Section
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF050040), // Deep Indigo
+                    Color(0xFFD39841), // Golden Amber
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40),
+                ),
               ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(40),
-                bottomRight: Radius.circular(40),
+              padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 30),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Profile image
+                  Stack(
+                    children: [
+                      const CircleAvatar(
+                        radius: 35,
+                        backgroundImage: NetworkImage(
+                          "https://i.pravatar.cc/150?img=3",
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 4,
+                        right: 4,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 15),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        "Shubham Chavan",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        "Private Member",
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        "Joined on August 2025",
+                        style: TextStyle(fontSize: 12, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                      );
+                    },
+                    child: CircleAvatar(
+                      backgroundColor: Colors.white.withOpacity(0.9),
+                      child: const Icon(Icons.edit, color: Color(0xFFD39841)),
+                    ),
+                  ),
+                ],
               ),
             ),
-            padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 30),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Profile image
-                Stack(
+            // Content Section
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const CircleAvatar(
-                      radius: 35,
-                      backgroundImage: NetworkImage(
-                        "https://i.pravatar.cc/150?img=3", // Replace with user image
-                      ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "Account Information",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    Positioned(
-                      bottom: 4,
-                      right: 4,
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                    const SizedBox(height: 4),
+                    const Text(
+                      "See your info & activity as a member of Elfinic.com",
+                      style: TextStyle(fontSize: 14, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 20),
+
+                    _buildListTile(Icons.shopping_bag_outlined, "Orders", () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const OrdersScreen()),
+                      );
+                    }),
+
+                    _buildListTile(Icons.favorite_border, "Wishlist", () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const WishlistScreen()),
+                      );
+                    }),
+
+                    _buildListTile(Icons.card_giftcard, "Rewards", () {
+                      // Navigate to RewardsScreen
+                    }),
+
+                    _buildListTile(Icons.location_on_outlined, "Address", () {
+                      // Navigate to AddressScreen from Profile
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChangeNotifierProvider(
+                            create: (context) => AddressProvider(),
+                            child: const AddressScreen(fromProfile: true),
+                          ),
+                        ),
+                      );
+                    }),
+
+                    _buildListTile(Icons.share_outlined, "Share with Friends", () {
+                      // Navigate to Share Friend / Share App logic
+                    }),
+
+                    _buildListTile(Icons.info_outline, "About Us", () {
+                      // Navigate to About Details screen
+                    }),
+
+                    const SizedBox(height: 30),
+
+                    Center(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _logout(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                          elevation: 2,
+                          shadowColor: Colors.redAccent.withOpacity(0.3),
+                        ),
+                        icon: const Icon(Icons.logout, color: Colors.white, size: 20),
+                        label: const Text(
+                          "Logout",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(width: 15),
-                // Name and membership
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Shubham Chavan",
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildListTile(IconData icon, String title, VoidCallback onTap) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade50.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: const Color(0xFF050040).withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: const Color(0xFF050040),
+            size: 20,
+          ),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        trailing: const Icon(
+          Icons.chevron_right_rounded,
+          color: Colors.grey,
+          size: 20,
+        ),
+        onTap: onTap,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutDialog(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      elevation: 10,
+      shadowColor: Colors.black.withOpacity(0.3),
+      backgroundColor: Colors.white,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.logout_rounded,
+                color: Colors.redAccent,
+                size: 30,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Title
+            const Text(
+              "Logout?",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // Description
+            Text(
+              "Are you sure you want to logout from your account?",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                height: 1.4,
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Buttons
+            Row(
+              children: [
+                // Cancel Button
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(false);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      backgroundColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      side: BorderSide(
+                        color: Colors.grey[300]!,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      "Cancel",
                       style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      "Private Member",
-                      style: TextStyle(fontSize: 14, color: Colors.white),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      "Joined on August 2025",
-                      style: TextStyle(fontSize: 12, color: Colors.white70),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                // Edit icon
-                // Edit icon with click
-                GestureDetector(
-                  onTap: () {
-                    // 👉 Navigate to Edit Profile screen
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const EditProfileScreen()),
-                    );
-
-                    // Or show a dialog / snackbar instead:
-                    // ScaffoldMessenger.of(context).showSnackBar(
-                    //   SnackBar(content: Text("Edit profile clicked")),
-                    // );
-                  },
-                  child: CircleAvatar(
-                    backgroundColor: Colors.white.withOpacity(0.9),
-                    child: Icon(Icons.edit, color: Colors.amber.shade700),
                   ),
                 ),
 
-                // CircleAvatar(
-                //   backgroundColor: Colors.white.withOpacity(0.9),
-                //   child: Icon(Icons.edit, color: Colors.amber.shade700),
-                // ),
+                const SizedBox(width: 12),
+
+                // Logout Button
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 2,
+                      shadowColor: Colors.redAccent.withOpacity(0.3),
+                    ),
+                    child: const Text(
+                      "Logout",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+/*
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
 
-          // White content section
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove("auth_token");
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+    );
+  }
+
+  void _onPopInvoked(BuildContext context) {
+    Navigator.popUntil(context, (route) => route.isFirst);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => dashboard.DashboardScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (!didPop) {
+          _onPopInvoked(context);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Column(
+          children: [
+            // Header Section
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF050040), // Deep Indigo
+                    Color(0xFFD39841), // Golden Amber
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40),
+                ),
+              ),
+              padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 30),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // About Me
-                  const Text(
-                    "About Me",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  // Profile image
+                  Stack(
+                    children: [
+                      const CircleAvatar(
+                        radius: 35,
+                        backgroundImage: NetworkImage(
+                          "https://i.pravatar.cc/150?img=3",
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 4,
+                        right: 4,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    "Lorem ipsum dolor sit amet consectetur. Ornare at commodo pharetra integer hendrerit nibh duis et mi. "
-                        "Nisl sed congue ullamcorper nibh nibh ultrices. Elementum convallis nullam euismod gravida.",
-                    style: TextStyle(fontSize: 14, color: Colors.black54),
+                  const SizedBox(width: 15),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        "Shubham Chavan",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        "Private Member",
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        "Joined on August 2025",
+                        style: TextStyle(fontSize: 12, color: Colors.white70),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-
-                  // Account Information
-                  const Text(
-                    "Account Information",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                      );
+                    },
+                    child: CircleAvatar(
+                      backgroundColor: Colors.white.withOpacity(0.9),
+                      child: const Icon(Icons.edit, color: Color(0xFFD39841)),
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    "See your info & activity as a member of Elfinic.com",
-                    style: TextStyle(fontSize: 14, color: Colors.black54),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // // Options list
-                  // _buildListTile(LineIcons.users, "Groups"),
-                  // _buildListTile(Icons.shopping_bag_outlined, "Orders"),
-                  // _buildListTile(Icons.favorite_border, "Wishlist"),
-                  // _buildListTile(Icons.star_border, "Rewards"),
-                  // _buildListTile(Icons.person_outline, "Subscriptions"),
-                  // Options list with navigation
-                  _buildListTile(LineIcons.users, "Groups", () {
-                    // Navigate to GroupsScreen if you have one
-                  }),
-                  _buildListTile(Icons.shopping_bag_outlined, "Orders", () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => OrdersScreen()),
-                    );
-                  }),
-                  _buildListTile(Icons.favorite_border, "Wishlist", () {
-                    // Navigate to WishlistScreen
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => WishlistScreen()),
-                    );
-                  }),
-                  _buildListTile(Icons.star_border, "Rewards", () {
-                    // Navigate to RewardsScreen
-                  }),
-                  _buildListTile(Icons.person_outline, "Subscriptions", () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => SubscriptionsScreen()),
-                    );
-                  }),
-
                 ],
               ),
             ),
-          ),
-        ],
+            // Content Section
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    const Text(
+                      "Account Information",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      "See your info & activity as a member of Elfinic.com",
+                      style: TextStyle(fontSize: 14, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 20),
+
+                    _buildListTile(Icons.shopping_bag_outlined, "Orders", () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const OrdersScreen()),
+                      );
+                    }),
+
+                    _buildListTile(Icons.favorite_border, "Wishlist", () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const WishlistScreen()),
+                      );
+                    }),
+
+                    _buildListTile(Icons.card_giftcard, "Rewards", () {
+                      // Navigate to RewardsScreen
+                    }),
+
+                    _buildListTile(Icons.location_on_outlined, "Address", () {
+                      // Navigate to AddressScreen from Profile
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChangeNotifierProvider(
+                            create: (context) => AddressProvider(),
+                            child: const AddressScreen(fromProfile: true),
+                          ),
+                        ),
+                      );
+                    }),
+
+                    _buildListTile(Icons.share_outlined, "Share with Friends", () {
+                      // Navigate to Share Friend / Share App logic
+                    }),
+
+                    _buildListTile(Icons.info_outline, "About Us", () {
+                      // Navigate to About Details screen
+                    }),
+
+                    const SizedBox(height: 30),
+
+                    Center(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _logout(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                        ),
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        label: const Text(
+                          "Logout",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -194,7 +619,7 @@ class ProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(
-        leading: Icon(icon, color: Colors.indigo.shade900),
+        leading: Icon(icon, color: const Color(0xFF050040)),
         title: Text(
           title,
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
@@ -204,5 +629,6 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-
 }
+
+*/

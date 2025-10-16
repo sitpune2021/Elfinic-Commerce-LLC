@@ -1,842 +1,700 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-
+import '../model/SubcategoriesResponse.dart';
 import 'package:flutter/material.dart';
 
 
 
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/category_provider.dart';
+import '../services/api_service.dart';
+
+import '../providers/SubCategoryProvider.dart';
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:auto_size_text/auto_size_text.dart';
+
+import '../services/api_service.dart';
+import '../providers/category_provider.dart';
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:auto_size_text/auto_size_text.dart';
+
 
 class HomeCategoriesScreen extends StatefulWidget {
-  const HomeCategoriesScreen({super.key});
+  const HomeCategoriesScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeCategoriesScreen> createState() => _HomeCategoriesScreen();
+  _HomeCategoriesScreenState createState() => _HomeCategoriesScreenState();
 }
 
-class _HomeCategoriesScreen extends State<HomeCategoriesScreen> {
-  String selectedCategory = "Trending Now";
+class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
+  int? selectedCategoryId;
 
-  // ✅ Categories list
-  final List<String> categories = [
-    "Trending Now",
-    "Men's Wear",
-    "Women's Wear",
-    "Kids Wear",
-    "Footwear",
-    "Beauty & Grooming",
-    "Home & Living",
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+      Provider.of<SubCategoryProvider>(context, listen: false).fetchSubcategories();
+    });
+  }
 
-  // ✅ Category Images Map
-  final Map<String, String> categoryImages = {
-    "Trending Now":
-    "https://images.pexels.com/photos/2983464/pexels-photo-2983464.jpeg",
-    "Men's Wear":
-    "https://images.pexels.com/photos/428338/pexels-photo-428338.jpeg",
-    "Women's Wear":
-    "https://images.pexels.com/photos/1488463/pexels-photo-1488463.jpeg",
-    "Kids Wear":
-    "https://images.pexels.com/photos/3661350/pexels-photo-3661350.jpeg",
-    "Footwear":
-    "https://images.pexels.com/photos/267320/pexels-photo-267320.jpeg",
-    "Beauty & Grooming":
-    "https://images.pexels.com/photos/2534961/pexels-photo-2534961.jpeg",
-    "Home & Living":
-    "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg",
-  };
-
-
-
-
-// Spotlight + Stores (Network Images)
-  final List<Map<String, String>> spotlightItems = [
-    {
-      "title": "New On Myntra",
-      "image": "https://images.pexels.com/photos/2983464/pexels-photo-2983464.jpeg"
-    },
-    {
-      "title": "Monsoon Magic",
-      "image": "https://images.pexels.com/photos/325185/pexels-photo-325185.jpeg"
-    },
-    {
-      "title": "The Edit",
-      "image": "https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg"
-    },
-    {
-      "title": "Trendnxt",
-      "image": "https://images.pexels.com/photos/2983465/pexels-photo-2983465.jpeg"
-    },
-    {
-      "title": "Autumn Winter",
-      "image": "https://images.pexels.com/photos/325208/pexels-photo-325208.jpeg"
-    },
-    {
-      "title": "Ganesh Chaturthi Store",
-      "image": "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg"
-    },
-    {
-      "title": "Onam Store",
-      "image": "https://images.pexels.com/photos/172292/pexels-photo-172292.jpeg"
-    },
-    {
-      "title": "The Pujo Store",
-      "image": "https://images.pexels.com/photos/1166869/pexels-photo-1166869.jpeg"
-    },
-    {
-      "title": "Navratri Store",
-      "image": "https://images.pexels.com/photos/1166869/pexels-photo-1166869.jpeg"
-    },
-    {
-      "title": "New On Myntra",
-      "image": "https://images.pexels.com/photos/2983464/pexels-photo-2983464.jpeg"
-    },
-    {
-      "title": "Monsoon Magic",
-      "image": "https://images.pexels.com/photos/325185/pexels-photo-325185.jpeg"
-    },
-    {
-      "title": "The Edit",
-      "image": "https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg"
-    },
-    {
-      "title": "Trendnxt",
-      "image": "https://images.pexels.com/photos/2983465/pexels-photo-2983465.jpeg"
-    },
-    {
-      "title": "Autumn Winter",
-      "image": "https://images.pexels.com/photos/325208/pexels-photo-325208.jpeg"
-    },
-    {
-      "title": "Ganesh Chaturthi Store",
-      "image": "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg"
-    },
-    {
-      "title": "Onam Store",
-      "image": "https://images.pexels.com/photos/172292/pexels-photo-172292.jpeg"
-    },
-    {
-      "title": "The Pujo Store",
-      "image": "https://images.pexels.com/photos/1166869/pexels-photo-1166869.jpeg"
-    },
-    {
-      "title": "Navratri Store",
-      "image": "https://images.pexels.com/photos/1166869/pexels-photo-1166869.jpeg"
-    },
-  ];
-
-  final List<Map<String, String>> trendingStores = [
-    {
-      "title": "Myntra Unique",
-      "image": "https://images.pexels.com/photos/2983463/pexels-photo-2983463.jpeg"
-    },
-    {
-      "title": "Rising Stars",
-      "image": "https://images.pexels.com/photos/3762928/pexels-photo-3762928.jpeg"
-    },
-    {
-      "title": "Luxe",
-      "image": "https://images.pexels.com/photos/291762/pexels-photo-291762.jpeg"
-    },
-    {
-      "title": "Picture",
-      "image": "https://images.pexels.com/photos/428340/pexels-photo-428340.jpeg"
-    },
-    {
-      "title": "Rising Stars Beauty",
-      "image": "https://images.pexels.com/photos/2534961/pexels-photo-2534961.jpeg"
-    },
-    {
-      "title": "FWD",
-      "image": "https://images.pexels.com/photos/994517/pexels-photo-994517.jpeg"
-    },
-  ];
-
-// Category-wise items
-  final Map<String, List<Map<String, String>>> categoryItems = {
-    "Men's Wear": [
-      {
-        "title": "T-Shirts",
-        "image": "https://images.pexels.com/photos/428338/pexels-photo-428338.jpeg"
-      },
-      {
-        "title": "Shirts",
-        "image": "https://images.pexels.com/photos/2983464/pexels-photo-2983464.jpeg"
-      },
-      {
-        "title": "Jeans",
-        "image": "https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg"
-      },
-      {
-        "title": "Jackets",
-        "image": "https://images.pexels.com/photos/1488463/pexels-photo-1488463.jpeg"
-      },
-    ],
-    "Women's Wear": [
-      {
-        "title": "Saree",
-        "image": "https://images.pexels.com/photos/1488463/pexels-photo-1488463.jpeg"
-      },
-      {
-        "title": "Dresses",
-        "image": "https://images.pexels.com/photos/5704845/pexels-photo-5704845.jpeg"
-      },
-      {
-        "title": "Kurtis",
-        "image": "https://images.pexels.com/photos/994517/pexels-photo-994517.jpeg"
-      },
-      {
-        "title": "Tops",
-        "image": "https://images.pexels.com/photos/1866149/pexels-photo-1866149.jpeg"
-      },
-    ],
-    "Kids Wear": [
-      {
-        "title": "T-Shirts",
-        "image": "https://images.pexels.com/photos/3661350/pexels-photo-3661350.jpeg"
-      },
-      {
-        "title": "Shorts",
-        "image": "https://images.pexels.com/photos/1449791/pexels-photo-1449791.jpeg"
-      },
-      {
-        "title": "Frocks",
-        "image": "https://images.pexels.com/photos/1449791/pexels-photo-1449791.jpeg"
-      },
-    ],
-    "Footwear": [
-      {
-        "title": "Heels",
-        "image": "https://images.pexels.com/photos/267202/pexels-photo-267202.jpeg"
-      },
-      {
-        "title": "Shoes",
-        "image": "https://images.pexels.com/photos/267320/pexels-photo-267320.jpeg"
-      },
-      {
-        "title": "Sandals",
-        "image": "https://images.pexels.com/photos/292999/pexels-photo-292999.jpeg"
-      },
-    ],
-    "Beauty & Grooming": [
-      {
-        "title": "Lipstick",
-        "image": "https://images.pexels.com/photos/2534961/pexels-photo-2534961.jpeg"
-      },
-      {
-        "title": "Perfume",
-        "image": "https://images.pexels.com/photos/965989/pexels-photo-965989.jpeg"
-      },
-      {
-        "title": "Shaving Kit",
-        "image": "https://images.pexels.com/photos/191841/pexels-photo-191841.jpeg"
-      },
-    ],
-    "Home & Living": [
-      {
-        "title": "Furniture",
-        "image": "https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg"
-      },
-      {
-        "title": "Decor",
-        "image": "https://images.pexels.com/photos/271816/pexels-photo-271816.jpeg"
-      },
-      {
-        "title": "Kitchen",
-        "image": "https://images.pexels.com/photos/2763894/pexels-photo-2763894.jpeg"
-      },
-    ],
-  };
-
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final catProvider = Provider.of<CategoryProvider>(context);
+    if (!catProvider.isLoading &&
+        catProvider.categories.isNotEmpty &&
+        selectedCategoryId == null) {
+      setState(() {
+        selectedCategoryId = catProvider.categories.first.id;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:  Colors.white,
-      // backgroundColor: const Color(0xfffdf6ef),
-      appBar: AppBar(
-        surfaceTintColor: Colors.white,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          "Categories",
-          style: TextStyle(color: Colors.black),
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ================= LEFT SIDE: CATEGORIES =================
+            _buildCategorySidebar(),
+
+            // ================= RIGHT SIDE: SUBCATEGORIES =================
+            _buildSubcategoriesGrid(),
+          ],
         ),
-        centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        actions: const [
-          Icon(Icons.favorite_border, color: Colors.black),
-          SizedBox(width: 12),
-          Icon(Icons.shopping_bag_outlined, color: Colors.black),
-          SizedBox(width: 12),
+      ),
+    );
+  }
+
+  Widget _buildCategorySidebar() {
+    return Container(
+      width: 100,
+      margin: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
         ],
       ),
+      child: Consumer<CategoryProvider>(
+        builder: (context, catProvider, child) {
+          if (catProvider.isLoading) {
+            return _buildLoadingIndicator();
+          } else if (catProvider.error != null) {
+            return _buildErrorWidget(catProvider.error!);
+          } else if (catProvider.categories.isEmpty) {
+            return _buildEmptyState("No categories found");
+          }
 
-      body: Row(
-        children: [
-
-          Container(
-            width: 100,
-            margin: const EdgeInsets.only(left: 8), // 🔹 Left margin
-            decoration: BoxDecoration(
-              color:  Colors.white, // 🔹 Light orange background
-              // color: const Color(0xFFFFF3E0), // 🔹 Light orange background
-              borderRadius: BorderRadius.circular(12),
-            ),
+          return AnimatedContainer(
+            duration: Duration(milliseconds: 300),
             child: ListView.builder(
-              itemCount: categories.length,
+              physics: BouncingScrollPhysics(),
+              itemCount: catProvider.categories.length,
               itemBuilder: (context, index) {
-                String category = categories[index];
-                bool isSelected = selectedCategory == category;
+                final category = catProvider.categories[index];
+                bool isSelected = selectedCategoryId == category.id;
 
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedCategory = category;
-                    });
-                  },
-                  child:
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.orange.shade100 : Colors.transparent,
-
-                      borderRadius: BorderRadius.circular(12),
-                      border: isSelected
-                          ?  Border(
-                        left: BorderSide(
-                          color: Colors.orange.shade800, // 🔹 Left strip color
-                          width: 4, // 🔹 Strip width
+                return AnimatedContainer(
+                  duration: Duration(milliseconds: 300),
+                  margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedCategoryId = category.id;
+                      });
+                    },
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: AnimatedContainer(
+                        duration: Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          gradient: isSelected
+                              ? LinearGradient(
+                            colors: [
+                              Colors.orange.shade50,
+                              Colors.orange.shade100,
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          )
+                              : null,
+                          borderRadius: BorderRadius.circular(16),
+                          border: isSelected
+                              ? Border.all(
+                            color: Color(0xFFD39841),
+                            width: 2,
+                          )
+                              : null,
+                          boxShadow: isSelected
+                              ? [
+                            BoxShadow(
+                              color: Colors.orange.shade100,
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                              : [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                          ],
                         ),
-                      )
-                          : null,
-                      boxShadow: isSelected
-                          ? [const BoxShadow(color: Colors.black12, blurRadius: 4)]
-                          : [],
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Category Image with smooth animation
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 300),
+                              width: isSelected ? 52 : 44,
+                              height: isSelected ? 52 : 44,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.grey.shade200,
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: Image.network(
+                                  "${ApiService.baseUrl}/assets/img/category-images/${category.image}",
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Center(
+                                      child: CircularProgressIndicator(
+                                        value: loadingProgress.expectedTotalBytes != null
+                                            ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                            : null,
+                                        strokeWidth: 2,
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey[200],
+                                      child: Icon(
+                                        Icons.category,
+                                        color: Colors.grey[400],
+                                        size: 20,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Category Name
+                            Flexible(
+                              child: AutoSizeText(
+                                category.name,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                minFontSize: 8,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                  color: isSelected ? Colors.orange.shade800 : Colors.grey[700],
+                                  height: 1.2,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: Column(
-                      children: [
-                        CircleAvatar(
-                          radius: isSelected ? 30 : 25, // 🔹 Zoom effect
-                          backgroundColor: Colors.white,
-                          backgroundImage: NetworkImage(
-                            categoryImages[category]!,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          category,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w700,
-                            color: isSelected ? Colors.orange.shade800 : Colors.black87, // 🔹 Highlight color
-                          ),
-                        ),
-
-                      ],
-                    ),
-                  )
-                  ,
+                  ),
                 );
               },
             ),
-          ),
+          );
+        },
+      ),
+    );
+  }
 
-          // Right Content
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 1.0,right: 1,bottom: 1),
-              child: selectedCategory == "Trending Now"
-                  ? SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Spotlight
-                    const Text("In The Spotlight",
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: spotlightItems.length,
-                      gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 0.8,
-                      ),
-                      itemBuilder: (context, index) {
-                        final item = spotlightItems[index];
-                        return Column(
-                          children: [
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundImage:
-                              NetworkImage(item["image"]!),
-                            ),
-                            const SizedBox(height: 6),
+  Widget _buildSubcategoriesGrid() {
+    return Expanded(
+      child: Consumer<SubCategoryProvider>(
+        builder: (context, subProvider, child) {
+          if (subProvider.isLoading) {
+            return _buildLoadingIndicator();
+          } else if (subProvider.error != null) {
+            return _buildErrorWidget(subProvider.error!);
+          }
 
-                            AutoSizeText(
-                              item["title"]!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 12,fontWeight: FontWeight.w600),
-                              maxLines: 1,         // keeps it in one line
-                              minFontSize: 8,      // smallest font it can shrink to
-                              overflow: TextOverflow.ellipsis, // adds "..." if too long
-                            ),
+          final filtered = subProvider.subcategories
+              .where((s) => s.categoryId == selectedCategoryId)
+              .toList();
 
+          if (filtered.isEmpty) {
+            return _buildEmptyState("No subcategories found");
+          }
 
+          return AnimatedContainer(
+            duration: Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+            padding: const EdgeInsets.all(16),
+            child: GridView.builder(
+              physics: BouncingScrollPhysics(),
+              itemCount: filtered.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: _calculateCrossAxisCount(context),
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.85,
+              ),
+              itemBuilder: (context, index) {
+                final sub = filtered[index];
+                final imageUrl =
+                    "${ApiService.baseUrl}/assets/img/sub-category-images/${sub.image}";
 
-                        ],
-                        );
-                      },
+                return AnimatedContainer(
+                  duration: Duration(milliseconds: 300),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
-
-                    const SizedBox(height: 20),
-
-                    // Trending Stores
-                    const Text("Trending Stores",
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: trendingStores.length,
-                      gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 0.8,
-                      ),
-                      itemBuilder: (context, index) {
-                        final item = trendingStores[index];
-                        return Column(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () {
+                        // Handle subcategory tap
+                        _onSubcategoryTap(sub);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundImage:
-                              NetworkImage(item["image"]!),
+                            // Subcategory Image
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 300),
+                              width: 70,
+                              height: 70,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.orange.shade50,
+                                    Colors.orange.shade100,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.orange.shade100,
+                                    blurRadius: 8,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ClipOval(
+                                  child: Image.network(
+                                    imageUrl,
+                                    fit: BoxFit.cover,
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Center(
+                                        child: CircularProgressIndicator(
+                                          value: loadingProgress.expectedTotalBytes != null
+                                              ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                              : null,
+                                          strokeWidth: 2,
+                                        ),
+                                      );
+                                    },
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Icon(
+                                        Icons.category,
+                                        color: Color(0xFFD39841),
+                                        size: 30,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
                             ),
-                            const SizedBox(height: 6),
-                            AutoSizeText(
-                              item["title"]!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 12,fontWeight: FontWeight.w600),
-                              maxLines: 1,
-                              minFontSize: 8,
-                              overflow: TextOverflow.ellipsis,
+                            const SizedBox(height: 12),
+
+                            // Subcategory Name
+                            Flexible(
+                              child: AutoSizeText(
+                                sub.name,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                minFontSize: 10,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[800],
+                                  height: 1.3,
+                                ),
+                              ),
                             ),
                           ],
-                        );
-                      },
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-              )
-                  : GridView.builder(
-                itemCount: categoryItems[selectedCategory]?.length ?? 0,
-                gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.8,
-                ),
-                itemBuilder: (context, index) {
-                  final item = categoryItems[selectedCategory]![index];
-                  return Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundImage: NetworkImage(item["image"]!),
-                      ),
-                      const SizedBox(height: 6),
-                      AutoSizeText(
-                        item["title"]!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 12,fontWeight: FontWeight.w600),
-                        maxLines: 1,
-                        minFontSize: 8,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  int _calculateCrossAxisCount(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    if (width > 1000) return 4;
+    if (width > 700) return 3;
+    return 2;
+  }
+
+  void _onSubcategoryTap(SubCategoryModel subcategory) {
+    // Add your subcategory tap logic here
+    print('Subcategory tapped: ${subcategory.name}');
+
+    // You can add navigation or other actions here
+    // Navigator.push(context, MaterialPageRoute(builder: (context) => SubcategoryDetailScreen(subcategory: subcategory)));
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD39841),),
+            strokeWidth: 2,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "Loading...",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            color: Colors.red.shade400,
+            size: 48,
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              error,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              // Retry logic
+              Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+              Provider.of<SubCategoryProvider>(context, listen: false).fetchSubcategories();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange.shade400,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text("Try Again"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.category_outlined,
+            color: Colors.grey[400],
+            size: 48,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/*
+class HomeCategoriesScreen extends StatefulWidget {
+  const HomeCategoriesScreen({Key? key}) : super(key: key);
+
+  @override
+  _HomeCategoriesScreenState createState() => _HomeCategoriesScreenState();
+}
+
+class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
+  int? selectedCategoryId; // Store the currently selected category
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Fetch categories + subcategories after widget build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+      Provider.of<SubCategoryProvider>(context, listen: false).fetchSubcategories();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Auto-select the first category when data is loaded
+    final catProvider = Provider.of<CategoryProvider>(context);
+    if (!catProvider.isLoading &&
+        catProvider.categories.isNotEmpty &&
+        selectedCategoryId == null) {
+      setState(() {
+        selectedCategoryId = catProvider.categories.first.id;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+
+      // SafeArea prevents content from going under status bar / notches
+      body: SafeArea(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ================= LEFT SIDE: CATEGORIES =================
+            Container(
+              width: 100, // fixed width for category sidebar
+              margin: const EdgeInsets.only(left: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+
+              // Listen to CategoryProvider
+              child: Consumer<CategoryProvider>(
+                builder: (context, catProvider, child) {
+                  if (catProvider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (catProvider.error != null) {
+                    return Center(child: Text(catProvider.error!));
+                  } else if (catProvider.categories.isEmpty) {
+                    return const Center(child: Text("No categories found"));
+                  }
+
+                  // Build category list
+                  return ListView.builder(
+                    itemCount: catProvider.categories.length,
+                    itemBuilder: (context, index) {
+                      final category = catProvider.categories[index];
+                      bool isSelected = selectedCategoryId == category.id;
+
+                      return GestureDetector(
+                        onTap: () {
+                          // Update selected category when tapped
+                          setState(() {
+                            selectedCategoryId = category.id;
+                          });
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.orange.shade100
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            border: isSelected
+                                ? Border(
+                              left: BorderSide(
+                                color: Colors.orange.shade800,
+                                width: 4,
+                              ),
+                            )
+                                : null,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Category Image
+                              CircleAvatar(
+                                radius: isSelected ? 30 : 25,
+                                backgroundColor: Colors.white,
+                                backgroundImage: NetworkImage(
+                                  "${ApiService.baseUrl}/assets/img/category-images/${category.image}",
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+
+                              // Category Name
+                              Flexible(
+                                child: AutoSizeText(
+                                  category.name,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  minFontSize: 8,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.w700,
+                                    color: isSelected
+                                        ? Colors.orange.shade800
+                                        : Colors.black87,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
+            // ================= RIGHT SIDE: SUBCATEGORIES =================
+            Expanded(
+              child: Consumer<SubCategoryProvider>(
+                builder: (context, subProvider, child) {
+                  if (subProvider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (subProvider.error != null) {
+                    return Center(child: Text(subProvider.error!));
+                  }
 
-// class CategoriesScreen extends StatefulWidget {
-//   const CategoriesScreen({super.key});
-//
-//   @override
-//   State<CategoriesScreen> createState() => _CategoriesScreenState();
-// }
-//
-// class _CategoriesScreenState extends State<CategoriesScreen> {
-//   String selectedCategory = "Trending Now";
-//
-//   final List<String> categories = [
-//     "Trending Now",
-//     "Men's Wear",
-//     "Women's Wear",
-//     "Kids Wear",
-//     "Footwear",
-//     "Beauty & Grooming",
-//     "Home & Living",
-//   ];
-//
-//   // Spotlight + Stores
-//   final List<Map<String, String>> spotlightItems = [
-//     {"title": "New On Myntra", "image": "assets/new.png"},
-//     {"title": "Monsoon Magic", "image": "assets/monsoon.png"},
-//     {"title": "The Edit", "image": "assets/edit.png"},
-//     {"title": "Trendnxt", "image": "assets/trend.png"},
-//     {"title": "Autumn Winter", "image": "assets/autumn.png"},
-//     {"title": "Ganesh Chaturthi Store", "image": "assets/ganesh.png"},
-//     {"title": "Onam Store", "image": "assets/onam.png"},
-//     {"title": "The Pujo Store", "image": "assets/pujo.png"},
-//     {"title": "Navratri Store", "image": "assets/navratri.png"},
-//   ];
-//
-//   final List<Map<String, String>> trendingStores = [
-//     {"title": "Myntra Unique", "image": "assets/unique.png"},
-//     {"title": "Rising Stars", "image": "assets/rising.png"},
-//     {"title": "Luxe", "image": "assets/luxe.png"},
-//     {"title": "Picture", "image": "assets/picture.png"},
-//     {"title": "Rising Stars Beauty", "image": "assets/beauty.png"},
-//     {"title": "FWD", "image": "assets/fwd.png"},
-//   ];
-//
-//   // Category-wise items
-//   final Map<String, List<Map<String, String>>> categoryItems = {
-//     "Men's Wear": [
-//       {"title": "T-Shirts", "image": "assets/mens_tshirt.png"},
-//       {"title": "Shirts", "image": "assets/mens_shirt.png"},
-//       {"title": "Jeans", "image": "assets/mens_jeans.png"},
-//       {"title": "Jackets", "image": "assets/mens_jacket.png"},
-//     ],
-//     "Women's Wear": [
-//       {"title": "Saree", "image": "assets/saree.png"},
-//       {"title": "Dresses", "image": "assets/dress.png"},
-//       {"title": "Kurtis", "image": "assets/kurti.png"},
-//       {"title": "Tops", "image": "assets/top.png"},
-//     ],
-//     "Kids Wear": [
-//       {"title": "T-Shirts", "image": "assets/kids_tshirt.png"},
-//       {"title": "Shorts", "image": "assets/kids_shorts.png"},
-//       {"title": "Frocks", "image": "assets/kids_frock.png"},
-//     ],
-//     "Footwear": [
-//       {"title": "Heels", "image": "assets/heels.png"},
-//       {"title": "Shoes", "image": "assets/shoes.png"},
-//       {"title": "Sandals", "image": "assets/sandals.png"},
-//     ],
-//     "Beauty & Grooming": [
-//       {"title": "Lipstick", "image": "assets/lipstick.png"},
-//       {"title": "Perfume", "image": "assets/perfume.png"},
-//       {"title": "Shaving Kit", "image": "assets/shaving.png"},
-//     ],
-//     "Home & Living": [
-//       {"title": "Furniture", "image": "assets/furniture.png"},
-//       {"title": "Decor", "image": "assets/decor.png"},
-//       {"title": "Kitchen", "image": "assets/kitchen.png"},
-//     ],
-//   };
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: const Color(0xfffdf6ef),
-//       appBar: AppBar(
-//         backgroundColor: const Color(0xfffdf6ef),
-//         elevation: 0,
-//         title: const Text("Categories", style: TextStyle(color: Colors.black)),
-//         centerTitle: false,
-//         leading: const Icon(Icons.arrow_back, color: Colors.black),
-//         actions: const [
-//           Icon(Icons.favorite_border, color: Colors.black),
-//           SizedBox(width: 12),
-//           Icon(Icons.shopping_bag_outlined, color: Colors.black),
-//           SizedBox(width: 12),
-//         ],
-//       ),
-//       body: Row(
-//         children: [
-//           // Sidebar
-//           Container(
-//             width: 100,
-//             color: Colors.grey.shade100,
-//             child: ListView.builder(
-//               itemCount: categories.length,
-//               itemBuilder: (context, index) {
-//                 String category = categories[index];
-//                 bool isSelected = selectedCategory == category;
-//                 return GestureDetector(
-//                   onTap: () {
-//                     setState(() {
-//                       selectedCategory = category;
-//                     });
-//                   },
-//                   child: Container(
-//                     margin: const EdgeInsets.symmetric(vertical: 8),
-//                     padding: const EdgeInsets.all(8),
-//                     decoration: BoxDecoration(
-//                       color: isSelected ? Colors.white : Colors.grey.shade100,
-//                       borderRadius: BorderRadius.circular(12),
-//                       boxShadow: isSelected
-//                           ? [BoxShadow(color: Colors.black12, blurRadius: 4)]
-//                           : [],
-//                     ),
-//                     child: Column(
-//                       children: [
-//                         CircleAvatar(
-//                           radius: 25,
-//                           backgroundColor: Colors.white,
-//                           child: Icon(Icons.image, size: 30, color: Colors.grey),
-//                         ),
-//                         const SizedBox(height: 6),
-//                         Text(
-//                           category,
-//                           textAlign: TextAlign.center,
-//                           style: TextStyle(
-//                             fontSize: 12,
-//                             fontWeight:
-//                             isSelected ? FontWeight.bold : FontWeight.normal,
-//                           ),
-//                         ),
-//                       ],
-//                     ),
-//                   ),
-//                 );
-//               },
-//             ),
-//           ),
-//
-//           // Right Content
-//           Expanded(
-//             child: Padding(
-//               padding: const EdgeInsets.all(12.0),
-//               child: selectedCategory == "Trending Now"
-//                   ? SingleChildScrollView(
-//                 child: Column(
-//                   crossAxisAlignment: CrossAxisAlignment.start,
-//                   children: [
-//                     // Spotlight
-//                     const Text("In The Spotlight",
-//                         style: TextStyle(
-//                             fontSize: 16, fontWeight: FontWeight.bold)),
-//                     const SizedBox(height: 12),
-//                     GridView.builder(
-//                       shrinkWrap: true,
-//                       physics: const NeverScrollableScrollPhysics(),
-//                       itemCount: spotlightItems.length,
-//                       gridDelegate:
-//                       const SliverGridDelegateWithFixedCrossAxisCount(
-//                         crossAxisCount: 3,
-//                         crossAxisSpacing: 12,
-//                         mainAxisSpacing: 12,
-//                         childAspectRatio: 0.8,
-//                       ),
-//                       itemBuilder: (context, index) {
-//                         final item = spotlightItems[index];
-//                         return Column(
-//                           children: [
-//                             CircleAvatar(
-//                               radius: 40,
-//                               backgroundColor: Colors.grey.shade200,
-//                               child: Icon(Icons.image,
-//                                   size: 40, color: Colors.black54),
-//                             ),
-//                             const SizedBox(height: 6),
-//                             Text(item["title"]!,
-//                                 textAlign: TextAlign.center,
-//                                 style: const TextStyle(fontSize: 12)),
-//                           ],
-//                         );
-//                       },
-//                     ),
-//
-//                     const SizedBox(height: 20),
-//
-//                     // Trending Stores
-//                     const Text("Trending Stores",
-//                         style: TextStyle(
-//                             fontSize: 16, fontWeight: FontWeight.bold)),
-//                     const SizedBox(height: 12),
-//                     GridView.builder(
-//                       shrinkWrap: true,
-//                       physics: const NeverScrollableScrollPhysics(),
-//                       itemCount: trendingStores.length,
-//                       gridDelegate:
-//                       const SliverGridDelegateWithFixedCrossAxisCount(
-//                         crossAxisCount: 3,
-//                         crossAxisSpacing: 12,
-//                         mainAxisSpacing: 12,
-//                         childAspectRatio: 0.8,
-//                       ),
-//                       itemBuilder: (context, index) {
-//                         final item = trendingStores[index];
-//                         return Column(
-//                           children: [
-//                             CircleAvatar(
-//                               radius: 40,
-//                               backgroundColor: Colors.grey.shade200,
-//                               child: Icon(Icons.image,
-//                                   size: 40, color: Colors.black54),
-//                             ),
-//                             const SizedBox(height: 6),
-//                             Text(item["title"]!,
-//                                 textAlign: TextAlign.center,
-//                                 style: const TextStyle(fontSize: 12)),
-//                           ],
-//                         );
-//                       },
-//                     ),
-//                   ],
-//                 ),
-//               )
-//                   : GridView.builder(
-//                 itemCount: categoryItems[selectedCategory]?.length ?? 0,
-//                 gridDelegate:
-//                 const SliverGridDelegateWithFixedCrossAxisCount(
-//                   crossAxisCount: 3,
-//                   crossAxisSpacing: 12,
-//                   mainAxisSpacing: 12,
-//                   childAspectRatio: 0.8,
-//                 ),
-//                 itemBuilder: (context, index) {
-//                   final item =
-//                   categoryItems[selectedCategory]![index];
-//                   return Column(
-//                     children: [
-//                       CircleAvatar(
-//                         radius: 40,
-//                         backgroundColor: Colors.grey.shade200,
-//                         child: Icon(Icons.image,
-//                             size: 40, color: Colors.black54),
-//                       ),
-//                       const SizedBox(height: 6),
-//                       Text(item["title"]!,
-//                           textAlign: TextAlign.center,
-//                           style: const TextStyle(fontSize: 12)),
-//                     ],
-//                   );
-//                 },
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
+                  // Filter subcategories by selected category
+                  final filtered = subProvider.subcategories
+                      .where((s) => s.categoryId == selectedCategoryId)
+                      .toList();
 
+                  if (filtered.isEmpty) {
+                    return const Center(child: Text("No subcategories found"));
+                  }
 
-/// Side Menu Item
-class _SideMenuItem extends StatelessWidget {
-  final String title;
-  final String imagePath;
-  final bool selected;
+                  // Show subcategories in Grid
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: filtered.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3, // 3 subcategories per row
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemBuilder: (context, index) {
+                      final sub = filtered[index];
+                      final imageUrl =
+                          "${ApiService.baseUrl}/assets/img/sub-category-images/${sub.image}";
 
-  const _SideMenuItem(this.title, this.imagePath, {this.selected = false, super.key});
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Subcategory Image
+                          CircleAvatar(
+                            radius: 40,
+                            backgroundImage: NetworkImage(imageUrl),
+                          ),
+                          const SizedBox(height: 6),
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: selected ? Colors.white : Colors.transparent,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Column(
-        children: [
-          CircleAvatar(
-            backgroundImage: AssetImage(imagePath),
-            radius: 24,
-          ),
-          const SizedBox(height: 5),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: selected ? FontWeight.bold : FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Section Title
-class SectionTitle extends StatelessWidget {
-  final String title;
-  const SectionTitle(this.title, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 16,
-      ),
-    );
-  }
-}
-
-/// Grid for circular icons + text
-class _CircleGrid extends StatelessWidget {
-  final List<Map<String, String>> items;
-
-  const _CircleGrid({required this.items});
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 0.8,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        return Column(
-          children: [
-            CircleAvatar(
-              backgroundImage: AssetImage(items[index]["image"]!),
-              radius: 40,
-            ),
-            const SizedBox(height: 5),
-            Text(
-              items[index]["title"]!,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12,fontWeight: FontWeight.w900),
+                          // Subcategory Name
+                          Flexible(
+                            child: AutoSizeText(
+                              sub.name,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              minFontSize: 8,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 }
+*/
+
