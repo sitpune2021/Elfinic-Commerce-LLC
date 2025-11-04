@@ -214,7 +214,9 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      if (data['status'] == 'success') {
+
+      // ✅ Correct condition (status is boolean)
+      if (data['status'] == true) {
         return (data['data'] as List)
             .map((e) => UserCartItem.fromJson(e))
             .toList();

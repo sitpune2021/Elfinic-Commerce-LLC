@@ -1,9 +1,11 @@
+import 'package:elfinic_commerce_llc/providers/BannerProvider.dart';
 import 'package:elfinic_commerce_llc/providers/ConnectivityProvider.dart';
 import 'package:elfinic_commerce_llc/providers/ShippingProvider.dart';
 import 'package:elfinic_commerce_llc/providers/AuthProvider.dart';
 import 'package:elfinic_commerce_llc/providers/CartProvider.dart';
 import 'package:elfinic_commerce_llc/providers/RegisterProvider.dart';
 import 'package:elfinic_commerce_llc/providers/SubCategoryProvider.dart';
+import 'package:elfinic_commerce_llc/providers/WishlistProvider.dart';
 import 'package:elfinic_commerce_llc/providers/category_provider.dart';
 import 'package:elfinic_commerce_llc/providers/delivery_provider.dart';
 import 'package:elfinic_commerce_llc/providers/product_provider.dart';
@@ -42,6 +44,8 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => AddressProvider()), // <- add this
         ChangeNotifierProvider(create: (_) => DeliveryProvider()), // <- add this
         ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
+        ChangeNotifierProvider(create: (_) => WishlistProvider()),
+        ChangeNotifierProvider(create: (_) => BannerProvider()), // Add this line
       ],
       child: MyApp(isLoggedIn: token != null),
     ),

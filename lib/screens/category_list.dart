@@ -263,116 +263,97 @@ class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
           }
 
           return AnimatedContainer(
-            duration: Duration(milliseconds: 500),
+            duration: const Duration(milliseconds: 500),
             curve: Curves.easeInOut,
             padding: const EdgeInsets.all(16),
-            child: GridView.builder(
-              physics: BouncingScrollPhysics(),
-              itemCount: filtered.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: _calculateCrossAxisCount(context),
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.85,
-              ),
-              itemBuilder: (context, index) {
-                final sub = filtered[index];
-                final imageUrl =
-                    "${ApiService.baseUrl}/assets/img/sub-category-images/${sub.image}";
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return GridView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: filtered.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: _calculateCrossAxisCount(context),
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.95, // ✅ slightly taller for text
+                  ),
+                  itemBuilder: (context, index) {
+                    final sub = filtered[index];
+                    final imageUrl =
+                        "${ApiService.baseUrl}/assets/img/sub-category-images/${sub.image}";
 
-                return AnimatedContainer(
-                  duration: Duration(milliseconds: 300),
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () {
-                        // Handle subcategory tap
-                        _onSubcategoryTap(sub);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
+                    return Card(
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () => _onSubcategoryTap(sub),   /// SubcategoryDetailScreen
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Subcategory Image
-                            AnimatedContainer(
-                              duration: Duration(milliseconds: 300),
-                              width: 70,
-                              height: 70,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.orange.shade50,
-                                    Colors.orange.shade100,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
+                            // ✅ Image section (square)
+                            Expanded(
+                              flex: 7,
+                              child: ClipRRect(
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(16),
+                                  topRight: Radius.circular(16),
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.orange.shade100,
-                                    blurRadius: 8,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ClipOval(
-                                  child: Image.network(
-                                    imageUrl,
-                                    fit: BoxFit.cover,
-                                    loadingBuilder: (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return Center(
-                                        child: CircularProgressIndicator(
-                                          value: loadingProgress.expectedTotalBytes != null
-                                              ? loadingProgress.cumulativeBytesLoaded /
-                                              loadingProgress.expectedTotalBytes!
-                                              : null,
-                                          strokeWidth: 2,
-                                        ),
-                                      );
-                                    },
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Icon(
-                                        Icons.category,
-                                        color: Color(0xFFD39841),
-                                        size: 30,
-                                      );
-                                    },
+                                child: Image.network(
+                                  imageUrl,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return const Center(
+                                      child: SizedBox(
+                                        height: 24,
+                                        width: 24,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) => Container(
+                                    color: Colors.orange.shade50,
+                                    child: const Icon(
+                                      Icons.category,
+                                      color: Color(0xFFD39841),
+                                      size: 40,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 12),
 
-                            // Subcategory Name
-                            Flexible(
-                              child: AutoSizeText(
-                                sub.name,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                minFontSize: 10,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[800],
-                                  height: 1.3,
+                            // ✅ Text section
+                            Expanded(
+                              flex: 3,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Center(
+                                  child: AutoSizeText(
+                                    sub.name,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    minFontSize: 10,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey[800],
+                                      height: 1.3,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 );
               },
             ),
@@ -393,7 +374,7 @@ class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
     // Add your subcategory tap logic here
     print('Subcategory tapped: ${subcategory.name}');
 
-    // You can add navigation or other actions here
+    /// You can add navigation or other actions here
     // Navigator.push(context, MaterialPageRoute(builder: (context) => SubcategoryDetailScreen(subcategory: subcategory)));
   }
 
@@ -460,8 +441,55 @@ class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
       ),
     );
   }
+  Widget _buildEmptyState(String message,) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Illustration or Icon
+            Icon(
+              Icons.shopping_bag_outlined,
+              color: Colors.grey[400],
+              size: 80,
+            ),
 
-  Widget _buildEmptyState(String message) {
+            const SizedBox(height: 20),
+
+            // Message
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Optional suggestion text
+            Text(
+              "Try exploring other categories.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey[500],
+                fontSize: 13,
+              ),
+            ),
+
+
+
+
+          ],
+        ),
+      ),
+    );
+  }
+
+ /* Widget _buildEmptyState(String message) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -482,7 +510,7 @@ class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
         ],
       ),
     );
-  }
+  }*/
 }
 
 /*
