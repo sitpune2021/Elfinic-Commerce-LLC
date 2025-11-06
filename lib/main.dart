@@ -1,5 +1,6 @@
 import 'package:elfinic_commerce_llc/providers/BannerProvider.dart';
 import 'package:elfinic_commerce_llc/providers/ConnectivityProvider.dart';
+import 'package:elfinic_commerce_llc/providers/OrderProvider.dart';
 import 'package:elfinic_commerce_llc/providers/ShippingProvider.dart';
 import 'package:elfinic_commerce_llc/providers/AuthProvider.dart';
 import 'package:elfinic_commerce_llc/providers/CartProvider.dart';
@@ -10,6 +11,7 @@ import 'package:elfinic_commerce_llc/providers/category_provider.dart';
 import 'package:elfinic_commerce_llc/providers/delivery_provider.dart';
 import 'package:elfinic_commerce_llc/providers/product_provider.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart';
+import 'package:elfinic_commerce_llc/screens/review_screen.dart';
 import 'package:elfinic_commerce_llc/screens/splash_screen.dart';
 import 'package:elfinic_commerce_llc/utils/NoInternetOverlay.dart';
 import 'package:flutter/material.dart';
@@ -46,6 +48,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
         ChangeNotifierProvider(create: (_) => WishlistProvider()),
         ChangeNotifierProvider(create: (_) => BannerProvider()), // Add this line
+        ChangeNotifierProvider(create: (_) => OrderProvider()), // Add this line
       ],
       child: MyApp(isLoggedIn: token != null),
     ),
@@ -70,6 +73,7 @@ class MyApp extends StatelessWidget {
             '/login': (context) => const LoginScreen(),
             '/register': (context) => const RegisterScreen(),
             '/dashboard': (context) => const DashboardScreen(),
+            // '/order-details': (context) => const OrderDetailsScreen(),
           },
           home: Builder(
             builder: (context) {

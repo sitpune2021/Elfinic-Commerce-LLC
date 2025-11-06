@@ -596,7 +596,58 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ],
               ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Vendor Title
+                  const Padding(
+                    padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 4),
+                    child: Text(
+                      "Vendor",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
 
+                  // Vendor Details
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[200]!),
+                    ),
+                    child: ReadMoreText(
+                      parseHtmlString(product.vendor ?? 'No vendor information'),
+                      trimLines: 2,
+                      colorClickableText: Colors.blue,
+                      trimMode: TrimMode.Line,
+                      trimCollapsedText: ' Read more',
+                      trimExpandedText: ' Read less',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                        height: 1.4,
+                      ),
+                      moreStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.blue,
+                      ),
+                      lessStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ),
               // Size Chart expandable
               ExpansionTile(
                 initiallyExpanded: showSizeChart,
