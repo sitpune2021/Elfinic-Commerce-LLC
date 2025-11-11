@@ -1,6 +1,7 @@
 import 'package:elfinic_commerce_llc/providers/BannerProvider.dart';
 import 'package:elfinic_commerce_llc/providers/ConnectivityProvider.dart';
 import 'package:elfinic_commerce_llc/providers/OrderProvider.dart';
+import 'package:elfinic_commerce_llc/providers/ReviewProvider.dart';
 import 'package:elfinic_commerce_llc/providers/ShippingProvider.dart';
 import 'package:elfinic_commerce_llc/providers/AuthProvider.dart';
 import 'package:elfinic_commerce_llc/providers/CartProvider.dart';
@@ -26,8 +27,69 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // Screens
 import 'screens/register_screen.dart';
-
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize SharedPreferences but don't decide login here
+  await SharedPreferences.getInstance();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => RegisterProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => SubCategoryProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => AddressProvider()),
+        ChangeNotifierProvider(create: (_) => DeliveryProvider()),
+        ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
+        ChangeNotifierProvider(create: (_) => WishlistProvider()),
+        ChangeNotifierProvider(create: (_) => BannerProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => ReviewProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ConnectivityProvider>(
+      builder: (context, connectivity, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Elfinic Commerce LLC',
+          theme: ThemeData(
+            primaryTextTheme: GoogleFonts.robotoTextTheme(),
+          ),
+          routes: {
+            '/login': (context) => const LoginScreen(),
+            '/register': (context) => const RegisterScreen(),
+            '/dashboard': (context) => const DashboardScreen(),
+          },
+          // ✅ Always start with SplashScreen first
+          home: Builder(
+            builder: (context) {
+              if (!connectivity.isConnected) {
+                return const NoInternetOverlay();
+              } else {
+                return const SplashScreen();
+              }
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+/*Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // ✅ Check login token from SharedPreferences
@@ -54,6 +116,7 @@ Future<void> main() async {
     ),
   );
 }
+
 
 class MyApp extends StatelessWidget {
   final bool isLoggedIn;
@@ -92,5 +155,5 @@ class MyApp extends StatelessWidget {
       },
     );
   }
-}
+}*/
 

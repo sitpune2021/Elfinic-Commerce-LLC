@@ -25,7 +25,6 @@ class ApiService {
 
 
 
-
   /// API Endpoints
   static Uri get getCategoriesUrl => Uri.parse('$_baseUrl/api/getAllCategories');
   /// Products API
@@ -44,6 +43,12 @@ class ApiService {
   static Uri get addAddressUrl => Uri.parse('$_baseUrl/api/addresses/addaddress');
   static Uri get updateAddressUrl => Uri.parse('$_baseUrl/api/addresses/updateAddress');
   static Uri get deleteAddressUrl => Uri.parse('$_baseUrl/api/addresses/deleteAddress');
+
+
+  // Review endpoints
+  static String get addReview => '$_baseUrl/api/products/addReview';
+  static String get productReviews => '$_baseUrl/api/products/productReviews';
+  static String get productReviewsById => '$_baseUrl/api/products'; // Base for /{id}/reviews
 
 
   /// ✅ Login API
