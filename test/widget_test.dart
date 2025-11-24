@@ -8,7 +8,7 @@ import 'package:elfinic_commerce_llc/main.dart';
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app with a fake login state (e.g., not logged in)
-    await tester.pumpWidget(const MyApp(isLoggedIn: false));
+    await tester.pumpWidget(const MyApp());
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

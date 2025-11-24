@@ -1,6 +1,8 @@
 import 'package:elfinic_commerce_llc/providers/BannerProvider.dart';
 import 'package:elfinic_commerce_llc/providers/ConnectivityProvider.dart';
+import 'package:elfinic_commerce_llc/providers/LogoutProvider.dart';
 import 'package:elfinic_commerce_llc/providers/OrderProvider.dart';
+import 'package:elfinic_commerce_llc/providers/RecentViewProvider.dart';
 import 'package:elfinic_commerce_llc/providers/ReviewProvider.dart';
 import 'package:elfinic_commerce_llc/providers/ShippingProvider.dart';
 import 'package:elfinic_commerce_llc/providers/AuthProvider.dart';
@@ -49,6 +51,8 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => BannerProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => ReviewProvider()),
+        ChangeNotifierProvider(create: (_) => LogoutProvider()),
+        ChangeNotifierProvider(create: (_) => RecentViewProvider()),
       ],
       child: const MyApp(),
     ),
@@ -67,6 +71,11 @@ class MyApp extends StatelessWidget {
           title: 'Elfinic Commerce LLC',
           theme: ThemeData(
             primaryTextTheme: GoogleFonts.robotoTextTheme(),
+            primaryColor: Color(0xFFD39841), // ✅ App primary color
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFFD39841), // ✅ AppBar color
+              foregroundColor: Colors.white,  // ✅ Text/Icon color
+            ),
           ),
           routes: {
             '/login': (context) => const LoginScreen(),
@@ -89,71 +98,5 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/*Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Check login token from SharedPreferences
-  final prefs = await SharedPreferences.getInstance();
-  final String? token = prefs.getString("auth_token");
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => RegisterProvider()),
-        ChangeNotifierProvider(create: (_) => CategoryProvider()),
-        ChangeNotifierProvider(create: (_) => ProductProvider()),
-        ChangeNotifierProvider(create: (_) => SubCategoryProvider()), // <- add this
-        ChangeNotifierProvider(create: (_) => CartProvider()), // <- add this
-        ChangeNotifierProvider(create: (_) => AddressProvider()), // <- add this
-        ChangeNotifierProvider(create: (_) => DeliveryProvider()), // <- add this
-        ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
-        ChangeNotifierProvider(create: (_) => WishlistProvider()),
-        ChangeNotifierProvider(create: (_) => BannerProvider()), // Add this line
-        ChangeNotifierProvider(create: (_) => OrderProvider()), // Add this line
-      ],
-      child: MyApp(isLoggedIn: token != null),
-    ),
-  );
-}
-
-
-class MyApp extends StatelessWidget {
-  final bool isLoggedIn;
-  const MyApp({super.key, required this.isLoggedIn});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ConnectivityProvider>(
-      builder: (context, connectivity, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Elfinic Commerce LLC',
-          theme: ThemeData(
-            primaryTextTheme: GoogleFonts.robotoTextTheme(),
-          ),
-          routes: {
-            '/login': (context) => const LoginScreen(),
-            '/register': (context) => const RegisterScreen(),
-            '/dashboard': (context) => const DashboardScreen(),
-            // '/order-details': (context) => const OrderDetailsScreen(),
-          },
-          home: Builder(
-            builder: (context) {
-              if (!connectivity.isConnected) {
-                // Show No Internet Screen
-                return const NoInternetOverlay();
-              } else {
-                // If connected
-                return isLoggedIn
-                    ? const DashboardScreen()
-                    : const SplashScreen();
-              }
-            },
-          ),
-        );
-      },
-    );
-  }
-}*/
 

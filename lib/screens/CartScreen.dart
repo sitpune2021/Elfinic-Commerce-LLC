@@ -325,12 +325,180 @@ class _CartScreenState extends State<CartScreen> {
           // Promo Code Section
           _buildPromoCodeSection(),
           const SizedBox(height: 20),
+          // Coupon Section
+          _buildMyCouponsSection(),
+          const SizedBox(height: 20),
+
           // Add Note Section
           _buildAddNoteSection(),
         ],
       ),
     );
   }
+  Widget _buildMyCouponsSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "My Coupons",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              TextButton(
+                onPressed: () {},
+                child: const Text(
+                  "Add Coupon",
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Coupon 1
+          _couponCard(
+            color1: const Color(0xFFFFF5E0),
+            color2: const Color(0xFFF2E3FF),
+            icon: "assets/images/banner1.png",
+            title: "Buy on Rewards store and Save Big",
+            subtitle: "Limited Brand Rewards!",
+            cta: "Explore Fire Drops",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CouponGridScreen(
+                    title: "Explore Fire Drops",
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+
+          // Coupon 2
+          _couponCard(
+            color1: const Color(0xFFFFF2E0),
+            color2: const Color(0xFFFFE9F5),
+            icon: "assets/images/banner1.png",
+            title: "More Rewards & Coupons",
+            subtitle: "Get up to 100% Off using Coins",
+            cta: "SuperCoin Zone",
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CouponGridScreen(
+                    title: "SuperCoin Zone",
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _couponCard({
+    required Color color1,
+    required Color color2,
+    required String icon,
+    required String title,
+    required String subtitle,
+    required String cta,
+    VoidCallback? onTap, // 👈 add this
+  }) {
+    return GestureDetector(
+      onTap: onTap, // 👈 handle tap
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [color1, color2],
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            // Left circular clip
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                bottomLeft: Radius.circular(12),
+              ),
+              child: Container(
+                color: Colors.transparent,
+                width: 90,
+                height: 90,
+                padding: const EdgeInsets.all(12),
+                child: Image.asset(icon, fit: BoxFit.contain),
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // Text content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          cta,
+                          style: const TextStyle(
+                            color: Colors.blueAccent,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios_rounded,
+                            size: 14, color: Colors.blueAccent),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildPromoCodeSection() {
     return Column(
@@ -586,6 +754,71 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 }
+
+class CouponGridScreen extends StatelessWidget {
+  final String title;
+  const CouponGridScreen({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final coupons = List.generate(8, (i) => "Offer ${i + 1}");
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+      ),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: coupons.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2, // ✅ ecommerce-style grid
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.8,
+        ),
+        itemBuilder: (context, index) {
+          return Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFD39841), Color(0xFFA9D4E7)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.local_offer_rounded,
+                    size: 48, color: Colors.white),
+                const SizedBox(height: 10),
+                Text(
+                  coupons[index],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 
 class CartItemWidget extends StatelessWidget {
   final UserCartItem item;

@@ -37,6 +37,11 @@ class HomeCategoriesScreen extends StatefulWidget {
 class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
   int? selectedCategoryId;
 
+
+  TextEditingController _searchController = TextEditingController();
+  String searchQuery = "";
+
+
   @override
   void initState() {
     super.initState();
@@ -64,16 +69,74 @@ class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: SafeArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
           children: [
-            // ================= LEFT SIDE: CATEGORIES =================
-            _buildCategorySidebar(),
-
-            // ================= RIGHT SIDE: SUBCATEGORIES =================
-            _buildSubcategoriesGrid(),
+            _buildSearchBar(),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildCategorySidebar(),
+                  _buildSubcategoriesGrid(),
+                ],
+              ),
+            ),
           ],
-        ),
+        )
+
+      ),
+    );
+  }
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: Colors.white,
+      child: Row(
+        children: [
+          // Back Arrow
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).pop();
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.arrow_back,
+                color: Colors.grey,
+                size: 25,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          // Search Field
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value.trim().toLowerCase();
+                });
+              },
+              decoration: InputDecoration(
+                hintText: "Search for products...",
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                filled: true,
+                fillColor: Colors.grey[100],
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -254,9 +317,14 @@ class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
             return _buildErrorWidget(subProvider.error!);
           }
 
-          final filtered = subProvider.subcategories
-              .where((s) => s.categoryId == selectedCategoryId)
-              .toList();
+          final filtered = subProvider.subcategories.where((sub) {
+            bool matchesCategory = sub.categoryId == selectedCategoryId;
+            bool matchesSearch = searchQuery.isEmpty ||
+                sub.name.toLowerCase().contains(searchQuery);
+
+            return matchesCategory && matchesSearch;
+          }).toList();
+
 
           if (filtered.isEmpty) {
             return _buildEmptyState("No subcategories found");

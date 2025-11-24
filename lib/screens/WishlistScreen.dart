@@ -117,12 +117,17 @@ class _WishlistScreenState extends State<WishlistScreen> {
       );
     }
   }
-  double _calculateDiscountedPrice(double price, double discountValue) {
-    // discountValue is a flat discount, e.g. ₹10 off
-    if (discountValue <= 0) return price;
-    return price - discountValue;
+  double _calculateDiscountedPrice(double originalPrice, double discountAmount) {
+    // discountAmount is the flat discount (e.g., ₹10 off)
+    if (discountAmount <= 0) return originalPrice;
+    return originalPrice - discountAmount;
   }
 
+  double _getDiscountAmount(Product product) {
+    // Return the actual discount amount (₹10 in your example)
+    // This depends on how your Product model stores discount information
+    return product.discountPrice ?? 0.0;
+  }
 
 
 
@@ -326,34 +331,59 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     const SizedBox(height: 4),
 
                     // Price Section
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                    // Price Section
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Discounted price (bold & colored)
-                        Text(
-                          "₹${_calculateDiscountedPrice(product.price, product.effectivePrice).toStringAsFixed(0)}",
+                        // Final price after discount
 
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xffc98a35), // gold-ish color
-                          ),
-                        ),
-                        const SizedBox(width: 6),
 
-                        // Original price (crossed out)
-                        if (product.discountPercentage > 0)
-                          Text(
-                            "₹${product.price.toStringAsFixed(0)}",
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey,
-                              decoration: TextDecoration.lineThrough,
+                        // const SizedBox(height: 4),
+
+                        // Original price and discount
+                        Row(
+                          children: [
+                            Text(
+                              "₹${_calculateDiscountedPrice(product.price, _getDiscountAmount(product)).toStringAsFixed(0)}",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xffc98a35),
+                              ),
                             ),
-                          ),
+                            SizedBox(width: 5,),
+                            // Original price (crossed out)
+                            Text(
+                              "₹${product.price.toStringAsFixed(0)}",
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+
+                            // const SizedBox(width: 6),
+
+                            // Discount amount
+                            // Container(
+                            //   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            //   decoration: BoxDecoration(
+                            //     color: Colors.red[50],
+                            //     borderRadius: BorderRadius.circular(4),
+                            //   ),
+                            //   child: Text(
+                            //     "₹${_getDiscountAmount(product).toStringAsFixed(0)} off",
+                            //     style: TextStyle(
+                            //       fontSize: 11,
+                            //       color: Colors.red[700],
+                            //       fontWeight: FontWeight.w500,
+                            //     ),
+                            //   ),
+                            // ),
+                          ],
+                        ),
                       ],
                     ),
-
                     const SizedBox(height: 4),
 
                     // Rating and Stock Section

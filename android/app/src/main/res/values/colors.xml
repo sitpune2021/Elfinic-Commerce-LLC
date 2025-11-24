@@ -1,0 +1,4 @@
+<resources>
+    <color name="my_splash_color">#D39841</color> <!-- Green -->
+    <color name="my_status_color">#D39841</color> <!-- Dark Green -->
+</resources>

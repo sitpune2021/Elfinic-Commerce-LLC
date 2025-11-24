@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../model/AddToCartResponse.dart';
 import '../model/AddressModel.dart';
 import '../model/LoginResponse.dart';
+import '../model/LogoutResponse.dart';
 import '../model/ProductsResponse.dart';
 import '../model/RegisterResponse.dart';
 import '../model/SubcategoriesResponse.dart';
@@ -72,6 +73,8 @@ class ApiService {
     print("Request body: $body");
     print("Response: ${response.body}");
 
+    logApiCall(method: 'POST', url: url, response: response);
+
     if (response.statusCode == 200) {
       final loginRes = LoginResponse.fromRawJson(response.body);
 
@@ -89,6 +92,56 @@ class ApiService {
       return loginRes;
     } else {
       throw Exception("Login failed: ${response.body}");
+    }
+  }
+
+  /// ✅ LOGOUT API
+  Future<LogoutResponse> logout(String email, String password) async {
+    final url = Uri.parse("$baseUrl/api/logout");
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("auth_token");
+
+    final body = jsonEncode({
+      "email": email,
+      "password": password,
+    });
+
+    print("🚀 API Call: POST $url");
+    print("📤 Request body: $body");
+    print("🔑 Token: $token");
+
+    final response = await http.post(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        if (token != null) "Authorization": "Bearer $token",
+      },
+      body: body,
+    );
+    logApiCall(method: 'POST', url: url, response: response);
+    print("📥 Response Status Code: ${response.statusCode}");
+    print("📥 Response Body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      // ✅ Decode before passing to fromJson
+      final data = jsonDecode(response.body);
+      final logoutRes = LogoutResponse.fromJson(data);
+
+      if (logoutRes.status == "success") {
+        await prefs.remove("auth_token");
+        await prefs.remove("user_id");
+        await prefs.remove("user_name");
+        await prefs.remove("user_email");
+
+        print("✅ Logout successful, cleared stored session data.");
+      } else {
+        print("⚠️ Logout failed: ${logoutRes.message}");
+      }
+
+      return logoutRes;
+    } else {
+      throw Exception("❌ Server error: ${response.statusCode}");
     }
   }
 
