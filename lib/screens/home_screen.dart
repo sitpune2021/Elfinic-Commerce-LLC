@@ -11,10 +11,11 @@ import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:video_player/video_player.dart';
+// import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../model/CategoriesResponse.dart';
 import '../model/ProductsResponse.dart';
+import '../providers/ArrivalProductProvider.dart';
 import '../providers/BannerProvider.dart';
 import '../providers/ConnectivityProvider.dart';
 import '../providers/RecentViewProvider.dart';
@@ -80,11 +81,15 @@ class _HomeScreenState extends State<HomeScreen>
       _precacheImages();
 
       // Fetch banners from API
-      Provider.of<BannerProvider>(context, listen: false).fetchBanners();
+      Provider.of<BannerProvider>(context, listen: false).fetchBanners(type:  'slider');
 
-      // Fetch recent views
       // Fetch recent views - no need to pass userId
       Provider.of<RecentViewProvider>(context, listen: false).getRecentViews();
+
+      Provider.of<ArrivalProductProvider>(context, listen: false)
+          .fetchArrivalProducts();
+
+
 
     });
   }
@@ -131,9 +136,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _loadInitialData() {
     final categoryProvider =
-        Provider.of<CategoryProvider>(context, listen: false);
+    Provider.of<CategoryProvider>(context, listen: false);
     final productProvider =
-        Provider.of<ProductProvider>(context, listen: false);
+    Provider.of<ProductProvider>(context, listen: false);
 
     // Load data in background
     Future.microtask(() {
@@ -164,9 +169,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _precacheNetworkImages() {
     final categoryProvider =
-        Provider.of<CategoryProvider>(context, listen: false);
+    Provider.of<CategoryProvider>(context, listen: false);
     final productProvider =
-        Provider.of<ProductProvider>(context, listen: false);
+    Provider.of<ProductProvider>(context, listen: false);
 
     Future.microtask(() {
       // Precache category images
@@ -250,12 +255,12 @@ class _HomeScreenState extends State<HomeScreen>
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
             ChangeNotifierProvider(
-          create: (_) => SubCategoryProvider(),
-          child: SubCategoriesScreen(
-            categoryId: categoryId,
-            categoryName: categoryName,
-          ),
-        ),
+              create: (_) => SubCategoryProvider(),
+              child: SubCategoriesScreen(
+                categoryId: categoryId,
+                categoryName: categoryName,
+              ),
+            ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,
@@ -308,6 +313,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     super.build(context);
 
@@ -335,7 +341,7 @@ class _HomeScreenState extends State<HomeScreen>
                   const HomeCategoriesScreen(),
                 ),
               ),
-              // Product Viewed Section
+              // Product Viewed Section with pagination
               SliverToBoxAdapter(
                 child: Consumer<ProductProvider>(
                   builder: (context, productProvider, child) {
@@ -343,6 +349,10 @@ class _HomeScreenState extends State<HomeScreen>
                       products: productProvider.products,
                       isLoading: productProvider.isLoading,
                       onProductTap: _onProductTap,
+                      onLoadMore: () {
+                        // This will be called when user scrolls horizontally to the end
+                        productProvider.loadNextPage();
+                      },
                       scrollDirection: Axis.horizontal,
                       height: 250,
                     );
@@ -355,7 +365,6 @@ class _HomeScreenState extends State<HomeScreen>
                 child: _buildRecentlyViewedSection(),
               ),
 
-
               // Explore Fresh Styles
               SliverToBoxAdapter(
                 child: _buildSectionTitle(
@@ -363,14 +372,31 @@ class _HomeScreenState extends State<HomeScreen>
                   const HomeCategoriesScreen(),
                 ),
               ),
-              // Product Viewed Section
+              // Explore Fresh Styles with pagination
               SliverToBoxAdapter(
-                child: Consumer<ProductProvider>(
-                  builder: (context, productProvider, child) {
+                child: Consumer<ArrivalProductProvider>(
+                  builder: (context, arrivalProvider, child) {
+                    if (arrivalProvider.isLoading) {
+                      return const SizedBox(
+                        height: 250,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    if (arrivalProvider.arrivalProducts.isEmpty) {
+                      return const SizedBox(
+                        height: 250,
+                        child: Center(child: Text("No new arrivals found")),
+                      );
+                    }
+
                     return ProductListWidget(
-                      products: productProvider.products,
-                      isLoading: productProvider.isLoading,
+                      products: arrivalProvider.arrivalProducts,
+                      isLoading: arrivalProvider.isLoadingMore,
                       onProductTap: _onProductTap,
+                      onLoadMore: () {
+                        arrivalProvider.loadMoreArrivalProducts();
+                      },
                       scrollDirection: Axis.horizontal,
                       height: 250,
                     );
@@ -378,12 +404,14 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
 
-              // Video Ad Section
-              SliverToBoxAdapter(child: _buildVideoSection()),
+
+
+              /// Video Ad Section
+              // SliverToBoxAdapter(child: _buildVideoSection()),
 
               // Flash Deals
               SliverToBoxAdapter(child: _buildFlashDealsHeader()),
-              // Product Viewed Section
+              // Flash Deals with pagination
               SliverToBoxAdapter(
                 child: Consumer<ProductProvider>(
                   builder: (context, productProvider, child) {
@@ -391,6 +419,10 @@ class _HomeScreenState extends State<HomeScreen>
                       products: productProvider.products,
                       isLoading: productProvider.isLoading,
                       onProductTap: _onProductTap,
+                      onLoadMore: () {
+                        // This will be called when user scrolls horizontally to the end
+                        productProvider.loadNextPage();
+                      },
                       scrollDirection: Axis.horizontal,
                       height: 250,
                     );
@@ -658,7 +690,7 @@ class _HomeScreenState extends State<HomeScreen>
                     context,
                     PageRouteBuilder(
                       pageBuilder: (context, animation, secondaryAnimation) =>
-                          const SerchBarScreen(),
+                      const SerchBarScreen(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) {
                         return FadeTransition(
@@ -709,7 +741,7 @@ class _HomeScreenState extends State<HomeScreen>
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation, secondaryAnimation) =>
-                        const NotificationsScreen(),
+                    const NotificationsScreen(),
                     transitionsBuilder:
                         (context, animation, secondaryAnimation, child) {
                       return FadeTransition(
@@ -735,24 +767,24 @@ class _HomeScreenState extends State<HomeScreen>
           child: categoryProvider.isLoading
               ? const CustomShimmer(type: ShimmerType.category)
               : categoryProvider.error != null
-                  ? Center(child: Text(categoryProvider.error!))
-                  : ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      itemCount: categoryProvider.categories.length > 5
-                          ? 6
-                          : categoryProvider.categories.length,
-                      itemBuilder: (context, index) {
-                        if (categoryProvider.categories.length > 5 &&
-                            index == 5) {
-                          return _buildViewAllCategoryButton();
-                        }
-                        final cat = categoryProvider.categories[index];
-                        final imageUrl =
-                            "${ApiService.baseUrl}/assets/img/category-images/${cat.image}";
-                        return _buildCategory(cat.name, imageUrl, cat.id);
-                      },
-                    ),
+              ? Center(child: Text(categoryProvider.error!))
+              : ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            itemCount: categoryProvider.categories.length > 5
+                ? 6
+                : categoryProvider.categories.length,
+            itemBuilder: (context, index) {
+              if (categoryProvider.categories.length > 5 &&
+                  index == 5) {
+                return _buildViewAllCategoryButton();
+              }
+              final cat = categoryProvider.categories[index];
+              final imageUrl =
+                  "${ApiService.baseUrl}/assets/img/category-images/${cat.image}";
+              return _buildCategory(cat.name, imageUrl, cat.id);
+            },
+          ),
         );
       },
     );
@@ -765,7 +797,7 @@ class _HomeScreenState extends State<HomeScreen>
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                const HomeCategoriesScreen(),
+            const HomeCategoriesScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               return FadeTransition(
@@ -1010,7 +1042,7 @@ class _HomeScreenState extends State<HomeScreen>
                 context,
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) =>
-                      navigateTo,
+                  navigateTo,
                   transitionsBuilder:
                       (context, animation, secondaryAnimation, child) {
                     return FadeTransition(
@@ -1307,7 +1339,7 @@ class _HomeScreenState extends State<HomeScreen>
               const SizedBox(width: 5),
               CountdownTimer(
                 endTime:
-                    DateTime.now().millisecondsSinceEpoch + 1000 * 60 * 60 * 12,
+                DateTime.now().millisecondsSinceEpoch + 1000 * 60 * 60 * 12,
                 textStyle: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -1414,51 +1446,129 @@ class _HomeScreenState extends State<HomeScreen>
 }
 
 
-class ProductListWidget extends StatelessWidget {
+class ProductListWidget extends StatefulWidget {
   final List<Product> products;
   final bool isLoading;
-  final Function(Product) onProductTap; // This callback
+  final Function(Product) onProductTap;
   final Axis scrollDirection;
   final double height;
+  final VoidCallback? onLoadMore; // Add this callback
 
   const ProductListWidget({
     Key? key,
     required this.products,
     required this.isLoading,
-    required this.onProductTap, // Required parameter
+    required this.onProductTap,
     this.scrollDirection = Axis.horizontal,
     this.height = 250,
+    this.onLoadMore, // Add this parameter
   }) : super(key: key);
 
   @override
+  State<ProductListWidget> createState() => _ProductListWidgetState();
+}
+
+class _ProductListWidgetState extends State<ProductListWidget> {
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoadingMore = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.scrollDirection == Axis.horizontal) {
+      _scrollController.addListener(_onHorizontalScroll);
+    }
+  }
+
+  void _onHorizontalScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
+      // User has scrolled near the end
+      _loadMoreProducts();
+    }
+  }
+
+  void _loadMoreProducts() async {
+    if (_isLoadingMore || widget.onLoadMore == null) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    // Call the load more callback
+    widget.onLoadMore!();
+
+    // Small delay to show loading indicator
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    setState(() {
+      _isLoadingMore = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (isLoading && products.isEmpty) {
+    if (widget.isLoading && widget.products.isEmpty) {
       return _buildProductListShimmer(context);
     }
 
-    if (products.isEmpty) {
-      return _buildEmptyState(context);
-    }
-
     return SizedBox(
-      height: scrollDirection == Axis.horizontal ? height : null,
-      child: ListView.builder(
-        scrollDirection: scrollDirection,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        itemCount: products.length,
-        itemBuilder: (context, index) {
-          final product = products[index];
-          return _buildProductItem(product, context);
-        },
+      height: widget.scrollDirection == Axis.horizontal ? widget.height : null,
+      child: Stack(
+        children: [
+          ListView.builder(
+            controller: _scrollController,
+            scrollDirection: widget.scrollDirection,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            itemCount: widget.products.length + (_isLoadingMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index >= widget.products.length) {
+                // Loading indicator at the end
+                return _buildLoadingIndicator();
+              }
+
+              final product = widget.products[index];
+              return _buildProductItem(product, context);
+            },
+          ),
+
+          // Loading overlay when initially loading
+          if (widget.isLoading && widget.products.isNotEmpty)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.3),
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Container(
+      width: 100,
+      margin: const EdgeInsets.all(8),
+      child: const Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }
 
   Widget _buildProductListShimmer(BuildContext context) {
     return SizedBox(
-      height: scrollDirection == Axis.horizontal ? 250 : null,
+      height: widget.scrollDirection == Axis.horizontal ? widget.height : null,
       child: ListView.builder(
-        scrollDirection: scrollDirection,
+        scrollDirection: widget.scrollDirection,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         itemCount: 4,
         itemBuilder: (context, index) {
@@ -1470,7 +1580,7 @@ class ProductListWidget extends StatelessWidget {
 
   Widget _buildEmptyState(BuildContext context) {
     return SizedBox(
-      height: scrollDirection == Axis.horizontal ? 250 : null,
+      height: widget.scrollDirection == Axis.horizontal ? widget.height : null,
       child: Center(
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -1525,10 +1635,11 @@ class ProductListWidget extends StatelessWidget {
 
   Widget _buildProductItem(Product product, BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final itemWidth = scrollDirection == Axis.horizontal ? screenWidth * 0.44 : screenWidth * 0.9;
+    final itemWidth = widget.scrollDirection == Axis.horizontal
+        ? screenWidth * 0.44
+        : screenWidth * 0.9;
 
     String? imageUrl;
-    bool isLoading = false;
 
     if (product.images.isNotEmpty && product.images.first.isNotEmpty) {
       imageUrl = "${ApiService.baseUrl}/assets/img/products-images/${product.images.first}";
@@ -1538,7 +1649,7 @@ class ProductListWidget extends StatelessWidget {
 
     return RepaintBoundary(
       child: GestureDetector(
-        onTap: () => onProductTap(product),
+        onTap: () => widget.onProductTap(product),
         child: Container(
           width: itemWidth,
           margin: const EdgeInsets.all(8),
@@ -1660,7 +1771,9 @@ class ProductListWidget extends StatelessWidget {
 
   Widget _buildProductItemShimmer(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final itemWidth = scrollDirection == Axis.horizontal ? screenWidth * 0.44 : screenWidth * 0.9;
+    final itemWidth = widget.scrollDirection == Axis.horizontal
+        ? screenWidth * 0.44
+        : screenWidth * 0.9;
 
     return Container(
       width: itemWidth,

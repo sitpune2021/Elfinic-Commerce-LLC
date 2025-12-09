@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:elfinic_commerce_llc/model/CategoriesResponse.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -8,11 +9,13 @@ import '../model/AddToCartResponse.dart';
 import '../model/AddressModel.dart';
 import '../model/LoginResponse.dart';
 import '../model/LogoutResponse.dart';
+
 import '../model/ProductsResponse.dart';
 import '../model/RegisterResponse.dart';
 import '../model/SubcategoriesResponse.dart';
 import '../model/cart_models.dart';
 import '../model/delivery_type.dart';
+import '../screens/CartScreen.dart';
 
 
 class ApiService {
@@ -25,11 +28,14 @@ class ApiService {
 
 
 
-
+  static Uri getBannersByTypeUrl(String type) {
+    return Uri.parse('$_baseUrl/api/getBannersByType?type=$type');
+  }
   /// API Endpoints
   static Uri get getCategoriesUrl => Uri.parse('$_baseUrl/api/getAllCategories');
   /// Products API
-  static Uri get getProductsUrl => Uri.parse('$_baseUrl/api/getAllProducts');
+  static Uri get getProductsUrl => Uri.parse('$_baseUrl/api/getProductsList');
+  // static Uri get getProductsUrl => Uri.parse('$_baseUrl/api/getAllProducts');
 
   static Uri get getSubcategoriesUrl => Uri.parse('$_baseUrl/api/getSubcategories');
 
@@ -211,24 +217,66 @@ class ApiService {
   }
 
   /// Fetch Products
-  static Future<List<Product>> fetchProducts() async {
-    try {
-      final response = await http.get(getProductsUrl);
+  /// Fetch products with pagination
+  static Future<List<Product>> fetchProducts({
+    String? productId,
+    int? perPage,
+    int? page,
+  }) async {
+    Uri url;
 
-      logApiCall(method: 'GET', url: getProductsUrl, response: response);
+    if (productId != null) {
+      url = Uri.parse("$baseUrl/api/getProductsList?product_id=$productId");
+    } else {
+      final params = <String, String>{};
+      if (perPage != null) params['per_page'] = perPage.toString();
+      if (page != null) params['page'] = page.toString();
 
-      if (response.statusCode == 200) {
-        final data = ProductsResponse.fromRawJson(response.body);
-        return data.data;
-      } else {
-        throw Exception("Failed to load products (${response.statusCode})");
-      }
-    } catch (e, st) {
-      debugPrint("fetchProducts error: $e\n$st");
-      rethrow;
+      url = Uri.parse("$baseUrl/api/getProductsList").replace(queryParameters: params);
+    }
+
+    print("🔵 API CALL → fetchProducts()");
+    print("🌐 URL: $url");
+
+    final response = await http.get(url);
+    print("📩 Response Status: ${response.statusCode}");
+
+    if (response.statusCode == 200) {
+      final res = ProductsResponse.fromRawJson(response.body);
+      return res.data;
+    } else {
+      print("❌ API ERROR: ${response.statusCode} → ${response.body}");
+      throw Exception("Failed to load products (${response.statusCode})");
     }
   }
 
+  /// Fetch a single product
+  static Future<Product?> fetchSingleProduct(int productId) async {
+    final url = Uri.parse("$baseUrl/api/getProductsList?product_id=$productId");
+
+    print("🔵 API CALL → fetchSingleProduct()");
+    print("🌐 URL: $url");
+
+    final response = await http.get(url);
+    print("📩 Response Status: ${response.statusCode}");
+    print("📩 Response Body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final jsonMap = json.decode(response.body);
+
+      if (jsonMap["status"] == true &&
+          jsonMap["data"] != null &&
+          jsonMap["data"].isNotEmpty) {
+        return Product.fromJson(jsonMap["data"][0]);
+      }
+
+      print("⚠️ No product found for ID: $productId");
+      return null;
+    } else {
+      print("❌ API ERROR: ${response.statusCode} → ${response.body}");
+      throw Exception("Failed to load product details");
+    }
+  }
 
   static Future<List<SubCategoryModel>> fetchSubcategories() async {
     try {
@@ -500,6 +548,223 @@ class ApiService {
       throw Exception("Failed to delete address: ${response.statusCode}");
     }
   }
+
+
+
+
+  // Fetch active coupons
+  // Fetch active coupons
+  static Future<CouponResponse> fetchActiveCoupons() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      final url = '$baseUrl/api/coupons';
+      print("➡️ FETCH COUPONS URL: $url");
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Accept': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      print("⬅️ RESPONSE STATUS: ${response.statusCode}");
+      print("⬅️ RESPONSE BODY: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        return CouponResponse.fromJson(data);
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized - Please login again');
+      } else {
+        throw Exception('Failed to load coupons: ${response.statusCode}');
+      }
+    } on SocketException {
+      throw Exception('No Internet connection');
+    } catch (e) {
+      throw Exception('Error fetching coupons: $e');
+    }
+  }
+
+
+  // Apply coupon to cart
+// Apply coupon to cart
+  static Future<Map<String, dynamic>> applyCoupon(String couponCode, double subtotal) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      final userId = int.tryParse(prefs.getString('user_id') ?? "0") ?? 0;
+
+      final url = '$baseUrl/api/apply-coupon';
+      print("➡️ APPLY COUPON URL: $url");
+
+      final bodyData = {
+        'user_id': userId,
+        'coupon_code': couponCode,
+        'subtotal': subtotal,
+      };
+
+      print("➡️ REQUEST BODY: $bodyData");
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: json.encode(bodyData),
+      );
+
+      print("⬅️ RESPONSE STATUS: ${response.statusCode}");
+      print("⬅️ RESPONSE BODY: ${response.body}");
+
+      final Map<String, dynamic> data = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': data,
+          'message': data['message'] ?? 'Coupon applied successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to apply coupon',
+          'error': data['error'] ?? 'Unknown error',
+        };
+      }
+    } catch (e) {
+      print("❌ APPLY COUPON ERROR: $e");
+      return {
+        'success': false,
+        'message': 'Error applying coupon',
+        'error': e.toString(),
+      };
+    }
+  }
+
+  // Remove applied coupon
+  // Remove applied coupon
+  static Future<Map<String, dynamic>> removeCoupon() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      final userId = int.tryParse(prefs.getString('user_id') ?? "0") ?? 0;
+
+      final url = '$baseUrl/api/remove-coupon';
+      print("➡️ REMOVE COUPON URL: $url");
+
+      final bodyData = {
+        'user_id': userId,
+      };
+
+      print("➡️ REQUEST BODY: $bodyData");
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: json.encode(bodyData),
+      );
+
+      print("⬅️ RESPONSE STATUS: ${response.statusCode}");
+      print("⬅️ RESPONSE BODY: ${response.body}");
+
+      final Map<String, dynamic> data = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Coupon removed successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to remove coupon',
+        };
+      }
+    } catch (e) {
+      print("❌ REMOVE COUPON ERROR: $e");
+      return {
+        'success': false,
+        'message': 'Error removing coupon',
+        'error': e.toString(),
+      };
+    }
+  }
+
+
+
+
+  static Future<Map<String, dynamic>> fetchProductsBySectionPaginated({
+    required String section,
+    required int page,
+  }) async {
+    try {
+      final uri = Uri.parse(
+        "https://admin.elfinic.com/api/getProductsList",
+      ).replace(queryParameters: {
+        "show_section": section,
+        "page": page.toString(),
+      });
+
+      print("📌 FINAL API URL: $uri");
+
+      final response = await http.get(
+        uri,
+        headers: {
+          "Accept": "application/json",
+        },
+      );
+
+      print("📌 STATUS CODE: ${response.statusCode}");
+      print("📌 RAW RESPONSE: ${response.body}");
+
+      if (response.statusCode != 200) {
+        throw Exception("Server Error: ${response.statusCode}");
+      }
+
+      final json = jsonDecode(response.body);
+
+      if (json["status"] != true) {
+        throw Exception(json["message"] ?? "Unknown error");
+      }
+
+      final List data = json["data"] ?? [];
+
+      return {
+        "products": data.map((e) => Product.fromJson(e)).toList(),
+        "last_page": json["pagination"]["last_page"],
+        "current_page": json["pagination"]["current_page"],
+      };
+    } catch (e) {
+      print("❌ fetchProductsBySectionPaginated Error: $e");
+      throw Exception("fetchProductsBySectionPaginated Error: $e");
+    }
+  }
+
+
+
+  static String getFullImageUrl(String? image, String folder) {
+    if (image == null || image.isEmpty) {
+      return "assets/images/no_product_img2.png";
+    }
+
+    // ✅ If already full URL, return directly
+    if (image.startsWith("http")) {
+      return image;
+    }
+
+    // ✅ If only filename, attach base URL
+    return "$_baseUrl/assets/img/$folder/$image";
+  }
+
 
 
 }

@@ -1,4 +1,5 @@
 import 'package:elfinic_commerce_llc/screens/ProductDetailPage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../model/ProductsResponse.dart';
@@ -60,6 +61,64 @@ class _WishlistScreenState extends State<WishlistScreen> {
         return;
       }
 
+      final url = Uri.parse(
+          '${ApiService.baseUrl}/api/getProductByType?user_id=$userId&type=Wishlist');
+
+      final response = await http.get(url, headers: {
+        "Authorization": "Bearer $token",
+        "Accept": "application/json"
+      });
+
+      if (kDebugMode) {
+        print("===== WISHLIST API RESPONSE =====");
+        print("Status: ${response.statusCode}");
+        print("Body: ${response.body}");
+      }
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+
+        if (jsonData['status'] == true) {
+          final List<dynamic> list = jsonData['data'] ?? [];
+
+          setState(() {
+            _wishlistProducts = list
+                .map((p) => Product.fromJson(p))
+                .toList();
+
+            if (_wishlistProducts.isEmpty) {
+              _errorMessage = "Your wishlist is empty!";
+            }
+          });
+        } else {
+          setState(() => _errorMessage = jsonData["message"] ?? "Failed to load wishlist");
+        }
+      } else {
+        setState(() => _errorMessage = "Server error: ${response.statusCode}");
+      }
+    } catch (e) {
+      setState(() => _errorMessage = "Error loading wishlist: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  /*Future<void> _loadWishlist() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('user_id');
+      final token = prefs.getString('auth_token');
+
+      if (userId == null || token == null) {
+        setState(() => _errorMessage = 'User not logged in');
+        return;
+      }
+
       final url = Uri.parse('${ApiService.baseUrl}/api/getWishlist?user_id=$userId');
       final response = await http.get(url, headers: {
         "Authorization": "Bearer $token",
@@ -90,7 +149,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
     } finally {
       setState(() => _isLoading = false);
     }
-  }
+  }*/
 
   Future<void> _toggleWishlist(int productId) async {
     final provider = Provider.of<WishlistProvider>(context, listen: false);

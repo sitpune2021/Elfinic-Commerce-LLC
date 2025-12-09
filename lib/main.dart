@@ -1,3 +1,4 @@
+import 'package:elfinic_commerce_llc/providers/ArrivalProductProvider.dart';
 import 'package:elfinic_commerce_llc/providers/BannerProvider.dart';
 import 'package:elfinic_commerce_llc/providers/ConnectivityProvider.dart';
 import 'package:elfinic_commerce_llc/providers/LogoutProvider.dart';
@@ -13,6 +14,7 @@ import 'package:elfinic_commerce_llc/providers/WishlistProvider.dart';
 import 'package:elfinic_commerce_llc/providers/category_provider.dart';
 import 'package:elfinic_commerce_llc/providers/delivery_provider.dart';
 import 'package:elfinic_commerce_llc/providers/product_provider.dart';
+import 'package:elfinic_commerce_llc/screens/CartScreen.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart';
 import 'package:elfinic_commerce_llc/screens/review_screen.dart';
 import 'package:elfinic_commerce_llc/screens/splash_screen.dart';
@@ -53,6 +55,12 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ReviewProvider()),
         ChangeNotifierProvider(create: (_) => LogoutProvider()),
         ChangeNotifierProvider(create: (_) => RecentViewProvider()),
+        ChangeNotifierProvider(create: (_) => ArrivalProductProvider()),
+
+
+
+        ChangeNotifierProvider(create: (_) => CouponProvider()),
+        // ChangeNotifierProvider(create: (_) => ShippingProvider()),
       ],
       child: const MyApp(),
     ),
@@ -96,6 +104,7 @@ class MyApp extends StatelessWidget {
       },
     );
   }
+  
 }
 
 

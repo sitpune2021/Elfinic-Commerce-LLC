@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart' as dashboard;
+import '../model/cart_models.dart';
 import '../providers/LogoutProvider.dart';
 import '../providers/ShippingProvider.dart';
+import 'CartScreen.dart';
 import 'address_screen.dart';
 import 'EditProfileScreen.dart';
 import 'OrdersScreen.dart';
@@ -184,15 +186,9 @@ class ProfileScreen extends StatelessWidget {
                     }),
 
                     _buildListTile(Icons.location_on_outlined, "Address", () {
-                      // Navigate to AddressScreen from Profile
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChangeNotifierProvider(
-                            create: (context) => AddressProvider(),
-                            child: const AddressScreen(fromProfile: true),
-                          ),
-                        ),
+                      NavigationHelper.navigateToAddressScreen(
+                        context: context,
+                        fromProfile: true,
                       );
                     }),
 
@@ -426,3 +422,39 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
+class NavigationHelper {
+  static Future<void> navigateToAddressScreen({
+    required BuildContext context,
+    bool fromProfile = false,
+    double? subtotalAmount,
+    List<UserCartItem>? cartItems,
+  }) async {
+    // Get providers from context
+    final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+    final couponProvider = Provider.of<CouponProvider>(context, listen: false);
+
+    // Fetch addresses if needed
+    if (addressProvider.addresses.isEmpty) {
+      await addressProvider.fetchAddresses();
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: addressProvider),
+            ChangeNotifierProvider.value(value: couponProvider),
+          ],
+          child: AddressScreen(
+            fromProfile: fromProfile,
+            subtotalAmount: subtotalAmount ?? 0.0,
+            cartItems: cartItems ?? [],
+            appliedCoupon: couponProvider.appliedCoupon,
+            couponDiscount: couponProvider.couponDiscount,
+          ),
+        ),
+      ),
+    );
+  }
+}
