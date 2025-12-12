@@ -240,15 +240,27 @@ class ApiService {
 
     final response = await http.get(url);
     print("📩 Response Status: ${response.statusCode}");
+    print("📌 RAW RESPONSE: ${response.body}");
 
     if (response.statusCode == 200) {
-      final res = ProductsResponse.fromRawJson(response.body);
-      return res.data;
+      try {
+        final res = ProductsResponse.fromRawJson(response.body);
+        if (!res.status) {
+          // API replied but indicated failure
+          throw Exception('API returned status=false: ${res.message}');
+        }
+        return res.data;
+      } catch (e, st) {
+        print('❌ Parsing ProductsResponse failed: $e\n$st');
+        // Re-throw to bubble up to provider and set provider.error
+        throw Exception('Parsing ProductsResponse failed: $e');
+      }
     } else {
       print("❌ API ERROR: ${response.statusCode} → ${response.body}");
       throw Exception("Failed to load products (${response.statusCode})");
     }
   }
+
 
   /// Fetch a single product
   static Future<Product?> fetchSingleProduct(int productId) async {
@@ -707,9 +719,8 @@ class ApiService {
     required int page,
   }) async {
     try {
-      final uri = Uri.parse(
-        "https://admin.elfinic.com/api/getProductsList",
-      ).replace(queryParameters: {
+      final uri = Uri.parse("$baseUrl/api/getProductsList")
+          .replace(queryParameters: {
         "show_section": section,
         "page": page.toString(),
       });
@@ -718,9 +729,7 @@ class ApiService {
 
       final response = await http.get(
         uri,
-        headers: {
-          "Accept": "application/json",
-        },
+        headers: {"Accept": "application/json"},
       );
 
       print("📌 STATUS CODE: ${response.statusCode}");
@@ -730,24 +739,59 @@ class ApiService {
         throw Exception("Server Error: ${response.statusCode}");
       }
 
-      final json = jsonDecode(response.body);
+      final Map<String, dynamic> json = jsonDecode(response.body);
 
-      if (json["status"] != true) {
+      // --- ROBUST STATUS PARSING ---
+      final rawStatus = json['status'];
+      print('📣 RAW status from API: $rawStatus (${rawStatus?.runtimeType})');
+
+      bool isSuccess = false;
+      if (rawStatus is bool) {
+        isSuccess = rawStatus;
+      } else if (rawStatus is String) {
+        final s = rawStatus.toLowerCase().trim();
+        isSuccess = (s == 'true' || s == 'success' || s == '1' || s == 'yes');
+      } else if (rawStatus is num) {
+        isSuccess = rawStatus != 0;
+      }
+
+      if (!isSuccess) {
+        // Only throw if API really indicates failure
         throw Exception(json["message"] ?? "Unknown error");
       }
 
-      final List data = json["data"] ?? [];
+      // --- SAFE DATA & PAGINATION PARSING ---
+      final List<dynamic> dataList = (json['data'] is List) ? json['data'] as List : [];
+
+      final paginationRaw = json['pagination'];
+      final int lastPage = (paginationRaw is Map && paginationRaw['last_page'] != null)
+          ? int.tryParse('${paginationRaw['last_page']}') ?? 1
+          : 1;
+      final int currentPage = (paginationRaw is Map && paginationRaw['current_page'] != null)
+          ? int.tryParse('${paginationRaw['current_page']}') ?? page
+          : page;
+
+      final products = dataList.map((e) {
+        try {
+          return Product.fromJson(Map<String, dynamic>.from(e));
+        } catch (err) {
+          print('⚠️ Product parse error: $err — raw: $e');
+          // skip malformed product by returning null; caller receives only valid ones
+          return null;
+        }
+      }).where((p) => p != null).map((p) => p as Product).toList();
 
       return {
-        "products": data.map((e) => Product.fromJson(e)).toList(),
-        "last_page": json["pagination"]["last_page"],
-        "current_page": json["pagination"]["current_page"],
+        "products": products,
+        "last_page": lastPage,
+        "current_page": currentPage,
       };
-    } catch (e) {
-      print("❌ fetchProductsBySectionPaginated Error: $e");
+    } catch (e, st) {
+      print("❌ fetchProductsBySectionPaginated Error: $e\n$st");
       throw Exception("fetchProductsBySectionPaginated Error: $e");
     }
   }
+
 
 
 

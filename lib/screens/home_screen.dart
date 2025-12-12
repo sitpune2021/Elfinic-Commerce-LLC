@@ -72,6 +72,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   final int userId = 15;
 
+
+  final _recentScrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -92,6 +95,10 @@ class _HomeScreenState extends State<HomeScreen>
 
 
     });
+
+
+    // Attach recent views scroll listener
+    _recentScrollController.addListener(_onRecentScroll);
   }
 
   Future<void> _initializeVideo() async {
@@ -213,10 +220,35 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     _scrollController.dispose();
+    _recentScrollController.removeListener(_onRecentScroll);
+    _recentScrollController.dispose();
+
     _controller.removeListener(_videoListener);
     _controller.pause();
     _controller.dispose();
     super.dispose();
+  /*  _scrollController.dispose();
+    _controller.removeListener(_videoListener);
+    _controller.pause();
+    _controller.dispose();
+    super.dispose();*/
+  }
+  void _onRecentScroll() {
+    // small threshold so we trigger slightly before absolute end
+    final thresholdPixels = 150.0;
+
+    if (!_recentScrollController.hasClients) return;
+
+    final maxScroll = _recentScrollController.position.maxScrollExtent;
+    final current = _recentScrollController.position.pixels;
+
+    if (current + thresholdPixels >= maxScroll) {
+      // call provider to load more if available
+      final provider = Provider.of<RecentViewProvider>(context, listen: false);
+      if (provider.hasMore) {
+        provider.loadMoreRecentViews();
+      }
+    }
   }
 
   void _togglePlay() {
@@ -504,11 +536,11 @@ class _HomeScreenState extends State<HomeScreen>
       },
     );
   }
-  // Add this method to build the recent views list
   Widget _buildRecentViewList(List<Product> recentViews) {
     return SizedBox(
       height: 250,
       child: ListView.builder(
+        controller: _recentScrollController, // <<-- set controller here
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         itemCount: recentViews.length,
@@ -519,6 +551,7 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
+
 
   Widget _buildRecentViewProductItem(Product product) {
     final screenWidth = MediaQuery.of(context).size.width;

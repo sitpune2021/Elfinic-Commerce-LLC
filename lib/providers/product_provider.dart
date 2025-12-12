@@ -5,10 +5,7 @@ import 'package:http/http.dart' as http;
 import '../model/ProductsResponse.dart';
 
 
-import 'package:flutter/material.dart';
-import '../model/ProductsResponse.dart';
 import '../services/api_service.dart';
-
 class ProductProvider with ChangeNotifier {
   bool isLoading = true;
   bool isLoadingMore = false;

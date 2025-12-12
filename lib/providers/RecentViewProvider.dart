@@ -137,6 +137,9 @@ class RecentViewProvider with ChangeNotifier {
   // ========================================================
   // ✅ LOAD MORE (PAGINATION)
   // ========================================================
+  // ========================================================
+// ✅ LOAD MORE (PAGINATION)
+// ========================================================
   Future<void> loadMoreRecentViews() async {
     if (_isFetching || !hasMore) return;
 
@@ -163,22 +166,41 @@ class RecentViewProvider with ChangeNotifier {
 
       if (jsonData["status"] == true) {
         final List items = jsonData["data"] ?? [];
-        final newItems =
-        items.map((e) => Product.fromJson(e)).toList();
+        final pagination = jsonData["pagination"];
+
+        final newItems = items.map((e) => Product.fromJson(e)).toList();
 
         _recentViews.addAll(newItems);
 
-        if (kDebugMode) {
-          print("✅ Loaded More RecentViews Page $_currentPage");
+        // IMPORTANT: update lastPage from pagination so hasMore stays correct
+        if (pagination != null && pagination["last_page"] != null) {
+          try {
+            _lastPage = (pagination["last_page"] is String)
+                ? int.parse(pagination["last_page"])
+                : pagination["last_page"];
+          } catch (_) {
+            // ignore parse errors, keep previous _lastPage
+          }
         }
+
+        if (kDebugMode) {
+          print("✅ Loaded More RecentViews Page $_currentPage (added ${newItems.length})");
+        }
+      } else {
+        if (kDebugMode) print("❌ loadMoreRecentViews: server returned false status");
+        // Optionally revert page increment if you want:
+        // _currentPage = max(1, _currentPage - 1);
       }
     } catch (e) {
       if (kDebugMode) print("❌ loadMoreRecentViews Error: $e");
+      // Optionally revert page increment if request failed:
+      // _currentPage = max(1, _currentPage - 1);
     }
 
     _isFetching = false;
     notifyListeners();
   }
+
 }
 
 

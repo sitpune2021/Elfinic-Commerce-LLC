@@ -15,17 +15,39 @@ class ProductsResponse {
   });
 
   factory ProductsResponse.fromJson(Map<String, dynamic> json) {
+    // Accept both boolean true and strings like "success" or "true"
+    final rawStatus = json['status'];
+    bool parsedStatus = false;
+    if (rawStatus is bool) {
+      parsedStatus = rawStatus;
+    } else if (rawStatus is String) {
+      final s = rawStatus.toLowerCase().trim();
+      parsedStatus = (s == 'true' || s == 'success' || s == '1' || s == 'yes');
+    } else if (rawStatus is num) {
+      parsedStatus = rawStatus != 0;
+    }
+
     return ProductsResponse(
-      status: json['status'] ?? false,
-      message: json['message'] ?? '',
+      status: parsedStatus,
+      message: json['message']?.toString() ?? '',
       data: (json['data'] as List<dynamic>? ?? [])
-          .map((e) => Product.fromJson(e))
+          .map((e) {
+        try {
+          return Product.fromJson(Map<String, dynamic>.from(e));
+        } catch (err) {
+          // If a single product is malformed, print and skip it
+          print('⚠️ Product parse error in ProductsResponse.fromJson: $err — raw: $e');
+          return null;
+        }
+      })
+          .where((p) => p != null)
+          .map((p) => p as Product)
           .toList(),
     );
   }
 
   factory ProductsResponse.fromRawJson(String str) =>
-      ProductsResponse.fromJson(json.decode(str));
+      ProductsResponse.fromJson(json.decode(str) as Map<String, dynamic>);
 
   Map<String, dynamic> toJson() => {
     'status': status,
@@ -33,6 +55,7 @@ class ProductsResponse {
     'data': data.map((e) => e.toJson()).toList(),
   };
 }
+
 
 class Product {
   final int id;
