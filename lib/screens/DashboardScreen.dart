@@ -1,5 +1,6 @@
 // dashboard_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'CartScreen.dart';
 import 'CategoriesScreen.dart';
@@ -23,7 +24,7 @@ import 'dart:async';
 
 
 
-class DashboardScreen extends StatefulWidget {
+  class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
 
   @override
@@ -52,6 +53,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+
+    // FORCE white status bar
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.white,
+        statusBarIconBrightness: Brightness.dark, // BLACK icons
+        statusBarBrightness: Brightness.light,
+      ),
+    );
+
     _checkInitialConnection();
     _subscription = Connectivity()
         .onConnectivityChanged

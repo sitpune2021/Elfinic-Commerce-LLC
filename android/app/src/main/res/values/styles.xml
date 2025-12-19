@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
-        <!-- ✅ Change splash screen background -->
-        <item name="android:windowBackground">@color/my_splash_color</item>
 
-        <!-- ✅ Change status bar color -->
+    <!-- Splash Screen Theme -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@color/my_splash_color</item>
         <item name="android:statusBarColor">@color/my_status_color</item>
 
-        <!-- Optional: light or dark status bar icons -->
-        <item name="android:windowLightStatusBar">false</item>
+        <!-- DARK icons for white background -->
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
+    <!-- Normal App Theme -->
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
         <item name="android:statusBarColor">@color/my_status_color</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
+
 </resources>
 
 

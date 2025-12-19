@@ -1,4 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="my_splash_color">#D39841</color> <!-- Green -->
-    <color name="my_status_color">#D39841</color> <!-- Dark Green -->
+    <color name="my_splash_color">#FFFFFF</color>
+    <color name="my_status_color">#FFFFFF</color> <!-- WHITE -->
 </resources>

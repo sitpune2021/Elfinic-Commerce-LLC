@@ -20,6 +20,7 @@ import 'package:elfinic_commerce_llc/screens/review_screen.dart';
 import 'package:elfinic_commerce_llc/screens/splash_screen.dart';
 import 'package:elfinic_commerce_llc/utils/NoInternetOverlay.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -33,6 +34,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/register_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.white, // WHITE
+      statusBarIconBrightness: Brightness.dark, // BLACK icons (Android)
+      statusBarBrightness: Brightness.light, // iOS
+    ),
+  );
 
   // Initialize SharedPreferences but don't decide login here
   await SharedPreferences.getInstance();

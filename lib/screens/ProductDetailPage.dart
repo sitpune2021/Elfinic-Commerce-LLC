@@ -257,7 +257,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       onPressed: () async {
                         await Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const CartScreen()),
+                          MaterialPageRoute(builder: (context) => const CartScreen(fromProductDetail: true)),
                         );
                         final cartProvider =
                         Provider.of<CartProvider>(context, listen: false);
@@ -306,80 +306,75 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Product Image with badge + fav + share
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 4,
-                  clipBehavior: Clip.hardEdge,
-                  child: Stack(
-                    children: [
-                      // Product Images PageView
-                      SizedBox(
-                        height: 350,
-                        child: PageView.builder(
-                          controller: _pageController,
-                          itemCount: product.images.isNotEmpty
-                              ? product.images.length
-                              : 1,
-                          onPageChanged: (index) =>
-                              setState(() => activeIndex = index),
-                          itemBuilder: (context, index) {
-                            if (product.images.isEmpty) {
-                              return Image.asset(
-                                "assets/images/no_product_img2.png",
-                                fit: BoxFit.cover,
-                              );
-                            }
+          Padding(
+          padding: const EdgeInsets.all(1.0),
+          child: Stack(
+            children: [
+              // 🔥 Product Image Slider (Nykaa Man style)
+              AspectRatio(
+                aspectRatio: 3 / 4.5, // ✅ Key ratio (no stretching)
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount:
+                  product.images.isNotEmpty ? product.images.length : 1,
+                  onPageChanged: (index) =>
+                      setState(() => activeIndex = index),
+                  itemBuilder: (context, index) {
+                    if (product.images.isEmpty) {
+                      return Image.asset(
+                        "assets/images/no_product_img2.png",
+                        fit: BoxFit.contain,
+                      );
+                    }
 
-                            return CachedNetworkImage(
-                              imageUrl:
-                              "${ApiService.baseUrl}/assets/img/products-images/${product.images[index]}",
-                              height: 350,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Image.asset(
-                                "assets/images/no_product_img2.png",
-                                fit: BoxFit.cover,
-                              ),
-                              errorWidget: (context, url, error) => Image.asset(
-                                "assets/images/no_product_img2.png",
-                                fit: BoxFit.cover,
-                              ),
-                            );
-                          },
+                    return Hero(
+                      tag: 'product-image-${product.id}',
+                      child: CachedNetworkImage(
+                        imageUrl:
+                        "${ApiService.baseUrl}/assets/img/products-images/${product.images[index]}",
+                        fit: BoxFit.contain, // ✅ NO CROPPING
+                        alignment: Alignment.center,
+                        filterQuality: FilterQuality.high,
+                        fadeInDuration: const Duration(milliseconds: 250),
+                        placeholder: (context, url) => Container(
+                          color: Colors.white,
+                        ),
+                        errorWidget: (context, url, error) => Image.asset(
+                          "assets/images/no_product_img2.png",
+                          fit: BoxFit.contain,
                         ),
                       ),
-
-                      // Discount Badge - Only show if there's an actual discount
-                      if (_shouldShowDiscountBadge())
-                        Positioned(
-                          top: 12,
-                          right: 12,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              _calculateDiscountPercentage(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
 
-              // Page Indicator
+              // 🔴 Discount Badge
+              if (_shouldShowDiscountBadge())
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _calculateDiscountPercentage(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+          // Page Indicator
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -565,7 +560,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
 
               // Choices Selection (for other options)
-              if (_availableChoices.isNotEmpty)
+              /*if (_availableChoices.isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -595,7 +590,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                   ],
-                ),
+                ),*/
 
               const SizedBox(height: 10),
 
@@ -707,37 +702,37 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ],
               ),
 
-              // Size Chart expandable
-              ExpansionTile(
-                initiallyExpanded: showSizeChart,
-                title: const Text("Size Chart",
-                    style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
-                children: [
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      columns: const [
-                        DataColumn(label: Text("Size")),
-                        DataColumn(label: Text("Chart")),
-                        DataColumn(label: Text("Brand Size")),
-                        DataColumn(label: Text("Shoulder")),
-                        DataColumn(label: Text("Length")),
-                      ],
-                      rows: List.generate(
-                        5,
-                            (index) => const DataRow(cells: [
-                          DataCell(Text("38")),
-                          DataCell(Text("40.94")),
-                          DataCell(Text("XS")),
-                          DataCell(Text("17.52")),
-                          DataCell(Text("26.54")),
-                        ]),
-                      ),
-                    ),
-                  )
-                ],
-              ),
+              /// Size Chart expandable
+              // ExpansionTile(
+              //   initiallyExpanded: showSizeChart,
+              //   title: const Text("Size Chart",
+              //       style: TextStyle(
+              //           fontSize: 18, fontWeight: FontWeight.bold)),
+              //   children: [
+              //     SingleChildScrollView(
+              //       scrollDirection: Axis.horizontal,
+              //       child: DataTable(
+              //         columns: const [
+              //           DataColumn(label: Text("Size")),
+              //           DataColumn(label: Text("Chart")),
+              //           DataColumn(label: Text("Brand Size")),
+              //           DataColumn(label: Text("Shoulder")),
+              //           DataColumn(label: Text("Length")),
+              //         ],
+              //         rows: List.generate(
+              //           5,
+              //               (index) => const DataRow(cells: [
+              //             DataCell(Text("38")),
+              //             DataCell(Text("40.94")),
+              //             DataCell(Text("XS")),
+              //             DataCell(Text("17.52")),
+              //             DataCell(Text("26.54")),
+              //           ]),
+              //         ),
+              //       ),
+              //     )
+              //   ],
+              // ),
 
               // Reviews
               Padding(
@@ -1280,7 +1275,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               isLoading: productProvider.isLoading,
               onProductTap: _onSimilarProductTap,
               scrollDirection: Axis.horizontal,
-              height: 250,
+              height: 344,
             );
           },
         ),

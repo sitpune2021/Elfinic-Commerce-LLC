@@ -320,6 +320,40 @@ class ApiService {
 
   /// ✅ Get Cart Items
   static Future<List<UserCartItem>> fetchCartItems() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString("user_id");
+      if (userId == null) throw Exception("User not logged in");
+
+      final url = Uri.parse("$_baseUrl/api/viewCart?user_id=$userId");
+      final headers = await _headers();
+
+      final response = await http.get(url, headers: headers);
+      logApiCall(method: "GET", url: url, response: response);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        final status = data['status'];
+
+        // ✅ FIXED CONDITION
+        if (status == true || status == "success") {
+          return (data['data'] as List)
+              .map((e) => UserCartItem.fromJson(e))
+              .toList();
+        } else {
+          throw Exception(data['message'] ?? "Failed to load cart");
+        }
+      } else {
+        throw Exception("Server error: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("❌ fetchCartItems error: $e");
+      rethrow;
+    }
+  }
+
+ /* static Future<List<UserCartItem>> fetchCartItems() async {
     final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString("user_id");
     if (userId == null) throw Exception("User not logged in");
@@ -344,7 +378,7 @@ class ApiService {
     } else {
       throw Exception("Server error: ${response.statusCode}");
     }
-  }
+  }*/
 
   /// ✅ Update Quantity (Add or Decrease)
   static Future<int> updateQuantity({
@@ -603,60 +637,45 @@ class ApiService {
 
   // Apply coupon to cart
 // Apply coupon to cart
-  static Future<Map<String, dynamic>> applyCoupon(String couponCode, double subtotal) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      final userId = int.tryParse(prefs.getString('user_id') ?? "0") ?? 0;
+  static Future<ApplyCouponResponse> applyCoupon(
+      String couponCode,
+      double amount,
+      ) async {
+    final url = Uri.parse('$baseUrl/api/applyCoupon');
 
-      final url = '$baseUrl/api/apply-coupon';
-      print("➡️ APPLY COUPON URL: $url");
+    // ✅ PRINT REQUEST
+    print('📌 APPLY COUPON URL: $url');
+    print('📌 REQUEST BODY: ${jsonEncode({
+      'code': couponCode,
+      'amount': amount.toInt(),
+    })}');
 
-      final bodyData = {
-        'user_id': userId,
-        'coupon_code': couponCode,
-        'subtotal': subtotal,
-      };
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({
+        'code': couponCode,
+        'amount': amount.toInt(),
+      }),
+    );
 
-      print("➡️ REQUEST BODY: $bodyData");
+    // ✅ PRINT RESPONSE
+    print('📌 STATUS CODE: ${response.statusCode}');
+    print('📌 RESPONSE BODY: ${response.body}');
 
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: json.encode(bodyData),
-      );
+    final json = jsonDecode(response.body);
 
-      print("⬅️ RESPONSE STATUS: ${response.statusCode}");
-      print("⬅️ RESPONSE BODY: ${response.body}");
-
-      final Map<String, dynamic> data = json.decode(response.body);
-
-      if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'data': data,
-          'message': data['message'] ?? 'Coupon applied successfully',
-        };
-      } else {
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Failed to apply coupon',
-          'error': data['error'] ?? 'Unknown error',
-        };
-      }
-    } catch (e) {
-      print("❌ APPLY COUPON ERROR: $e");
-      return {
-        'success': false,
-        'message': 'Error applying coupon',
-        'error': e.toString(),
-      };
+    if (response.statusCode == 200) {
+      return ApplyCouponResponse.fromJson(json);
+    } else {
+      throw Exception(json['message'] ?? 'Failed to apply coupon');
     }
   }
+
+
 
   // Remove applied coupon
   // Remove applied coupon
