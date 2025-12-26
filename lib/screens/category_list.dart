@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/category_provider.dart';
+import '../providers/product_provider.dart';
 import '../services/api_service.dart';
 
 import '../providers/SubCategoryProvider.dart';
@@ -25,6 +26,8 @@ import '../providers/category_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+
+import 'ProductDetailPage.dart';
 
 
 class HomeCategoriesScreen extends StatefulWidget {
@@ -439,12 +442,23 @@ class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
   }
 
   void _onSubcategoryTap(SubCategoryModel subcategory) {
-    // Add your subcategory tap logic here
-    print('Subcategory tapped: ${subcategory.name}');
+    final categoryProvider =
+    Provider.of<CategoryProvider>(context, listen: false);
 
-    /// You can add navigation or other actions here
-    // Navigator.push(context, MaterialPageRoute(builder: (context) => SubcategoryDetailScreen(subcategory: subcategory)));
+    final selectedCategory = categoryProvider.categories
+        .firstWhere((c) => c.id == selectedCategoryId);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProductListScreen(
+          categoryName: selectedCategory.name, // ✅ PASS NAME
+          subcategoryName: subcategory.name,   // ✅ PASS NAME (slug)
+        ),
+      ),
+    );
   }
+
 
   Widget _buildLoadingIndicator() {
     return Center(
@@ -559,6 +573,168 @@ class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
 
 
 }
+
+class ProductListScreen extends StatefulWidget {
+  final String categoryName;
+  final String subcategoryName;
+
+  const ProductListScreen({
+    Key? key,
+    required this.categoryName,
+    required this.subcategoryName,
+  }) : super(key: key);
+
+  @override
+  State<ProductListScreen> createState() => _ProductListScreenState();
+}
+
+class _ProductListScreenState extends State<ProductListScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProductProvider>().fetchFilteredProducts(
+        categoryName: widget.categoryName,
+        subcategoryName: widget.subcategoryName,
+        reset: true,
+      );
+    });
+
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >
+          _scrollController.position.maxScrollExtent - 200) {
+        context.read<ProductProvider>().fetchFilteredProducts(
+          categoryName: widget.categoryName,
+          subcategoryName: widget.subcategoryName,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.subcategoryName),
+      ),
+      body: Consumer<ProductProvider>(
+        builder: (context, provider, _) {
+          if (provider.isLoading && provider.products.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (provider.products.isEmpty) {
+            return const Center(child: Text("No products found"));
+          }
+
+          return GridView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(12),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.65,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount:
+            provider.products.length + (provider.hasMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index >= provider.products.length) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final product = provider.products[index];
+
+              String imageUrl;
+              if (product.images.isNotEmpty) {
+                imageUrl =
+                "${product.imagePath}${product.images.first}";
+              } else {
+                imageUrl =
+                "${product.imagePath}${product.productThumb}";
+              }
+
+              return InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          ProductDetailScreen(
+                            product: product,      // ✅ full product
+                            slug: product.slug!,   // ✅ slug
+                          ),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        );
+                      },
+                      transitionDuration: const Duration(milliseconds: 300),
+                    ),
+                  );
+                },
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(12),
+                          ),
+                          child: Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.image_not_supported),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Text(
+                          product.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          "₹${product.totalPrice}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                    ],
+                  ),
+                ),
+              );
+
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
 
 
 

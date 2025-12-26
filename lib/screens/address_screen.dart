@@ -1,3 +1,4 @@
+import 'package:elfinic_commerce_llc/screens/review_screen.dart';
 import 'package:flutter/material.dart';
 
 
@@ -34,6 +35,11 @@ class AddressScreen extends StatefulWidget {
 class _AddressScreenState extends State<AddressScreen> {
   Address? _selectedAddress;
 
+  double? _updatedSubtotal;
+
+  double get _displaySubtotal => _updatedSubtotal ?? widget.subtotalAmount;
+
+
   @override
   void initState() {
     super.initState();
@@ -51,12 +57,14 @@ class _AddressScreenState extends State<AddressScreen> {
   Widget build(BuildContext context) {
     final addressProvider = Provider.of<AddressProvider>(context);
 
+
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
         surfaceTintColor: const Color(0xfffdf6ef),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_sharp, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_sharp, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(widget.fromProfile ? 'My Addresses' : 'Select Address'),
@@ -149,7 +157,7 @@ class _AddressScreenState extends State<AddressScreen> {
             ),
           ),
           Text(
-            "₹${widget.subtotalAmount!.toStringAsFixed(2)}",
+            "₹${_displaySubtotal.toStringAsFixed(2)}",
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -180,13 +188,14 @@ class _AddressScreenState extends State<AddressScreen> {
           ),
           const Spacer(),
           Text(
-            "Total: ₹${widget.subtotalAmount!.toStringAsFixed(2)}",
+            "Total: ₹${_displaySubtotal.toStringAsFixed(2)}",
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
               color: Colors.green,
             ),
           ),
+
         ],
       ),
     );
@@ -319,7 +328,8 @@ class _AddressScreenState extends State<AddressScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => ShippingScreen(
-          subtotalAmount: widget.subtotalAmount ?? 0.0,
+          subtotalAmount: _displaySubtotal,
+
           cartItems: widget.cartItems ?? [],
           fromProfile: widget.fromProfile,
         ),
@@ -335,7 +345,8 @@ class _AddressScreenState extends State<AddressScreen> {
       MaterialPageRoute(
         builder: (_) => EditAddressScreen(
           address: address,
-          subtotalAmount: widget.subtotalAmount ?? 0.0,
+          subtotalAmount: _displaySubtotal,
+
           cartItems: widget.cartItems ?? [],
           fromProfile: widget.fromProfile,
         ),
@@ -345,22 +356,34 @@ class _AddressScreenState extends State<AddressScreen> {
     });
   }
 
-  void _navigateToDelivery(BuildContext context, Address address) {
-    if (widget.fromProfile || widget.subtotalAmount == null || widget.cartItems == null) {
-      return;
-    }
+  Future<void> _navigateToDelivery(BuildContext context, Address address) async {
+    if (widget.fromProfile) return;
 
-    Navigator.push(
+    final result = await Navigator.push<ReviewResult>(
       context,
       MaterialPageRoute(
         builder: (_) => DeliveryScreen(
           selectedAddress: address,
-          subtotalAmount: widget.subtotalAmount!,
-          cartItems: widget.cartItems!,
+          subtotalAmount: _displaySubtotal,
+
+          cartItems: widget.cartItems,
         ),
       ),
     );
+
+    if (result != null) {
+      setState(() {
+        widget.cartItems
+          ..clear()
+          ..addAll(result.cartItems);
+
+        _updatedSubtotal = result.subtotal;
+
+
+      });
+    }
   }
+
 
   void _showDeleteConfirmationDialog(
       BuildContext context,

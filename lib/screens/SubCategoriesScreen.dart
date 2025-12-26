@@ -10,6 +10,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import '../services/api_service.dart';
 import '../utils/ShimmerCategoryCard.dart';
+import 'category_list.dart';
 
 class SubCategoriesScreen extends StatefulWidget {
   final int categoryId;
@@ -121,17 +122,17 @@ class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
 
                   return InkWell(
                     onTap: () {
-                      // Navigate to product list screen for this subcategory
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => CategoryProductsScreen(
-                      //       subcategoryId: item.id,
-                      //       subcategoryName: item.name,
-                      //     ),
-                      //   ),
-                      // );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProductListScreen(
+                            categoryName: widget.categoryName, // ✅ already available
+                            subcategoryName: item.name,        // ✅ slug / name
+                          ),
+                        ),
+                      );
                     },
+
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,

@@ -16,6 +16,7 @@ import '../model/SubcategoriesResponse.dart';
 import '../model/cart_models.dart';
 import '../model/delivery_type.dart';
 import '../screens/CartScreen.dart';
+import '../screens/ProductDetailPage.dart';
 
 
 class ApiService {
@@ -56,7 +57,69 @@ class ApiService {
   static String get addReview => '$_baseUrl/api/products/addReview';
   static String get productReviews => '$_baseUrl/api/products/productReviews';
   static String get productReviewsById => '$_baseUrl/api/products'; // Base for /{id}/reviews
+  static Uri getProductBySlugUrl(String slug) {
+    return Uri.parse('$_baseUrl/api/productDetails/$slug');
+  }
 
+
+
+
+  static Future<List<Product>> getSimilarProducts(int productId) async {
+    final url = Uri.parse(
+      "${ApiService.baseUrl}/api/getSimilarProducts?product_id=$productId",
+    );
+
+    debugPrint("🔵 [SIMILAR PRODUCTS] URL: $url");
+
+    final response = await http.get(
+      url,
+      headers: {
+        "Accept": "application/json",
+      },
+    );
+
+    debugPrint("🟢 [SIMILAR PRODUCTS] STATUS CODE: ${response.statusCode}");
+    debugPrint("🟢 [SIMILAR PRODUCTS] RESPONSE BODY: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+
+      if (json['status'] == 'success') {
+        final List list = json['data'] ?? [];
+        return list
+            .map((e) => Product.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      } else {
+        throw Exception(json['message'] ?? "API returned error");
+      }
+    }
+
+    throw Exception("Failed to fetch similar products");
+  }
+
+
+  // If you want a method that makes the actual HTTP call, add this:
+  Future<ProductDetailResponse> getProductBySlug(String slug) async {
+    try {
+      final response = await http.get(
+        getProductBySlugUrl(slug),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        return ProductDetailResponse.fromJson(data);
+      } else {
+        throw Exception('Failed to load product. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('API Error (getProductBySlug): $e');
+      rethrow;
+    }
+  }
 
   /// ✅ Login API
   Future<LoginResponse> login(String email, String password) async {
@@ -353,35 +416,10 @@ class ApiService {
     }
   }
 
- /* static Future<List<UserCartItem>> fetchCartItems() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString("user_id");
-    if (userId == null) throw Exception("User not logged in");
 
-    final url = Uri.parse("$_baseUrl/api/viewCart?user_id=$userId");
-    final headers = await _headers();
-
-    final response = await http.get(url, headers: headers);
-    logApiCall(method: "GET", url: url, response: response);
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      // ✅ Correct condition (status is boolean)
-      if (data['status'] == true) {
-        return (data['data'] as List)
-            .map((e) => UserCartItem.fromJson(e))
-            .toList();
-      } else {
-        throw Exception(data['message'] ?? "Failed to load cart");
-      }
-    } else {
-      throw Exception("Server error: ${response.statusCode}");
-    }
-  }*/
 
   /// ✅ Update Quantity (Add or Decrease)
-  static Future<int> updateQuantity({
+/*  static Future<int> updateQuantity({
     required int userId,
     required int productId,
     required bool increase,
@@ -394,6 +432,7 @@ class ApiService {
       "user_id": userId,
       "product_id": productId,
       "quantity": 1,
+
     });
 
     final response = await http.post(url, headers: headers, body: body);
@@ -409,7 +448,38 @@ class ApiService {
     } else {
       throw Exception("Server error: ${response.statusCode}");
     }
+  }*/
+  static Future<void> updateQuantity({
+    required int userId,
+    required int productId,
+    int? variantId,
+    required bool increase,
+  }) async {
+    final url = Uri.parse(
+      increase
+          ? "$_baseUrl/api/cart/add"
+          : "$_baseUrl/api/cart/decrease",
+    );
+
+    final body = jsonEncode({
+      "user_id": userId,
+      "product_id": productId,
+      "variants_id": variantId,
+      "quantity": 1,
+    });
+
+    final response = await http.post(url, headers: await _headers(), body: body);
+
+    logApiCall(method: "POST", url: url, response: response);
+
+    final json = jsonDecode(response.body);
+
+    if (response.statusCode != 200 || json["status"] != "success") {
+      throw Exception(json["message"] ?? "Quantity update failed");
+    }
   }
+
+
 
   /// ✅ Remove Cart Item
   static Future<bool> removeCartItem(int cartId) async {
@@ -437,36 +507,40 @@ class ApiService {
   static Future<AddToCartResponse> addToCartApi({
     required int productId,
     required int quantity,
+    int? variantId, // ✅ NEW
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final userId = int.parse(prefs.getString("user_id") ?? "0");
     final token = prefs.getString("auth_token") ?? "";
 
-
-
     if (userId == 0 || token.isEmpty) {
       throw Exception("User not logged in");
     }
 
-    final url = addToCartUrl; // Correct URL with /api
+    final url = addToCartUrl;
+
+    final body = {
+      "user_id": userId,
+      "product_id": productId,
+      "quantity": quantity,
+    };
+
+    // ✅ Only send variants_id if exists
+    if (variantId != null) {
+      body["variants_id"] = variantId;
+    }
 
     final response = await http.post(
       url,
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "Authorization": "Bearer $token",
       },
-      body: jsonEncode({
-        "user_id": userId,
-        "product_id": productId,
-        "quantity": quantity,
-      }),
+      body: jsonEncode(body),
     );
 
-    // Use logApiCall for consistent logging
     logApiCall(method: 'POST', url: url, response: response);
-
-    print("Token : $token");
 
     if (response.statusCode == 200) {
       return AddToCartResponse.fromRawJson(response.body);
@@ -603,10 +677,12 @@ class ApiService {
   static Future<CouponResponse> fetchActiveCoupons() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+
+      // ✅ FIX HERE
+      final token = prefs.getString('auth_token');
 
       final url = '$baseUrl/api/coupons';
-      print("➡️ FETCH COUPONS URL: $url");
+      debugPrint("➡️ FETCH COUPONS URL: $url");
 
       final response = await http.get(
         Uri.parse(url),
@@ -616,39 +692,52 @@ class ApiService {
         },
       );
 
-      print("⬅️ RESPONSE STATUS: ${response.statusCode}");
-      print("⬅️ RESPONSE BODY: ${response.body}");
+      
+      debugPrint("⬅️ STATUS: ${response.statusCode}");
+      debugPrint("⬅️ BODY: ${response.body}");
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        return CouponResponse.fromJson(data);
-      } else if (response.statusCode == 401) {
-        throw Exception('Unauthorized - Please login again');
+        return CouponResponse.fromJson(jsonDecode(response.body));
       } else {
-        throw Exception('Failed to load coupons: ${response.statusCode}');
+        throw Exception('Failed to load coupons');
       }
-    } on SocketException {
-      throw Exception('No Internet connection');
     } catch (e) {
       throw Exception('Error fetching coupons: $e');
     }
   }
 
 
+
   // Apply coupon to cart
 // Apply coupon to cart
-  static Future<ApplyCouponResponse> applyCoupon(
-      String couponCode,
-      double amount,
-      ) async {
+  static Future<ApplyCouponResponse> applyCoupon({
+    required int userId,
+    required String couponCode,
+    required List<UserCartItem> cartItems,
+    required double subtotal,
+  }) async {
     final url = Uri.parse('$baseUrl/api/applyCoupon');
 
-    // ✅ PRINT REQUEST
-    print('📌 APPLY COUPON URL: $url');
-    print('📌 REQUEST BODY: ${jsonEncode({
-      'code': couponCode,
-      'amount': amount.toInt(),
-    })}');
+    final request = ApplyCouponRequest(
+      userId: userId,
+      couponCode: couponCode,
+      cart: CouponCart(
+        cartSubtotal: subtotal,
+        items: cartItems.map((item) {
+          return CouponCartItem(
+            productId: item.product.id,
+            variantId: item.product.selectedVariantId, // ✅ FIXED
+            quantity: item.quantity,
+            clientPrice: double.tryParse(
+              item.product.discountPrice.replaceAll(',', ''),
+            ) ?? 0,
+          );
+        }).toList(),
+      ),
+    );
+
+    debugPrint('📌 APPLY COUPON URL: $url');
+    debugPrint('📌 REQUEST BODY: ${jsonEncode(request.toJson())}');
 
     final response = await http.post(
       url,
@@ -656,15 +745,11 @@ class ApiService {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: jsonEncode({
-        'code': couponCode,
-        'amount': amount.toInt(),
-      }),
+      body: jsonEncode(request.toJson()),
     );
 
-    // ✅ PRINT RESPONSE
-    print('📌 STATUS CODE: ${response.statusCode}');
-    print('📌 RESPONSE BODY: ${response.body}');
+    debugPrint('📌 STATUS CODE: ${response.statusCode}');
+    debugPrint('📌 RESPONSE BODY: ${response.body}');
 
     final json = jsonDecode(response.body);
 
@@ -674,6 +759,8 @@ class ApiService {
       throw Exception(json['message'] ?? 'Failed to apply coupon');
     }
   }
+
+
 
 
 

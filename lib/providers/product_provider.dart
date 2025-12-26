@@ -26,6 +26,73 @@ class ProductProvider with ChangeNotifier {
 
   Map<int, bool> favoriteStatus = {};
 
+
+  int page = 1;
+
+  Future<void> fetchFilteredProducts({
+    required String categoryName,
+    required String subcategoryName,
+    bool reset = false,
+  }) async {
+    if (isLoading) return;
+
+    if (reset) {
+      products.clear();
+      page = 1;
+      hasMore = true;
+    }
+
+    if (!hasMore) return;
+
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      final url = Uri.parse(
+        "${ApiService.baseUrl}/api/getProductsFilterList"
+            "?category_id=$categoryName"
+            "&subcategory_id=$subcategoryName"
+            "&page=$page",
+      );
+
+      final response = await http.get(url);
+      final json = jsonDecode(response.body);
+
+      if (json['status'] == 'success') {
+        /// ✅ SAFELY HANDLE NULL OR NON-LIST DATA
+        final rawData = json['data'];
+
+        final List listData =
+        rawData is List ? rawData : <dynamic>[];
+
+        products.addAll(
+          listData
+              .map((e) => Product.fromJson(Map<String, dynamic>.from(e)))
+              .toList(),
+        );
+
+        /// ✅ Pagination safe check
+        final pagination = json['pagination'];
+        if (pagination != null) {
+          final int lastPage = pagination['last_page'] ?? page;
+          hasMore = page < lastPage;
+          page++;
+        } else {
+          hasMore = false;
+        }
+      } else {
+        hasMore = false;
+      }
+    } catch (e) {
+      debugPrint("❌ fetchFilteredProducts error: $e");
+      hasMore = false;
+    }
+
+    isLoading = false;
+    notifyListeners();
+  }
+
+
   /// Initial load of products
   Future<void> fetchProducts({String? productId, bool loadMore = false}) async {
     print("🔵 Provider → fetchProducts() - Page: $currentPage, LoadMore: $loadMore");

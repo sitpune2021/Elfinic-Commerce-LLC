@@ -1,66 +1,85 @@
 // models/create_order_request.dart
 class CreateOrderRequest {
-  final double amount;
+  final int userId;
+  final double totalAmount;
+  final String? couponCode;
+  final double discountAmount;
+  final double coinsUsed;
+  final int addressId;
+  final List<OrderCartItem> cart;
 
   CreateOrderRequest({
-    required this.amount,
+    required this.userId,
+    required this.totalAmount,
+    this.couponCode,
+    required this.discountAmount,
+    required this.coinsUsed,
+    required this.addressId,
+    required this.cart,
   });
 
-  // Convert to JSON for API request
   Map<String, dynamic> toJson() {
     return {
-      'amount': amount,
+      "user_id": userId,
+      "total_amount": totalAmount,
+      "coupon_code": couponCode,
+      "discount_amount": discountAmount,
+      "coins_used": coinsUsed,
+      "address_id": addressId,
+      "cart": cart.map((e) => e.toJson()).toList(),
     };
-  }
-
-  // For debugging
-  @override
-  String toString() {
-    return 'CreateOrderRequest{amount: $amount}';
   }
 }
 
+
 // models/create_order_response.dart
+class OrderCartItem {
+  final int productId;
+  final int variantId;
+  final int quantity;
+  final double price;
+  final double discount;
+
+  OrderCartItem({
+    required this.productId,
+    required this.variantId,
+    required this.quantity,
+    required this.price,
+    required this.discount,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      "product_id": productId,
+      "variant_id": variantId,
+      "quantity": quantity,
+      "price": price,
+      "discount": discount,
+    };
+  }
+}
 class CreateOrderResponse {
-  final String orderId;
+  final int orderId;
+  final String razorpayOrderId;
   final double amount;
+  final String currency;
+  final String keyId;
 
   CreateOrderResponse({
     required this.orderId,
+    required this.razorpayOrderId,
     required this.amount,
+    required this.currency,
+    required this.keyId,
   });
 
-  // Factory constructor to create instance from JSON
   factory CreateOrderResponse.fromJson(Map<String, dynamic> json) {
     return CreateOrderResponse(
-      orderId: json['order_id'] as String,
+      orderId: json['order_id'],
+      razorpayOrderId: json['razorpay_order_id'],
       amount: (json['amount'] as num).toDouble(),
+      currency: json['currency'],
+      keyId: json['key_id'],
     );
   }
-
-  // Convert to JSON (if needed for storage)
-  Map<String, dynamic> toJson() {
-    return {
-      'order_id': orderId,
-      'amount': amount,
-    };
-  }
-
-  // For debugging
-  @override
-  String toString() {
-    return 'CreateOrderResponse{orderId: $orderId, amount: $amount}';
-  }
-
-  // Override equality for testing
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-          other is CreateOrderResponse &&
-              runtimeType == other.runtimeType &&
-              orderId == other.orderId &&
-              amount == other.amount;
-
-  @override
-  int get hashCode => orderId.hashCode ^ amount.hashCode;
 }

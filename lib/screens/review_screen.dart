@@ -7,6 +7,7 @@ import '../model/AddressModel.dart';
 import '../model/OrderModel.dart';
 import '../model/cart_models.dart';
 import '../model/delivery_type.dart';
+import '../providers/AuthProvider.dart';
 import '../providers/CartProvider.dart';
 import '../providers/OrderProvider.dart';
 import '../providers/ShippingProvider.dart';
@@ -67,7 +68,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
   void initState() {
     super.initState();
     _cartItems = List.from(widget.cartItems);
-    _calculateTotals();
+    // 🔥 Take subtotal & total directly from DeliveryScreen
+    _subtotal = widget.subtotalAmount;
+    _total = widget.totalAmount;
+
 
     _razorpay = Razorpay();
 
@@ -95,13 +99,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     super.dispose();
   }
 
-  void _calculateTotals() {
-    _subtotal = _cartItems.fold(0.0, (sum, item) {
-      final sellingPrice = _getSellingPrice(item.product);
-      return sum + sellingPrice * item.quantity;
-    });
-    _total = _subtotal + widget.deliveryCost;
-  }
+
 
   double _getSellingPrice(UserCartProduct product) {
     final regularPrice = double.tryParse(product.price.replaceAll(',', '')) ?? 0;
@@ -123,14 +121,28 @@ class _ReviewScreenState extends State<ReviewScreen> {
         await cartProvider.removeFromCart(item, context);
         setState(() {
           _cartItems.removeWhere((e) => e.cartId == item.cartId);
-          _calculateTotals();
+          _subtotal = _cartItems.fold(0.0, (sum, item) {
+            final sellingPrice = _getSellingPrice(item.product);
+            return sum + sellingPrice * item.quantity;
+          });
+
+// delivery cost remains same
+          _total = _subtotal + widget.deliveryCost;
+
         });
       } else {
         await cartProvider.updateQuantity(item, newQuantity);
         setState(() {
           final index = _cartItems.indexWhere((e) => e.cartId == item.cartId);
           if (index != -1) _cartItems[index].quantity = newQuantity;
-          _calculateTotals();
+          _subtotal = _cartItems.fold(0.0, (sum, item) {
+            final sellingPrice = _getSellingPrice(item.product);
+            return sum + sellingPrice * item.quantity;
+          });
+
+// delivery cost remains same
+          _total = _subtotal + widget.deliveryCost;
+
         });
       }
     } catch (e) {
@@ -224,6 +236,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     }
 
     final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     _logPaymentFlow('Starting checkout process');
 
@@ -236,8 +249,36 @@ class _ReviewScreenState extends State<ReviewScreen> {
         ),
       );
 
-      // Create order first using the API with model
-      final CreateOrderResponse? orderResponse = await orderProvider.createOrder(_total);
+      // Prepare cart items for API
+
+      final prefs = await SharedPreferences.getInstance();
+      final String? userIdStr = prefs.getString("user_id");
+      final String? email = prefs.getString("user_email");
+
+
+      if (userIdStr == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("User not logged in. Please login again."),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final int userId = int.parse(userIdStr);
+      // Create order using the API with all required parameters
+      final CreateOrderResponse? orderResponse = await orderProvider.createOrder(
+        userId: userId,                         // ✅ correct user id
+        addressId: widget.selectedAddress.id!,  // ✅ address id
+        totalAmount: _total,                   // ✅ total
+        cartItems: _cartItems,                 // ✅ cart list
+        couponCode: _promoCodeController.text.trim().isNotEmpty
+            ? _promoCodeController.text.trim()
+            : null,
+        discountAmount: 0,
+        coinsUsed: 0,
+      );
 
       if (orderResponse == null) {
         _logPaymentFlow('Order creation failed', extra: {'error': orderProvider.error});
@@ -251,34 +292,43 @@ class _ReviewScreenState extends State<ReviewScreen> {
       }
 
       // Store the order ID for verification
-      _currentOrderId = orderResponse.orderId;
+      _currentOrderId = orderResponse.razorpayOrderId;
 
       _logPaymentFlow('Order created successfully', extra: {
         'orderId': orderResponse.orderId,
+        'razorpayOrderId': orderResponse.razorpayOrderId,
         'amount': orderResponse.amount,
       });
 
       // Use the model properties
-      final orderId = orderResponse.orderId;
+      final orderId = orderResponse.razorpayOrderId;
       final amount = orderResponse.amount;
+
+      // Get user phone from address
+      String phone = widget.selectedAddress.phone;
+      // Clean phone number (remove +91 if present)
+      if (phone.startsWith('+91')) {
+        phone = phone.substring(3);
+      }
 
       // Enhanced Razorpay options
       var options = {
-        'key': 'rzp_test_RMUfaKMC7moQpC', // Your test key
+        'key': orderResponse.keyId, // Use key from API response
         'amount': (amount * 100).toInt(), // Amount in paise
-        'currency': 'INR', // Explicitly set currency
-        'name': 'Elfinic Commerce', // Your business name
+        'currency': orderResponse.currency, // Use currency from API
+        'name': 'Elfinic Commerce',
         'description': 'Order Payment',
         'order_id': orderId,
-        'timeout': 300, // 3 minutes timeout
+        'timeout': 300,
         'retry': {'enabled': true, 'max_count': 1},
         'prefill': {
-          'contact': widget.selectedAddress.phone,
-          'email': 'test@elfinic.com', // Use a test email
+          'contact': phone,
+          'email': email ?? 'test@elfinic.com',
         },
         'notes': {
           'order_type': 'ecommerce',
-          'source': 'flutter_app'
+          'source': 'flutter_app',
+          'order_id': orderResponse.orderId.toString(),
         },
         'theme': {
           'color': '#2D89EF',
@@ -332,7 +382,20 @@ class _ReviewScreenState extends State<ReviewScreen> {
     }
   }
 
+
+  
+
+
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+
+
+    _logPaymentFlow("Razorpay Payment Success", extra: {
+      "razorpay_order_id": response.orderId,
+      "razorpay_payment_id": response.paymentId,
+      "razorpay_signature": response.signature,   // 🔥 THIS IS THE SIGNATURE
+    });
+
+
     if (kDebugMode) {
       print('┌─────────────────────────────────────────────────────────────');
       print('│ 💰 PAYMENT SUCCESS CALLBACK TRIGGERED');
@@ -376,6 +439,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
       Navigator.pop(context);
 
       if (verifyResponse != null && verifyResponse.success) {
+
+        await cartProvider.fetchCartItems();
         // Payment verified successfully
         if (kDebugMode) {
           print('✅ Payment verified successfully by server!');
@@ -516,7 +581,18 @@ class _ReviewScreenState extends State<ReviewScreen> {
     final orderProvider = Provider.of<OrderProvider>(context);
 
     return WillPopScope(
-      onWillPop: _onWillPop,
+      onWillPop: () async {
+        Navigator.pop(
+          context,
+          ReviewResult(
+            subtotal: _subtotal,
+            total: _total,
+            cartItems: _cartItems,
+          ),
+        );
+        return false;
+      },
+
       child: BaseScreen(
         child: Scaffold(
           backgroundColor: const Color(0xfffdf6ef),
@@ -526,11 +602,17 @@ class _ReviewScreenState extends State<ReviewScreen> {
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_sharp, color: Colors.black),
-              onPressed: () async {
-                final cartProvider = Provider.of<CartProvider>(context, listen: false);
-                await cartProvider.fetchCartItems();
-                Navigator.pop(context);
+              onPressed: () {
+                Navigator.pop(
+                  context,
+                  ReviewResult(
+                    subtotal: _subtotal,
+                    total: _total,
+                    cartItems: _cartItems,
+                  ),
+                );
               },
+
             ),
             title: const Text(
               "Checkout",
@@ -544,7 +626,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   children: [
                     Text(
                       "₹${_total.toStringAsFixed(2)}",
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
                     ),
                     const Text(
                       "Estimated Total",
@@ -677,7 +759,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     const SizedBox(height: 20),
 
                     // Promo Code Section
-                    const Text("Promo Code", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF160042))),
+                    /*const Text("Promo Code", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF160042))),
                     const SizedBox(height: 8),
                     Row(
                       children: [
@@ -698,17 +780,17 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 20),*/
 
                     // Add Note Section
-                    const Text("Add Note", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF160042))),
+                   /* const Text("Add Note", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF160042))),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _noteController,
                       maxLines: 3,
                       decoration: _inputDecoration("e.g. Leave outside the door"),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 20),*/
 
                     // Terms and Conditions
                     Container(
@@ -934,18 +1016,18 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              InkWell(
-                                onTap: () => _decrementQuantity(item),
-                                child: Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: const Icon(Icons.remove, size: 16),
-                                ),
-                              ),
+                              // InkWell(
+                              //   onTap: () => _decrementQuantity(item),
+                              //   child: Container(
+                              //     width: 30,
+                              //     height: 30,
+                              //     decoration: BoxDecoration(
+                              //       color: Colors.grey.shade200,
+                              //       borderRadius: BorderRadius.circular(6),
+                              //     ),
+                              //     child: const Icon(Icons.remove, size: 16),
+                              //   ),
+                              // ),
                               Container(
                                 width: 40,
                                 height: 30,
@@ -958,32 +1040,33 @@ class _ReviewScreenState extends State<ReviewScreen> {
                                   ),
                                 ),
                               ),
-                              InkWell(
-                                onTap: () => _incrementQuantity(item),
-                                child: Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.shade100,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Icon(Icons.add, size: 16, color: Colors.green.shade800),
+                              // InkWell(
+                              //   onTap: () => _incrementQuantity(item),
+                              //   child: Container(
+                              //     width: 30,
+                              //     height: 30,
+                              //     decoration: BoxDecoration(
+                              //       color: Colors.green.shade100,
+                              //       borderRadius: BorderRadius.circular(6),
+                              //     ),
+                              //     child: Icon(Icons.add, size: 16, color: Colors.green.shade800),
+                              //   ),
+                              // ),
+                              const Spacer(),
+                              Text(
+                                "₹${totalPrice.toStringAsFixed(2)}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.green,
                                 ),
                               ),
-                              const Spacer(),
                             ],
                           ),
                         ],
                       ),
                     ),
-                    Text(
-                      "₹${totalPrice.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.green,
-                      ),
-                    ),
+
                   ],
                 ),
               );
@@ -1422,4 +1505,18 @@ class OrderSuccessDialog extends StatelessWidget {
       },
     );
   }
+}
+
+
+
+class ReviewResult {
+  final double subtotal;
+  final double total;
+  final List<UserCartItem> cartItems;
+
+  ReviewResult({
+    required this.subtotal,
+    required this.total,
+    required this.cartItems,
+  });
 }

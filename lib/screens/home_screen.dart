@@ -286,16 +286,40 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _onProductTap(Product product) {
     if (kDebugMode) {
-      print('📱 Product tapped: ${product.name} (ID: ${product.id})');
+      print('📱 Product tapped: ${product.name}');
+      print('📱 Product ID: ${product.id}');
+      print('📱 Product Slug: ${product.slug}');
     }
 
+    // ✅ Add to recent views
     _addToRecentViews(product.id);
 
+    // ❌ Guard: slug must exist
+    if (product.slug == null || product.slug!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Product details not available"),
+        ),
+      );
+      return;
+    }
+
+    // ✅ Shareable URL (debug / future share feature)
+    final shareableUrl =
+        'https://admin.elfinic.com/api/productDetails/${product.slug}';
+    if (kDebugMode) {
+      print('🔗 Shareable URL: $shareableUrl');
+    }
+
+    // ✅ Navigate safely
     Navigator.push(
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            ProductDetailScreen(product: product),
+            ProductDetailScreen(
+              product: product,
+              slug: product.slug!, // ✅ now 100% safe
+            ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,
@@ -306,6 +330,7 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
+
 
   Future<void> _addToRecentViews(int productId) async {
     if (kDebugMode) {
@@ -1734,6 +1759,8 @@ class _ProductListWidgetState extends State<ProductListWidget> {
     );
   }
 }
+
+
 /*
 // Import your custom classes and providers
 class HomeScreen extends StatefulWidget {

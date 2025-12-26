@@ -9,6 +9,7 @@ import 'package:elfinic_commerce_llc/providers/ShippingProvider.dart';
 import 'package:elfinic_commerce_llc/providers/AuthProvider.dart';
 import 'package:elfinic_commerce_llc/providers/CartProvider.dart';
 import 'package:elfinic_commerce_llc/providers/RegisterProvider.dart';
+import 'package:elfinic_commerce_llc/providers/SimilarProductProvider.dart';
 import 'package:elfinic_commerce_llc/providers/SubCategoryProvider.dart';
 import 'package:elfinic_commerce_llc/providers/WishlistProvider.dart';
 import 'package:elfinic_commerce_llc/providers/category_provider.dart';
@@ -65,6 +66,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => LogoutProvider()),
         ChangeNotifierProvider(create: (_) => RecentViewProvider()),
         ChangeNotifierProvider(create: (_) => ArrivalProductProvider()),
+        ChangeNotifierProvider(create: (_) => SimilarProductProvider()),
 
 
 

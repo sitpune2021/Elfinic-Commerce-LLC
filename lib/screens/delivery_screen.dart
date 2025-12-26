@@ -38,6 +38,11 @@ class DeliveryScreen extends StatefulWidget {
 class _DeliveryScreenState extends State<DeliveryScreen> {
   int? _selectedDeliveryId;
 
+
+  double? _updatedSubtotal;
+  double? _updatedTotal;
+
+
   @override
   void initState() {
     super.initState();
@@ -65,171 +70,212 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
     );
 
     double deliveryCost = selectedType.charge;
-    double totalAmount = widget.subtotalAmount + deliveryCost;
+    // Use updated values from ReviewScreen if available
+    double subtotal = _updatedSubtotal ?? widget.subtotalAmount;
+    double totalAmount = _updatedTotal ?? (subtotal + deliveryCost);
 
-    return BaseScreen(
-      child: Scaffold(
-        backgroundColor: const Color(0xfffdf6ef),
-        appBar: AppBar(
+
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(
+          context,
+          ReviewResult(
+            subtotal: _updatedSubtotal ?? widget.subtotalAmount,
+            total: _updatedTotal ??
+                ((_updatedSubtotal ?? widget.subtotalAmount) +
+                    selectedType.charge),
+            cartItems: widget.cartItems,
+          ),
+        );
+        return false;
+      },
+      child: BaseScreen(
+        child: Scaffold(
           backgroundColor: const Color(0xfffdf6ef),
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_sharp, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: const Text(
-            "Checkout",
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "₹${totalAmount.toStringAsFixed(2)}",
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const Text("Estimated Total",
-                      style: TextStyle(fontSize: 12, color: Colors.black54)),
-                ],
-              ),
-            )
-          ],
-        ),
-        body: provider.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : provider.errorMessage != null
-            ? Center(child: Text(provider.errorMessage!))
-            : SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  stepBox("1 SHIPPING", false),
-                  stepBox("2 DELIVERY", true),
-                  stepBox("3 REVIEW", false),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              _buildOrderSummary(deliveryCost, totalAmount),
-              const SizedBox(height: 20),
-
-              if (widget.selectedAddress != null)
-                _buildAddressCard(widget.selectedAddress!),
-              const SizedBox(height: 20),
-
-              const Text(
-                "Delivery Options:",
-                style: TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF160042)),
-              ),
-              const SizedBox(height: 15),
-
-              ...provider.deliveryTypes.map((type) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _selectedDeliveryId == type.id
-                          ? Colors.amber
-                          : Colors.grey.shade300,
-                      width: _selectedDeliveryId == type.id ? 2 : 1,
-                    ),
-                  ),
-                  child: RadioListTile<int>(
-                    value: type.id,
-                    groupValue: _selectedDeliveryId,
-                    onChanged: (val) {
-                      setState(() => _selectedDeliveryId = val);
-                    },
-                    title: Text(type.type,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(type.days),
-                    secondary: Text(
-                      "₹${type.charge.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    activeColor: Colors.amber,
+          appBar: AppBar(
+            backgroundColor: const Color(0xfffdf6ef),
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_sharp, color: Colors.black),
+              onPressed: () {
+                Navigator.pop(
+                  context,
+                  ReviewResult(
+                    subtotal: subtotal,
+                    total: totalAmount,
+                    cartItems: widget.cartItems,
                   ),
                 );
-              }),
+              },
+            ),
 
-              const SizedBox(height: 20),
-
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.amber.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.amber.shade200),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            title: const Text(
+              "Checkout",
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Delivery Cost:",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
                     Text(
-                      "₹${deliveryCost.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.green,
-                      ),
+                      "₹${totalAmount.toStringAsFixed(2)}",
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
                     ),
+                    const Text("Estimated Total",
+                        style: TextStyle(fontSize: 12, color: Colors.black54)),
                   ],
                 ),
-              ),
-              const SizedBox(height: 20),
+              )
+            ],
+          ),
+          body: provider.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : provider.errorMessage != null
+              ? Center(child: Text(provider.errorMessage!))
+              : SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    stepBox("1 SHIPPING", false),
+                    stepBox("2 DELIVERY", true),
+                    stepBox("3 REVIEW", false),
+                  ],
+                ),
+                const SizedBox(height: 20),
 
-              // ✅ Continue Button
-              Container(
-                margin: const EdgeInsets.only(top: 20, bottom: 10),
-                child: mainButton("REVIEW YOUR ORDER", () {
-                  if (widget.selectedAddress == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please select an address first'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-                  if (_selectedDeliveryId == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please select a delivery option'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
+                _buildOrderSummary(deliveryCost, totalAmount),
+                const SizedBox(height: 20),
 
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ReviewScreen(
-                        selectedAddress: widget.selectedAddress!,
-                        deliveryOption: selectedType.type,
-                        deliveryCost: selectedType.charge,
-                        subtotalAmount: widget.subtotalAmount,
-                        totalAmount: totalAmount,
-                        cartItems: widget.cartItems,
+                if (widget.selectedAddress != null)
+                  _buildAddressCard(widget.selectedAddress!),
+                const SizedBox(height: 20),
+
+                const Text(
+                  "Delivery Options:",
+                  style: TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF160042)),
+                ),
+                const SizedBox(height: 15),
+
+                ...provider.deliveryTypes.map((type) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _selectedDeliveryId == type.id
+                            ? Colors.amber
+                            : Colors.grey.shade300,
+                        width: _selectedDeliveryId == type.id ? 2 : 1,
                       ),
+                    ),
+                    child: RadioListTile<int>(
+                      value: type.id,
+                      groupValue: _selectedDeliveryId,
+                      onChanged: (val) {
+                        setState(() => _selectedDeliveryId = val);
+                      },
+                      title: Text(type.type,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(type.days),
+                      secondary: Text(
+                        "₹${type.charge.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      activeColor: Colors.amber,
                     ),
                   );
                 }),
-              ),
-            ],
+
+                const SizedBox(height: 20),
+
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.shade200),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Delivery Cost:",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        "₹${deliveryCost.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // ✅ Continue Button
+                Container(
+                  margin: const EdgeInsets.only(top: 20, bottom: 10),
+                  child: mainButton("REVIEW YOUR ORDER", () async {
+                    if (widget.selectedAddress == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please select an address first'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    if (_selectedDeliveryId == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please select a delivery option'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    final result = await Navigator.push<ReviewResult>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ReviewScreen(
+                          selectedAddress: widget.selectedAddress!,
+                          deliveryOption: selectedType.type,
+                          deliveryCost: selectedType.charge,
+                          subtotalAmount: widget.subtotalAmount,
+                          totalAmount: totalAmount,
+                          cartItems: widget.cartItems,
+                        ),
+                      ),
+                    );
+
+                    if (result != null) {
+                      setState(() {
+                        widget.cartItems
+                          ..clear()
+                          ..addAll(result.cartItems);
+
+                        _updatedSubtotal = result.subtotal;
+                        _updatedTotal = result.total;
+                      });
+                    }
+
+
+                  }),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -259,7 +305,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text("Subtotal:"),
-              Text("₹${widget.subtotalAmount.toStringAsFixed(2)}",
+        Text("₹${(_updatedSubtotal ?? widget.subtotalAmount).toStringAsFixed(2)}",
                   style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),

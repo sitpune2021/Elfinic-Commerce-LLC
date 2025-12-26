@@ -18,7 +18,7 @@ class CartProvider with ChangeNotifier {
   String? _error;
   List<UserCartItem> _cartItems = [];
   final Set<int> _selectedCartIds = {};
-  bool _cartClearedByPayment = false;
+  // bool _cartClearedByPayment = false;
 
   // Getters
   bool get isLoading => _isLoading;
@@ -43,11 +43,11 @@ class CartProvider with ChangeNotifier {
   Future<void> _loadCartClearedFlag() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _cartClearedByPayment = prefs.getBool('cart_cleared_by_payment') ?? false;
-
-      if (kDebugMode) {
-        print('🛒 Cart cleared flag loaded: $_cartClearedByPayment');
-      }
+      // _cartClearedByPayment = prefs.getBool('cart_cleared_by_payment') ?? false;
+      //
+      // if (kDebugMode) {
+      //   print('🛒 Cart cleared flag loaded: $_cartClearedByPayment');
+      // }
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error loading cart cleared flag: $e');
@@ -56,11 +56,11 @@ class CartProvider with ChangeNotifier {
   }
 
   // Save the flag to persistent storage
-  Future<void> _saveCartClearedFlag(bool value) async {
+  /*Future<void> _saveCartClearedFlag(bool value) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('cart_cleared_by_payment', value);
-      _cartClearedByPayment = value;
+      // _cartClearedByPayment = value;
 
       if (kDebugMode) {
         print('🛒 Cart cleared flag saved: $value');
@@ -70,7 +70,7 @@ class CartProvider with ChangeNotifier {
         print('❌ Error saving cart cleared flag: $e');
       }
     }
-  }
+  }*/
 
   // UPDATED: Local-only cart clearance with persistent flag
   Future<void> clearCart() async {
@@ -79,7 +79,7 @@ class CartProvider with ChangeNotifier {
 
     try {
       // Set flag to prevent server reload (persistently)
-      await _saveCartClearedFlag(true);
+      // await _saveCartClearedFlag(true);
 
       // Clear local cart state only
       _cartItems.clear();
@@ -103,12 +103,12 @@ class CartProvider with ChangeNotifier {
   // MODIFIED: Fetch cart items with payment check
   Future<void> fetchCartItems() async {
     // Don't fetch from server if cart was cleared by payment
-    if (_cartClearedByPayment) {
-      if (kDebugMode) {
-        print('🛒 Skipping server fetch - cart cleared by payment');
-      }
-      return;
-    }
+    // if (_cartClearedByPayment) {
+    //   if (kDebugMode) {
+    //     print('🛒 Skipping server fetch - cart cleared by payment');
+    //   }
+    //   return;
+    // }
 
     _isLoading = true;
     notifyListeners();
@@ -138,83 +138,59 @@ class CartProvider with ChangeNotifier {
   }
 
   // NEW: Reset the flag when user adds items to cart
-  Future<void> addToCart(Product product, int quantity) async {
+  Future<void> addToCart(Product product, int quantity, {int? variantId}) async {
     try {
-      // Reset the flag when user explicitly adds to cart
-      if (_cartClearedByPayment) {
-        await _saveCartClearedFlag(false);
-        if (kDebugMode) {
-          print('🛒 Cart cleared flag reset - user adding new items');
-        }
-      }
+      // Reset cleared flag if needed
+      // if (_cartClearedByPayment) {
+      //   await _saveCartClearedFlag(false);
+      //   if (kDebugMode) {
+      //     print('🛒 Cart cleared flag reset - user adding new items');
+      //   }
+      // }
 
-      final existingItemIndex = _cartItems.indexWhere((item) => item.productId == product.id);
+      /// Check if same product + variant already exists
+    /*  final existingIndex = _cartItems.indexWhere((item) =>
+      item.productId == product.id &&
+          item.product.variantId == variantId);
 
-      if (existingItemIndex != -1) {
-        final existingItem = _cartItems[existingItemIndex];
+      if (existingIndex != -1) {
+        // Increase quantity
+        final existingItem = _cartItems[existingIndex];
         await updateQuantity(existingItem, existingItem.quantity + quantity);
-      } else {
-        final response = await ApiService.addToCartApi(
-          productId: product.id,
-          quantity: quantity,
-        );
+        return;
+      }*/
 
-        // Use product_thumb instead of images[0]
-        final cartItem = UserCartItem(
-          cartId: response.data?.id ?? 0,
-          productId: product.id,
-          userId: response.data?.userId ?? 0,
-          quantity: response.data?.quantity ?? quantity,
-          product: UserCartProduct(
-            id: product.id,
-            name: product.name,
-            sku: product.sku ?? '',
-            barcode: product.barcode ?? '',
-            images: product.images ?? [],
-            thumb: product.productThumb ?? '',
-            description: product.description ?? '',
-            price: product.price.toString(),
-            discountPrice: product.discountPrice.toString(),
-            totalPrice: product.discountPrice.toString(),
-            stock: product.stock,
-            status: product.status,
-            brand: product.brand ?? '',
-            category: product.category ?? '',
-            // subcategory: product.subcategory ?? '',
-            vendor: product.vendor ?? '',
-            vendorId: product.vendorId?.toString() ?? '',
-            ratingCount: product.ratingCount,
-            averageRating: product.averageRating,
-            options: product.options
-                .map((e) => CartProductOption(
-              optionType: e.optionType,
-              displayType: e.displayType,
-              // size: e.size,
-              // choices: e.choices,
-            ))
-                .toList(), subcategory: '',
-          ),
-        );
+      // Call API
+      final response = await ApiService.addToCartApi(
+        productId: product.id,
+        quantity: quantity,
+        variantId: variantId,
+      );
 
-        _cartItems.add(cartItem);
-        notifyListeners();
+      if (response.status != "success") {
+        throw Exception(response.message);
       }
+
+      // 🚀 Always sync cart from backend after add
+      await fetchCartItems();
+
     } catch (e) {
       debugPrint("❌ addToCart error: $e");
       rethrow;
     }
   }
 
+
   // NEW: Manual method to reset the flag if needed
   Future<void> resetCartClearedFlag() async {
-    await _saveCartClearedFlag(false);
+    // await _saveCartClearedFlag(false);
     if (kDebugMode) {
       print('🛒 Cart cleared flag manually reset');
     }
   }
 
   // NEW: Check if cart was cleared by payment
-  bool get wasCartClearedByPayment => _cartClearedByPayment;
+  // bool get wasCartClearedByPayment => _cartClearedByPayment;
 
   // ... rest of your existing methods (updateQuantity, removeFromCart, etc.) remain the same
   Future<void> updateQuantity(UserCartItem item, int newQty) async {
@@ -225,25 +201,26 @@ class CartProvider with ChangeNotifier {
       }
 
       final prefs = await SharedPreferences.getInstance();
-      final userId = int.tryParse(prefs.getString('user_id') ?? "0") ?? 0;
+      final userId = int.parse(prefs.getString("user_id")!);
 
       final isIncrease = newQty > item.quantity;
-      final updatedQty = await ApiService.updateQuantity(
+
+      await ApiService.updateQuantity(
         userId: userId,
         productId: item.productId,
+        variantId: item.product.selectedVariantId, // ✅ FIX
         increase: isIncrease,
       );
 
-      if (updatedQty == 0) {
-        await removeFromCart(item, null);
-      } else {
-        updateLocalQuantity(item.cartId, updatedQty);
-      }
+      // Single source of truth
+      await fetchCartItems();
+
     } catch (e) {
-      debugPrint("❌ updateQuantity error: $e");
+      debugPrint("❌ updateQuantity failed: $e");
       rethrow;
     }
   }
+
 
   Future<void> removeFromCart(UserCartItem item, BuildContext? context) async {
     try {

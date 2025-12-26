@@ -48,7 +48,7 @@ class _CartScreenState extends State<CartScreen> {
       _couponProvider = Provider.of<CouponProvider>(context, listen: false);
       _couponProvider.loadAppliedCoupon();
       _couponProvider.fetchCoupons();
-      context.read<CouponProvider>().fetchCoupons();
+
     });
   }
 
@@ -92,10 +92,7 @@ class _CartScreenState extends State<CartScreen> {
 
     if (couponCode.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a promo code'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Please enter a promo code')),
       );
       return;
     }
@@ -103,41 +100,62 @@ class _CartScreenState extends State<CartScreen> {
     setState(() => _isApplyingPromo = true);
 
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    final subtotal = _calculateSubtotal(cartProvider);
     final couponProvider = Provider.of<CouponProvider>(context, listen: false);
 
-    final result = await couponProvider.applyCoupon(couponCode);
+    final selectedItems = cartProvider.getSelectedCartItems();
+
+    if (selectedItems.isEmpty) {
+      setState(() => _isApplyingPromo = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select items to apply coupon')),
+      );
+      return;
+    }
+
+    // ✅ Get userId safely from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final userIdString = prefs.getString("user_id");
+    final userId = int.tryParse(userIdString ?? '');
+
+    if (userId == null || userId == 0) {
+      setState(() => _isApplyingPromo = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User not logged in')),
+      );
+      return;
+    }
+
+    // ✅ APPLY COUPON
+    final result = await couponProvider.applyCoupon(
+      couponCode,
+      selectedItems,
+      userId,
+    );
 
     setState(() => _isApplyingPromo = false);
 
     if (result['success'] == true) {
-      setState(() => _showSuccessAnimation = true);
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-              'Coupon applied successfully! Discount: ₹${result['discount']?.toStringAsFixed(2) ?? '0.00'}'),
+          content: Text(result['message'] ?? 'Coupon applied'),
           backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
         ),
       );
 
-      _promoCodeController.clear();
-
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          setState(() => _showSuccessAnimation = false);
-        }
-      });
-    } else {
+      // Keep coupon visible in input
+      _promoCodeController.text = couponCode;   // ✅ show applied coupon
+    }
+    else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result['message'] ?? 'Invalid coupon code'),
+          content: Text(result['message'] ?? 'Failed to apply coupon'),
           backgroundColor: Colors.red,
         ),
       );
     }
   }
+
+
 
   Future<void> _removeCoupon() async {
     final couponProvider = Provider.of<CouponProvider>(context, listen: false);
@@ -397,8 +415,8 @@ class _CartScreenState extends State<CartScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Applied Coupon Section
-          if (couponProvider.hasAppliedCoupon)
-            _buildAppliedCouponSection(couponProvider),
+          // if (couponProvider.hasAppliedCoupon)
+            // _buildAppliedCouponSection(couponProvider),
 
           // Promo Code Section
           _buildPromoCodeSection(couponProvider),
@@ -415,49 +433,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _buildAppliedCouponSection(CouponProvider couponProvider) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.green.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.shade200),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: Colors.green, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${couponProvider.appliedCoupon!.code} Applied',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-                Text(
-                  'Discount: ₹${couponProvider.couponDiscount.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close, size: 18),
-            onPressed: _removeCoupon,
-            color: Colors.green,
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildPromoCodeSection(CouponProvider couponProvider) {
     return Column(
@@ -638,13 +614,22 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ),
               TextButton(
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  final selectedCoupon = await Navigator.push<String>(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const AllCouponsScreen(),
                     ),
                   );
+
+                  if (selectedCoupon != null && selectedCoupon.isNotEmpty) {
+                    setState(() {
+                      _promoCodeController.text = selectedCoupon; // 👈 Autofill textfield
+                    });
+
+                    // Optional: auto apply
+                    _applyPromoCode();
+                  }
                 },
                 child: const Text(
                   "View All",
@@ -1732,58 +1717,47 @@ class CouponProvider with ChangeNotifier {
   }
 
   // Apply coupon
-  Future<Map<String, dynamic>> applyCoupon(String couponCode) async {
+  Future<Map<String, dynamic>> applyCoupon(
+      String couponCode,
+      List<UserCartItem> selectedItems,
+      int userId,
+      ) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final response =
-      await ApiService.applyCoupon(couponCode, _subtotal);
+      final response = await ApiService.applyCoupon(
+        userId: userId,
+        couponCode: couponCode,
+        cartItems: selectedItems,
+        subtotal: _subtotal,
+      );
 
-      if (response.status == 'success') {
-        final data = response.data;
+      _couponDiscount = response.pricing.totalDiscount;
+      _appliedCoupon = Coupon(
+        id: response.coupon?.id ?? 0,
+        code: response.coupon?.code ?? couponCode,
+        discountType: 'flat',
+        discountValue: _couponDiscount,
+        startDate: '',
+        endDate: '',
+        minimumAmount: 0,
+        maxUsage: 0,
+        usedCount: 0,
+        status: 'active',
+        couponStatus: 'valid',
+      );
 
-        _couponDiscount = data.discount.toDouble();
-
-        // Find coupon locally for UI display
-        final coupon = _coupons.firstWhere(
-              (c) => c.code == couponCode,
-          orElse: () => Coupon(
-            id: 0,
-            code: couponCode,
-            discountType: 'flat',
-            discountValue: _couponDiscount,
-            startDate: '',
-            endDate: '',
-            productId: null,
-            minimumAmount: 0,
-            maxUsage: 0,
-            usedCount: 0,
-            status: 'active',
-            couponStatus: 'valid',
-          ),
-        );
-
-        _appliedCoupon = coupon;
-
-        await _saveAppliedCoupon(coupon);
-
-        return {
-          'success': true,
-          'message': response.message,
-          'discount': data.discount.toDouble(),
-          'payable_amount': data.payableAmount.toDouble(),
-        };
-      } else {
-        return {
-          'success': false,
-          'message': response.message,
-        };
-      }
+      return {
+        'success': true,
+        'discount': response.pricing.totalDiscount,
+        'payable_amount': response.pricing.totalPayableAmount,
+        'message': response.coupon?.message ?? 'Coupon applied',
+      };
     } catch (e) {
       return {
         'success': false,
-        'message': 'Error applying coupon: $e',
+        'message': e.toString(),
       };
     } finally {
       _isLoading = false;
@@ -1917,7 +1891,8 @@ class Coupon {
   final double discountValue;
   final String startDate;
   final String endDate;
-  final int? productId;
+  final String? productId;
+
   final double minimumAmount;
   final int maxUsage;
   final int usedCount;
@@ -1948,13 +1923,12 @@ class Coupon {
       id: json['id'] ?? 0,
       code: json['code'] ?? '',
       discountType: json['discount_type'] ?? 'flat',
-      discountValue:
-      double.tryParse(json['discount_value']?.toString() ?? '0') ?? 0.0,
+      discountValue: double.tryParse(json['discount_value'].toString()) ?? 0.0,
       startDate: json['start_date'] ?? '',
       endDate: json['end_date'] ?? '',
-      productId: json['product_id'],
+      productId: json['product_id']?.toString(), // ✅ FIX
       minimumAmount:
-      double.tryParse(json['minimum_amount']?.toString() ?? '0') ?? 0.0,
+      double.tryParse(json['minimum_amount'].toString()) ?? 0.0,
       maxUsage: json['max_usage'] ?? 0,
       usedCount: json['used_count'] ?? 0,
       status: json['status'] ?? 'inactive',
@@ -1967,6 +1941,7 @@ class Coupon {
           : null,
     );
   }
+
 
   // ✅ REQUIRED FOR SharedPreferences
   Map<String, dynamic> toJson() {
@@ -2032,45 +2007,159 @@ class CouponResponse {
 }
 
 
+class ApplyCouponRequest {
+  final int userId;
+  final String couponCode;
+  final CouponCart cart;
+
+  ApplyCouponRequest({
+    required this.userId,
+    required this.couponCode,
+    required this.cart,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      "user_id": userId,
+      "coupon_code": couponCode,
+      "cart": cart.toJson(),
+    };
+  }
+}
+
+class CouponCart {
+  final List<CouponCartItem> items;
+  final double cartSubtotal;
+
+  CouponCart({
+    required this.items,
+    required this.cartSubtotal,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      "items": items.map((e) => e.toJson()).toList(),
+      "cart_subtotal": cartSubtotal.toInt(),
+    };
+  }
+}
+
+class CouponCartItem {
+  final int productId;
+  final int? variantId;
+  final int quantity;
+  final double clientPrice;
+
+  CouponCartItem({
+    required this.productId,
+    this.variantId,
+    required this.quantity,
+    required this.clientPrice,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      "product_id": productId,
+      "variant_id": variantId,
+      "quantity": quantity,
+      "client_price": clientPrice.toInt(),
+    };
+  }
+}
 
 class ApplyCouponResponse {
-  final String status;
-  final String message;
-  final CouponData data;
+  final bool success;
+  final CouponInfo? coupon;
+  final PricingInfo pricing;
+  final List<ItemDiscount> itemDiscounts;
 
   ApplyCouponResponse({
-    required this.status,
-    required this.message,
-    required this.data,
+    required this.success,
+    this.coupon,
+    required this.pricing,
+    required this.itemDiscounts,
   });
 
   factory ApplyCouponResponse.fromJson(Map<String, dynamic> json) {
     return ApplyCouponResponse(
-      status: json['status'] ?? '',
-      message: json['message'] ?? '',
-      data: CouponData.fromJson(json['data'] ?? {}),
+      success: json['success'] == 'success',
+      coupon: json['coupon'] != null
+          ? CouponInfo.fromJson(json['coupon'])
+          : null,
+      pricing: PricingInfo.fromJson(json['pricing']),
+      itemDiscounts: (json['item_discounts'] as List? ?? [])
+          .map((e) => ItemDiscount.fromJson(e))
+          .toList(),
     );
   }
 }
-class CouponData {
-  final int originalAmount;
-  final int discount;
-  final int payableAmount;
-  final String couponCode;
 
-  CouponData({
-    required this.originalAmount,
-    required this.discount,
-    required this.payableAmount,
-    required this.couponCode,
+class CouponInfo {
+  final int id;
+  final String code;
+  final String type;
+  final String message;
+
+  CouponInfo({
+    required this.id,
+    required this.code,
+    required this.type,
+    required this.message,
   });
 
-  factory CouponData.fromJson(Map<String, dynamic> json) {
-    return CouponData(
-      originalAmount: json['original_amount'] ?? 0,
-      discount: json['discount'] ?? 0,
-      payableAmount: json['payable_amount'] ?? 0,
-      couponCode: json['coupon_code'] ?? '',
+  factory CouponInfo.fromJson(Map<String, dynamic> json) {
+    return CouponInfo(
+      id: json['id'] ?? 0,
+      code: json['code'] ?? '',
+      type: json['type'] ?? '',
+      message: json['message'] ?? '',
     );
   }
 }
+
+class PricingInfo {
+  final double totalDiscount;
+  final double cartSubtotal;
+  final double totalPayableAmount;
+
+  PricingInfo({
+    required this.totalDiscount,
+    required this.cartSubtotal,
+    required this.totalPayableAmount,
+  });
+
+  factory PricingInfo.fromJson(Map<String, dynamic> json) {
+    return PricingInfo(
+      totalDiscount:
+      double.tryParse(json['total_discount'].toString()) ?? 0,
+      cartSubtotal:
+      double.tryParse(json['cart_subtotal'].toString()) ?? 0,
+      totalPayableAmount:
+      double.tryParse(json['total_payable_amount'].toString()) ?? 0,
+    );
+  }
+}
+
+class ItemDiscount {
+  final int productId;
+  final int? variantId;
+  final double discountAmount;
+
+  ItemDiscount({
+    required this.productId,
+    this.variantId,
+    required this.discountAmount,
+  });
+
+  factory ItemDiscount.fromJson(Map<String, dynamic> json) {
+    return ItemDiscount(
+      productId: json['product_id'] ?? 0,
+      variantId: json['variant_id'],
+      discountAmount:
+      double.tryParse(json['discount_amount'].toString()) ?? 0,
+    );
+  }
+}
+
+
+
