@@ -31,90 +31,72 @@ class ReviewProvider with ChangeNotifier {
       final userId = int.tryParse(userIdString ?? '0') ?? 0;
 
       if (userId == 0) {
-        _error = 'Please login to add review';
+        _error = 'Please login to add a review';
         _isLoading = false;
         notifyListeners();
         return false;
       }
 
-      // Prepare request data
-      final requestData = {
-        'product_id': productId,
-        'user_id': userId,
-        'rating': rating,
-        'review': review,
-      };
-
-      // Use ApiService URL
       final url = ApiService.addReview;
 
-      // Print request details
-      print('🟡 REVIEW API REQUEST:');
-      print('🟡 URL: $url');
-      print('🟡 Method: POST');
-      print('🟡 Headers: {Content-Type: application/json}');
-      print('🟡 Request Body: ${jsonEncode(requestData)}');
-      print('🟡 User ID: $userId');
-      print('🟡 Product ID: $productId');
+      final requestBody = {
+        "product_id": productId,
+        "user_id": userId,
+        "rating": rating,
+        "review": review,
+      };
+
+      // ✅ LOG REQUEST
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('🟡 ADD REVIEW API');
+      print('URL: $url');
+      print('BODY: ${jsonEncode(requestBody)}');
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       final response = await http.post(
         Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        body: jsonEncode(requestData),
+        body: jsonEncode(requestBody),
       );
 
-      // Print response details
-      print('🟢 REVIEW API RESPONSE:');
-      print('🟢 Status Code: ${response.statusCode}');
-      print('🟢 Response Body: ${response.body}');
-      print('🟢 Response Headers: ${response.headers}');
+      // ✅ LOG RESPONSE
+      print('🟢 STATUS: ${response.statusCode}');
+      print('🟢 BODY: ${response.body}');
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       _isLoading = false;
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        print('🟢 Parsed Response Data: $data');
-
         if (data['status'] == 'success') {
-          print('✅ Review added successfully!');
+          print('✅ Review submitted successfully');
 
-          // Add the new review to local list
-          final newReview = Review(
-            id: DateTime.now().millisecondsSinceEpoch,
-            productId: productId,
-            userId: userId,
-            rating: rating,
-            review: review,
-            createdAt: DateTime.now().toIso8601String(),
-            userPhoto: '',
-          );
+          // 🔥 Re-fetch reviews so real data comes from backend
+          await fetchProductReviews(productId);
 
-          _reviews.insert(0, newReview);
-          notifyListeners();
           return true;
         } else {
-          _error = data['message'] ?? 'Failed to add review';
-          print('❌ API Error: $_error');
+          _error = data['message'] ?? 'Failed to submit review';
           notifyListeners();
           return false;
         }
       } else {
-        _error = 'Server error: ${response.statusCode}';
-        print('❌ HTTP Error: $_error');
+        _error = 'Server error ${response.statusCode}';
         notifyListeners();
         return false;
       }
     } catch (e) {
       _isLoading = false;
       _error = 'Network error: $e';
-      print('❌ Exception: $e');
       notifyListeners();
       return false;
     }
   }
+
 
   // Fetch product reviews with detailed information
   Future<Map<String, dynamic>?> fetchProductReviews(int productId) async {
@@ -123,14 +105,16 @@ class ReviewProvider with ChangeNotifier {
       _error = '';
       notifyListeners();
 
-      // Use ApiService URL
       final url = ApiService.productReviews;
 
-      // Print request details
-      print('🟡 PRODUCT REVIEWS API REQUEST:');
+      // ✅ FULL REQUEST LOG
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('🟡 PRODUCT REVIEWS API REQUEST');
       print('🟡 URL: $url');
-      print('🟡 Method: POST');
-      print('🟡 Product ID: $productId');
+      print('🟡 METHOD: POST');
+      print('🟡 HEADERS: { Content-Type: application/json }');
+      print('🟡 BODY: ${jsonEncode({"product_id": productId})}');
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       final response = await http.post(
         Uri.parse(url),
@@ -142,53 +126,43 @@ class ReviewProvider with ChangeNotifier {
         }),
       );
 
-      // Print response details
-      print('🟢 PRODUCT REVIEWS API RESPONSE:');
-      print('🟢 Status Code: ${response.statusCode}');
-      print('🟢 Response Body: ${response.body}');
+      // ✅ FULL RESPONSE LOG
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('🟢 PRODUCT REVIEWS API RESPONSE');
+      print('🟢 STATUS CODE: ${response.statusCode}');
+      print('🟢 BODY: ${response.body}');
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       _isLoading = false;
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        print('🟢 Parsed Product Reviews Data: $data');
-
         if (data['status'] == 'success') {
-          print('✅ Product reviews fetched successfully!');
-
-          // Update reviews list
-          if (data['reviews'] != null) {
-            _reviews = (data['reviews'] as List)
-                .map((item) {
-              print('🟢 Review Item: $item');
-              return Review.fromJson(item);
-            })
-                .toList();
-          }
+          _reviews = (data['reviews'] as List? ?? [])
+              .map((e) => Review.fromJson(e))
+              .toList();
 
           notifyListeners();
           return data;
         } else {
           _error = data['message'] ?? 'Failed to fetch product reviews';
-          print('❌ API Error: $_error');
           notifyListeners();
           return null;
         }
       } else {
         _error = 'Server error: ${response.statusCode}';
-        print('❌ HTTP Error: $_error');
         notifyListeners();
         return null;
       }
     } catch (e) {
       _isLoading = false;
       _error = 'Network error: $e';
-      print('❌ Exception: $e');
       notifyListeners();
       return null;
     }
   }
+
 
 
   // Clear all reviews

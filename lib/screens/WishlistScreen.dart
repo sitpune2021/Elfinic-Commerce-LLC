@@ -62,94 +62,51 @@ class _WishlistScreenState extends State<WishlistScreen> {
       }
 
       final url = Uri.parse(
-          '${ApiService.baseUrl}/api/getProductByType?user_id=$userId&type=Wishlist');
+        '${ApiService.baseUrl}/api/getProductByType?user_id=$userId&type=Wishlist',
+      );
 
       final response = await http.get(url, headers: {
         "Authorization": "Bearer $token",
-        "Accept": "application/json"
+        "Accept": "application/json",
       });
-
-      if (kDebugMode) {
-        print("===== WISHLIST API RESPONSE =====");
-        print("Status: ${response.statusCode}");
-        print("Body: ${response.body}");
-      }
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
 
-        if (jsonData['status'] == true) {
-          final List<dynamic> list = jsonData['data'] ?? [];
+        final isSuccess = jsonData['status'] == 'success';
+
+        if (isSuccess) {
+          final List list = jsonData['data'] ?? [];
+
+          final products =
+          list.map((e) => Product.fromJson(e)).toList();
 
           setState(() {
-            _wishlistProducts = list
-                .map((p) => Product.fromJson(p))
-                .toList();
-
+            _wishlistProducts = products;
             if (_wishlistProducts.isEmpty) {
               _errorMessage = "Your wishlist is empty!";
             }
           });
+
+          // 🔥 Sync Provider with backend
+          final wishlistProvider =
+          Provider.of<WishlistProvider>(context, listen: false);
+
+
         } else {
-          setState(() => _errorMessage = jsonData["message"] ?? "Failed to load wishlist");
+          setState(() => _errorMessage = jsonData['message']);
         }
       } else {
-        setState(() => _errorMessage = "Server error: ${response.statusCode}");
+        setState(() => _errorMessage = "Server error ${response.statusCode}");
       }
     } catch (e) {
-      setState(() => _errorMessage = "Error loading wishlist: $e");
+      setState(() => _errorMessage = "Error: $e");
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  /*Future<void> _loadWishlist() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getString('user_id');
-      final token = prefs.getString('auth_token');
-
-      if (userId == null || token == null) {
-        setState(() => _errorMessage = 'User not logged in');
-        return;
-      }
-
-      final url = Uri.parse('${ApiService.baseUrl}/api/getWishlist?user_id=$userId');
-      final response = await http.get(url, headers: {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-      });
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == true && data['data'] != null) {
-          final List<dynamic> products = data['data'];
-          setState(() {
-            _wishlistProducts = products.isNotEmpty
-                ? List<Product>.from(
-              products.map((product) => Product.fromJson(product)),
-            )
-                : [];
-            _errorMessage = products.isEmpty ? 'Your wishlist is empty!' : '';
-          });
-        } else {
-          setState(() =>
-          _errorMessage = data['message'] ?? 'Failed to load wishlist');
-        }
-      } else {
-        setState(() => _errorMessage = 'Server error: ${response.statusCode}');
-      }
-    } catch (e) {
-      setState(() => _errorMessage = 'Error loading wishlist: $e');
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }*/
 
   Future<void> _toggleWishlist(int productId) async {
     final provider = Provider.of<WishlistProvider>(context, listen: false);
@@ -306,12 +263,30 @@ class _WishlistScreenState extends State<WishlistScreen> {
   Widget _buildWishlistCard(Product product) {
     return GestureDetector(
       onTap: () {
+        if (product.slug == null || product.slug!.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Product not available")),
+          );
+          return;
+        }
+
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (context) => ProductDetailScreen(product: product)),
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                ProductDetailScreen(
+                  product: product,
+                  slug: product.slug!,
+                ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
         );
+
       },
+
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,

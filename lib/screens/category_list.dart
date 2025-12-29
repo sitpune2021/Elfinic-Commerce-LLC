@@ -1,5 +1,7 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import '../model/SubcategoriesResponse.dart';
 import 'package:flutter/material.dart';
 
@@ -250,33 +252,32 @@ class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
                                 ],
                               ),
                               child: ClipOval(
-                                child: Image.network(
+                                child: CachedNetworkImage(
+                                  imageUrl:
                                   "${ApiService.baseUrl}/assets/img/category-images/${category.image}",
                                   fit: BoxFit.cover,
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Center(
-                                      child: CircularProgressIndicator(
-                                        value: loadingProgress.expectedTotalBytes != null
-                                            ? loadingProgress.cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                            : null,
-                                        strokeWidth: 2,
-                                      ),
-                                    );
-                                  },
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      color: Colors.grey[200],
-                                      child: Icon(
-                                        Icons.category,
-                                        color: Colors.grey[400],
-                                        size: 20,
-                                      ),
-                                    );
-                                  },
+
+                                  // 🟡 Shimmer while loading
+                                  placeholder: (context, url) => Shimmer.fromColors(
+                                    baseColor: Colors.grey.shade300,
+                                    highlightColor: Colors.grey.shade100,
+                                    child: Container(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+
+                                  // 🔴 Error fallback
+                                  errorWidget: (context, url, error) => Container(
+                                    color: Colors.grey.shade200,
+                                    child: Icon(
+                                      Icons.category,
+                                      color: Colors.grey.shade400,
+                                      size: 20,
+                                    ),
+                                  ),
                                 ),
                               ),
+
                             ),
                             const SizedBox(height: 8),
 
@@ -373,20 +374,22 @@ class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
                                   topLeft: Radius.circular(16),
                                   topRight: Radius.circular(16),
                                 ),
-                                child: Image.network(
-                                  imageUrl,
+                                child: CachedNetworkImage(
+                                  imageUrl: imageUrl,
                                   fit: BoxFit.cover,
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return const Center(
-                                      child: SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                      ),
-                                    );
-                                  },
-                                  errorBuilder: (context, error, stackTrace) => Container(
+                                  fadeInDuration: const Duration(milliseconds: 300),
+
+                                  // ✅ Shimmer while loading
+                                  placeholder: (context, url) => Shimmer.fromColors(
+                                    baseColor: Colors.grey.shade300,
+                                    highlightColor: Colors.grey.shade100,
+                                    child: Container(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+
+                                  // ❌ Error fallback
+                                  errorWidget: (context, url, error) => Container(
                                     color: Colors.orange.shade50,
                                     child: const Icon(
                                       Icons.category,
@@ -397,6 +400,7 @@ class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
                                 ),
                               ),
                             ),
+
 
                             // ✅ Text section
                             Expanded(
@@ -691,17 +695,38 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(12),
                           ),
-                          child: Image.network(
-                            imageUrl,
+                          child: CachedNetworkImage(
+                            imageUrl: imageUrl,
                             fit: BoxFit.cover,
                             width: double.infinity,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: Colors.grey[200],
-                              child: const Icon(Icons.image_not_supported),
+
+                            // 🔥 CACHE OPTIMIZATION (VERY IMPORTANT)
+                            memCacheWidth: 400,   // Grid image width
+                            memCacheHeight: 550,  // Grid image height
+                            maxWidthDiskCache: 400,
+                            maxHeightDiskCache: 550,
+
+                            // 🔥 FADE IN ANIMATION
+                            fadeInDuration: const Duration(milliseconds: 300),
+                            fadeOutDuration: const Duration(milliseconds: 200),
+
+                            // 🔥 SHIMMER PLACEHOLDER
+                            placeholder: (context, url) => const ImageShimmer(),
+
+                            // 🔥 ERROR STATE
+                            errorWidget: (context, url, error) => Container(
+                              color: Colors.grey.shade200,
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
                         ),
                       ),
+
+
                       Padding(
                         padding: const EdgeInsets.all(8),
                         child: Text(
@@ -738,3 +763,18 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
 
 
+
+class ImageShimmer extends StatelessWidget {
+  const ImageShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: Container(
+        color: Colors.white,
+      ),
+    );
+  }
+}

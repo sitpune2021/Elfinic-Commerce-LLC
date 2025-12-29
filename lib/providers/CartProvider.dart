@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import '../model/ProductsResponse.dart';
 import '../model/cart_models.dart';
+import '../screens/ProductDetailPage.dart';
 import '../services/api_service.dart';
 
 
@@ -138,27 +139,9 @@ class CartProvider with ChangeNotifier {
   }
 
   // NEW: Reset the flag when user adds items to cart
-  Future<void> addToCart(Product product, int quantity, {int? variantId}) async {
+  Future<void> addToCart(ProductDetail product, int quantity, {int? variantId}) async {
     try {
-      // Reset cleared flag if needed
-      // if (_cartClearedByPayment) {
-      //   await _saveCartClearedFlag(false);
-      //   if (kDebugMode) {
-      //     print('🛒 Cart cleared flag reset - user adding new items');
-      //   }
-      // }
 
-      /// Check if same product + variant already exists
-    /*  final existingIndex = _cartItems.indexWhere((item) =>
-      item.productId == product.id &&
-          item.product.variantId == variantId);
-
-      if (existingIndex != -1) {
-        // Increase quantity
-        final existingItem = _cartItems[existingIndex];
-        await updateQuantity(existingItem, existingItem.quantity + quantity);
-        return;
-      }*/
 
       // Call API
       final response = await ApiService.addToCartApi(

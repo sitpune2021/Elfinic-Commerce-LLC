@@ -79,7 +79,8 @@ class _ShippingScreenState extends State<ShippingScreen> {
     _fullNameController.text = address.name;
     _phoneController.text = address.phone;
     _addressLine1Controller.text = address.addressLine1;
-    _addressLine2Controller.text = address.addressLine2!;
+    _addressLine2Controller.text = address.addressLine2 ?? '';
+
     _cityController.text = address.city;
     _stateController.text = address.state;
     _postalCodeController.text = address.postalCode;
@@ -135,6 +136,17 @@ class _ShippingScreenState extends State<ShippingScreen> {
       }
 
       final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+
+      if (selectedAddressType == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Please select address type (Home / Office / Other)"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
 
       final address = Address(
         id: _isEditMode ? widget.address!.id : null,
@@ -216,6 +228,56 @@ class _ShippingScreenState extends State<ShippingScreen> {
       }
     }
   }
+
+
+
+  String? _validateName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return "Full name is required";
+    }
+    if (value.trim().length < 3) {
+      return "Enter a valid name";
+    }
+    return null;
+  }
+
+  String? _validatePhone(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return "Mobile number is required";
+    }
+    if (!RegExp(r'^[6-9]\d{9}$').hasMatch(value)) {
+      return "Enter valid 10-digit Indian mobile number";
+    }
+    return null;
+  }
+
+  String? _validatePincode(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return "Pincode is required";
+    }
+    if (!RegExp(r'^\d{6}$').hasMatch(value)) {
+      return "Enter valid 6-digit PIN code";
+    }
+    return null;
+  }
+
+  String? _validateCity(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return "City is required";
+    }
+    if (!RegExp(r'^[a-zA-Z ]+$').hasMatch(value)) {
+      return "Enter valid city name";
+    }
+    return null;
+  }
+
+  String? _validateState(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return "State is required";
+    }
+    return null;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -300,21 +362,28 @@ class _ShippingScreenState extends State<ShippingScreen> {
                           _textField(
                             controller: _fullNameController,
                             hint: "Enter full name",
+                            validator: _validateName,
                           ),
+
 
                           _label("Mobile Number*"),
                           _textField(
                             controller: _phoneController,
                             hint: "Enter mobile number",
                             keyboardType: TextInputType.phone,
+                            validator: _validatePhone,
                           ),
+
 
                           _label("Address Line 1*"),
                           _textField(
                             controller: _addressLine1Controller,
                             hint: "House no, Street name",
                             suffixIcon: const Icon(Icons.location_on_outlined),
+                            validator: (v) =>
+                            v == null || v.trim().isEmpty ? "Address is required" : null,
                           ),
+
 
                           _label("Address Line 2"),
                           _textField(
@@ -326,20 +395,26 @@ class _ShippingScreenState extends State<ShippingScreen> {
                           _textField(
                             controller: _cityController,
                             hint: "Enter city name",
+                            validator: _validateCity,
                           ),
+
 
                           _label("State*"),
                           _textField(
                             controller: _stateController,
                             hint: "Enter state name",
+                            validator: _validateState,
                           ),
+
 
                           _label("Zip / Postal Code*"),
                           _textField(
                             controller: _postalCodeController,
                             hint: "411038",
                             keyboardType: TextInputType.number,
+                            validator: _validatePincode,
                           ),
+
 
                           Row(
                             children: [
@@ -472,16 +547,13 @@ class _ShippingScreenState extends State<ShippingScreen> {
     String? hint,
     Widget? suffixIcon,
     TextInputType? keyboardType,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      validator: (value) {
-        if (value == null || value.trim().isEmpty) {
-          return "This field is required";
-        }
-        return null;
-      },
+      validator: validator,
+      autovalidateMode: AutovalidateMode.onUserInteraction, // 🔥 Flipkart-style
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
@@ -490,19 +562,11 @@ class _ShippingScreenState extends State<ShippingScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide(color: Colors.grey.shade400),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide(color: Colors.grey.shade400),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Colors.black87, width: 1.2),
         ),
       ),
     );
   }
+
 
   Widget _addressTypeSelector() {
     final types = ["Home", "Office", "Other"];

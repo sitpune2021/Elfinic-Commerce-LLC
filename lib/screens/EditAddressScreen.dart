@@ -42,6 +42,39 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
   String? selectedAddressType;
   bool useBillingAddress = false;
 
+
+  String? _validateName(String? v) {
+    if (v == null || v.trim().isEmpty) return "Full name is required";
+    if (v.trim().length < 3) return "Enter a valid name";
+    return null;
+  }
+
+  String? _validatePhone(String? v) {
+    if (v == null || v.trim().isEmpty) return "Mobile number is required";
+    if (!RegExp(r'^[6-9]\d{9}$').hasMatch(v)) {
+      return "Enter valid 10-digit mobile number";
+    }
+    return null;
+  }
+
+  String? _validatePincode(String? v) {
+    if (v == null || v.trim().isEmpty) return "Pincode is required";
+    if (!RegExp(r'^\d{6}$').hasMatch(v)) return "Enter valid 6-digit pincode";
+    return null;
+  }
+
+  String? _validateCity(String? v) {
+    if (v == null || v.trim().isEmpty) return "City is required";
+    if (!RegExp(r'^[a-zA-Z ]+$').hasMatch(v)) return "Enter valid city";
+    return null;
+  }
+
+  String? _validateState(String? v) {
+    if (v == null || v.trim().isEmpty) return "State is required";
+    return null;
+  }
+
+
   @override
   void initState() {
     super.initState();
@@ -82,13 +115,25 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
         type: selectedAddressType ?? "Home",
         phone: _phoneController.text.trim(),
         addressLine1: _addressLine1Controller.text.trim(),
-        addressLine2: _addressLine2Controller.text.trim(),
+        addressLine2: _addressLine2Controller.text.trim().isEmpty
+            ? null
+            : _addressLine2Controller.text.trim(),
         city: _cityController.text.trim(),
         state: _stateController.text.trim(),
         country: 'India',
         postalCode: _postalCodeController.text.trim(),
         isDefault: useBillingAddress ? 1 : 0,
       );
+
+      if (selectedAddressType == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Please select address type"),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
 
       print("🔄 Updating Address: ${updatedAddress.toJson()}");
 
@@ -177,6 +222,7 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                   _textField(
                     controller: _fullNameController,
                     hint: "Enter full name",
+                    validator: _validateName,
                   ),
 
                   _label("Mobile Number*"),
@@ -184,31 +230,37 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                     controller: _phoneController,
                     hint: "Enter mobile number",
                     keyboardType: TextInputType.phone,
+                    validator: _validatePhone,
                   ),
 
                   _label("Address Line 1*"),
-                  _textField(
-                    controller: _addressLine1Controller,
-                    hint: "House no, Street name",
-                    suffixIcon: const Icon(Icons.location_on_outlined),
-                  ),
+        _textField(
+        controller: _addressLine1Controller,
+        hint: "House no, Street name",
+        suffixIcon: const Icon(Icons.location_on_outlined),
+        validator: (v) => v == null || v.trim().isEmpty ? "Address is required" : null,
+        ),
 
                   _label("Address Line 2"),
                   _textField(
                     controller: _addressLine2Controller,
                     hint: "Apartment, suite, etc. (optional)",
+                    validator: (_) => null,   // 👈 no validation = optional
                   ),
+
 
                   _label("City*"),
                   _textField(
                     controller: _cityController,
                     hint: "Enter city name",
+                    validator: _validateCity,
                   ),
 
                   _label("State*"),
                   _textField(
                     controller: _stateController,
                     hint: "Enter state name",
+                    validator: _validateState,
                   ),
 
                   _label("Zip / Postal Code*"),
@@ -216,6 +268,7 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                     controller: _postalCodeController,
                     hint: "411038",
                     keyboardType: TextInputType.number,
+                    validator: _validatePincode,
                   ),
 
                   Row(
@@ -332,16 +385,13 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
     String? hint,
     Widget? suffixIcon,
     TextInputType? keyboardType,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      validator: (value) {
-        if (value == null || value.trim().isEmpty) {
-          return "This field is required";
-        }
-        return null;
-      },
+      validator: validator,
+      autovalidateMode: AutovalidateMode.onUserInteraction, // 🔥 real-time validation
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
@@ -350,19 +400,11 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide(color: Colors.grey.shade400),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide(color: Colors.grey.shade400),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Colors.black87, width: 1.2),
         ),
       ),
     );
   }
+
 
   Widget _addressTypeSelector() {
     final types = ["Home", "Office", "Other"];

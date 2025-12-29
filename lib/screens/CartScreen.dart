@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../model/AddressModel.dart';
 import '../model/cart_models.dart';
@@ -14,6 +16,7 @@ import '../services/api_service.dart';
 import '../utils/BaseScreen.dart';
 import '../utils/lottie_overlay.dart';
 import 'AddressListScreen.dart';
+import 'ProductDetailPage.dart';
 import 'ProfileScreen.dart';
 import 'address_screen.dart';
 import 'DashboardScreen.dart';
@@ -157,26 +160,7 @@ class _CartScreenState extends State<CartScreen> {
 
 
 
-  Future<void> _removeCoupon() async {
-    final couponProvider = Provider.of<CouponProvider>(context, listen: false);
-    final result = await couponProvider.removeCoupon();
 
-    if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] ?? 'Coupon removed'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] ?? 'Failed to remove coupon'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
 
   double _getUnitPrice(UserCartProduct product) {
     try {
@@ -209,6 +193,9 @@ class _CartScreenState extends State<CartScreen> {
     super.dispose();
   }
 
+
+
+
   @override
   Widget build(BuildContext context) {
     return Consumer<CartProvider>(
@@ -224,7 +211,22 @@ class _CartScreenState extends State<CartScreen> {
             // Update coupon provider subtotal whenever it changes
             WidgetsBinding.instance.addPostFrameCallback((_) {
               couponProvider.setSubtotal(subtotal);
+
+              final selectedItems = cartProvider.getSelectedCartItems();
+              couponProvider.validateAppliedCoupon(selectedItems);
+              final removed = couponProvider.validateAppliedCoupon(selectedItems);
+
+              if (removed) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Applied coupon removed as it is no longer applicable'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+
             });
+
 
             return PopScope(
               canPop: false,
@@ -427,7 +429,7 @@ class _CartScreenState extends State<CartScreen> {
           const SizedBox(height: 20),
 
           // Add Note Section
-          _buildAddNoteSection(),
+          // _buildAddNoteSection(),
         ],
       ),
     );
@@ -512,7 +514,11 @@ class _CartScreenState extends State<CartScreen> {
                     itemCount: couponProvider.coupons.length,
                     itemBuilder: (context, index) {
                       final coupon = couponProvider.coupons[index];
-                      final isValid = couponProvider.isCouponValid(coupon);
+                      final cartProvider = Provider.of<CartProvider>(context, listen: false);
+                      final selectedItems = cartProvider.getSelectedCartItems();
+
+                      final isValid = couponProvider.isCouponValid(coupon, selectedItems);
+
                       return Padding(
                         padding: const EdgeInsets.only(right: 8.0),
                         child: ChoiceChip(
@@ -649,11 +655,68 @@ class _CartScreenState extends State<CartScreen> {
               }
 
               if (couponProvider.coupons.isEmpty) {
-                return const Text("No coupons available");
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.local_offer_outlined, color: Colors.grey),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "No coupons available right now",
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               }
 
+
               // Show first 2 coupons
-              final displayedCoupons = couponProvider.coupons.take(2).toList();
+              final cartProvider = Provider.of<CartProvider>(context, listen: false);
+              final selectedItems = cartProvider.getSelectedCartItems();
+
+
+
+
+              final displayedCoupons = couponProvider.coupons
+                  .where((c) => couponProvider.isCouponValid(c, selectedItems))
+                  .take(2)
+                  .toList();
+
+              if (displayedCoupons.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.orange),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "No coupons applicable for selected items",
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
 
               return Column(
                 children: displayedCoupons.map((coupon) {
@@ -759,12 +822,15 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                   ),
                   Text(
-                    coupon.endDate.split('-').reversed.join('/'),
+                    "${coupon.endDate.day.toString().padLeft(2, '0')}/"
+                        "${coupon.endDate.month.toString().padLeft(2, '0')}/"
+                        "${coupon.endDate.year}",
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+
                 ],
               ),
             ],
@@ -1022,7 +1088,11 @@ class _AllCouponsScreenState extends State<AllCouponsScreen> {
             itemCount: couponProvider.coupons.length,
             itemBuilder: (context, index) {
               final coupon = couponProvider.coupons[index];
-              final isValid = couponProvider.isCouponValid(coupon);
+              final cartProvider = Provider.of<CartProvider>(context, listen: false);
+              final selectedItems = cartProvider.getSelectedCartItems();
+
+              final isValid = couponProvider.isCouponValid(coupon, selectedItems);
+
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -1202,7 +1272,11 @@ class CouponGridScreen extends StatelessWidget {
             ),
             itemBuilder: (context, index) {
               final coupon = coupons[index];
-              final disabled = !provider.isCouponValid(coupon);
+              final cartProvider = Provider.of<CartProvider>(context, listen: false);
+              final selectedItems = cartProvider.getSelectedCartItems();
+
+              final disabled = !provider.isCouponValid(coupon, selectedItems);
+
 
               return Opacity(
                 opacity: disabled ? 0.5 : 1,
@@ -1356,49 +1430,57 @@ class CartItemWidget extends StatelessWidget {
                     onChanged: (_) => cartProvider.toggleSelection(item),
                     activeColor: Colors.orange,
                   ),
-                  _buildProductImage(product),
+                  GestureDetector(
+                    onTap: () => _openProduct(context, product),
+                    child: _buildProductImage(product),
+                  ),
+
+
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          product.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Text(
-                              "₹${product.price}",
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                decoration: TextDecoration.lineThrough,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              "₹${_calculateDiscountedPrice(product)}",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Qty: ${item.quantity}",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
+                    child: GestureDetector(
+                      onTap: () => _openProduct(context, product),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w500),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                "₹${product.price}",
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  decoration: TextDecoration.lineThrough,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                "₹${_calculateDiscountedPrice(product)}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Qty: ${item.quantity}",
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   IconButton(
@@ -1488,6 +1570,36 @@ class CartItemWidget extends StatelessWidget {
     );
   }
 
+  void _openProduct(BuildContext context, UserCartProduct product) {
+    if (kDebugMode) {
+      print('🛒 Cart product tapped: ${product.name}');
+      print('🛒 Product ID: ${product.id}');
+      print('🛒 Product Slug: ${product.slug}');
+    }
+
+    if (product.slug == null || product.slug!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Product details not available")),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ProductDetailScreen(
+              slug: product.slug!,   // ✅ Cart → ProductDetail via slug
+            ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
+
   Widget _buildOptimizedImage(String? thumb) {
     if (thumb == null || thumb.isEmpty) {
       return Image.asset(
@@ -1498,64 +1610,57 @@ class CartItemWidget extends StatelessWidget {
       );
     }
 
-    final imageUrl = "${ApiService.baseUrl}/assets/img/products-thumbs/$thumb";
+    final imageUrl =
+        "${ApiService.baseUrl}/assets/img/products-thumbs/$thumb";
 
-    // debugPrint("🖼️ Loading product thumb: $imageUrl");
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        width: 70,
+        height: 70,
+        fit: BoxFit.cover,
 
-    return Image.network(
-      imageUrl,
-      width: 70,
-      height: 70,
-      fit: BoxFit.cover,
-      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-        if (wasSynchronouslyLoaded) return child;
-        return AnimatedOpacity(
-          opacity: frame == null ? 0 : 1,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-          child: child,
-        );
-      },
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return Container(
-          width: 70,
-          height: 70,
-          color: Colors.grey.shade200,
-          child: const Center(
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        );
-      },
-      errorBuilder: (context, error, stackTrace) {
-        debugPrint("❌ Thumb image failed: $imageUrl");
+        // 🔥 Cache optimization (VERY IMPORTANT)
+        memCacheWidth: 140,   // 2x for better quality on high DPI
+        memCacheHeight: 140,
+        maxWidthDiskCache: 140,
+        maxHeightDiskCache: 140,
 
-        return Image.asset(
-          'assets/images/no_product_img2.png',
-          width: 70,
-          height: 70,
-          fit: BoxFit.cover,
-        );
-      },
-    );
-  }
+        // 🔥 Fade-in animation
+        fadeInDuration: const Duration(milliseconds: 300),
+        fadeOutDuration: const Duration(milliseconds: 200),
 
-  Widget _buildPlaceholder() {
-    return Container(
-      color: Colors.grey.shade200,
-      child: const Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.shopping_bag, color: Colors.grey, size: 30),
-          SizedBox(height: 4),
-          Text(
-            'No Image',
-            style: TextStyle(fontSize: 9, color: Colors.grey),
-          ),
-        ],
+        // 🔥 Shimmer loader
+        placeholder: (context, url) => _thumbShimmer(),
+
+        // 🔥 Error fallback
+        errorWidget: (context, url, error) {
+          debugPrint("❌ Thumb image failed: $imageUrl");
+          return Image.asset(
+            'assets/images/no_product_img2.png',
+            width: 70,
+            height: 70,
+            fit: BoxFit.cover,
+          );
+        },
       ),
     );
   }
+
+
+  Widget _thumbShimmer() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: Container(
+        width: 70,
+        height: 70,
+        color: Colors.white,
+      ),
+    );
+  }
+
 
   void _showDeleteBottomSheet(
       BuildContext context, UserCartItem item, Function(int) onDelete) {
@@ -1734,19 +1839,14 @@ class CouponProvider with ChangeNotifier {
       );
 
       _couponDiscount = response.pricing.totalDiscount;
-      _appliedCoupon = Coupon(
-        id: response.coupon?.id ?? 0,
-        code: response.coupon?.code ?? couponCode,
-        discountType: 'flat',
-        discountValue: _couponDiscount,
-        startDate: '',
-        endDate: '',
-        minimumAmount: 0,
-        maxUsage: 0,
-        usedCount: 0,
-        status: 'active',
-        couponStatus: 'valid',
+      final apiCoupon = _coupons.firstWhere(
+            (c) => c.code == couponCode,
+        orElse: () => throw Exception("Coupon not found"),
       );
+
+      _appliedCoupon = apiCoupon;
+      _couponDiscount = response.pricing.totalDiscount;
+
 
       return {
         'success': true,
@@ -1804,18 +1904,16 @@ class CouponProvider with ChangeNotifier {
   // Calculate discount locally
   void _calculateDiscount(Coupon coupon) {
     if (coupon.isPercent) {
-      // Percentage discount
       _couponDiscount = (_subtotal * coupon.discountValue) / 100;
     } else {
-      // Flat discount
       _couponDiscount = coupon.discountValue;
     }
 
-    // Ensure discount doesn't exceed subtotal
     if (_couponDiscount > _subtotal) {
       _couponDiscount = _subtotal;
     }
   }
+
 
   // Calculate final amount after discount
   double get finalAmount {
@@ -1823,11 +1921,26 @@ class CouponProvider with ChangeNotifier {
   }
 
   // Check if coupon is valid for current cart
-  bool isCouponValid(Coupon coupon) {
+  bool isCouponValid(Coupon coupon, List<UserCartItem> selectedItems) {
     if (!coupon.isUsable) return false;
     if (!coupon.isValidForAmount(_subtotal)) return false;
+
+    // Product based validation
+    if (coupon.productIds.isNotEmpty) {
+      final selectedProductIds =
+      selectedItems.map((e) => e.product.id).toList();
+
+      final hasMatch =
+      selectedProductIds.any((id) => coupon.productIds.contains(id));
+
+      if (!hasMatch) return false;
+    }
+
     return true;
   }
+
+
+
 
   // Load applied coupon from shared preferences
   Future<void> loadAppliedCoupon() async {
@@ -1849,17 +1962,7 @@ class CouponProvider with ChangeNotifier {
   }
 
   // Save applied coupon to shared preferences
-  Future<void> _saveAppliedCoupon(Coupon coupon) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('applied_coupon', json.encode(coupon.toJson()));
-      await prefs.setDouble('coupon_discount', _couponDiscount);
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error saving applied coupon: $e');
-      }
-    }
-  }
+
 
   // Remove applied coupon from shared preferences
   Future<void> _removeAppliedCoupon() async {
@@ -1882,107 +1985,122 @@ class CouponProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  bool validateAppliedCoupon(List<UserCartItem> selectedItems) {
+    if (_appliedCoupon == null) return false;
+
+    final isStillValid = isCouponValid(_appliedCoupon!, selectedItems);
+
+    if (!isStillValid) {
+      _appliedCoupon = null;
+      _couponDiscount = 0.0;
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
 }
 
 class Coupon {
   final int id;
   final String code;
-  final String discountType;
+  final String? title;
+  final String? description;
+  final String discountType; // flat / percent
   final double discountValue;
-  final String startDate;
-  final String endDate;
-  final String? productId;
-
+  final DateTime startDate;
+  final DateTime endDate;
+  final List<int> productIds;
+  final String termCondition;
   final double minimumAmount;
   final int maxUsage;
   final int usedCount;
-  final String status;
   final String couponStatus;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
 
   Coupon({
     required this.id,
     required this.code,
+    this.title,
+    this.description,
     required this.discountType,
     required this.discountValue,
     required this.startDate,
     required this.endDate,
-    this.productId,
+    required this.productIds,
+    required this.termCondition,
     required this.minimumAmount,
     required this.maxUsage,
     required this.usedCount,
-    required this.status,
     required this.couponStatus,
-    this.createdAt,
-    this.updatedAt,
   });
 
   factory Coupon.fromJson(Map<String, dynamic> json) {
     return Coupon(
-      id: json['id'] ?? 0,
+      id: int.tryParse(json['id'].toString()) ?? 0,
       code: json['code'] ?? '',
-      discountType: json['discount_type'] ?? 'flat',
-      discountValue: double.tryParse(json['discount_value'].toString()) ?? 0.0,
-      startDate: json['start_date'] ?? '',
-      endDate: json['end_date'] ?? '',
-      productId: json['product_id']?.toString(), // ✅ FIX
+      title: json['title'],
+      description: json['description'],
+      discountType: json['discount_type'] ?? '',
+      discountValue: double.tryParse(json['discount_value'].toString()) ?? 0,
+      startDate: DateTime.tryParse(json['start_date'] ?? '') ?? DateTime.now(),
+      endDate: DateTime.tryParse(json['end_date'] ?? '') ?? DateTime.now(),
+      productIds: _parseProductIds(json['product_id']),
+      termCondition: json['term_condition'] ?? '',
       minimumAmount:
-      double.tryParse(json['minimum_amount'].toString()) ?? 0.0,
-      maxUsage: json['max_usage'] ?? 0,
-      usedCount: json['used_count'] ?? 0,
-      status: json['status'] ?? 'inactive',
-      couponStatus: json['coupon_status'] ?? 'expired',
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'])
-          : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.tryParse(json['updated_at'])
-          : null,
+      double.tryParse(json['minimum_amount'].toString()) ?? 0,
+      maxUsage: int.tryParse(json['max_usage'].toString()) ?? 0,
+      usedCount: int.tryParse(json['used_count'].toString()) ?? 0,
+      couponStatus: json['coupon_status'] ?? '',
     );
   }
 
-
-  // ✅ REQUIRED FOR SharedPreferences
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'code': code,
-      'discount_type': discountType,
-      'discount_value': discountValue,
-      'start_date': startDate,
-      'end_date': endDate,
-      'product_id': productId,
-      'minimum_amount': minimumAmount,
-      'max_usage': maxUsage,
-      'used_count': usedCount,
-      'status': status,
-      'coupon_status': couponStatus,
-      'created_at': createdAt?.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
-    };
+  static List<int> _parseProductIds(dynamic value) {
+    if (value == null || value.toString().isEmpty) return [];
+    return value
+        .toString()
+        .split(',')
+        .map((e) => int.tryParse(e.trim()) ?? 0)
+        .where((e) => e > 0)
+        .toList();
   }
 
-  // Helpers
+  // ---------- HELPERS ----------
+
+  bool get isValid => couponStatus.toLowerCase() == 'valid';
+
   bool get isPercent => discountType == 'percent';
-  bool get isFlat => discountType == 'flat';
-  bool get isActive => status == 'active';
-  bool get isValid => couponStatus == 'valid';
 
-  bool get isUsable =>
-      isActive && isValid && (usedCount < maxUsage);
+  bool isValidForAmount(double amount) => amount >= minimumAmount;
 
-  bool isValidForAmount(double amount) =>
-      amount >= minimumAmount;
+  bool isApplicableToProduct(int productId) {
+    if (productIds.isEmpty) return true;
+    return productIds.contains(productId);
+  }
 
-  String get discountText =>
-      isPercent ? '${discountValue.toInt()}% OFF' : '₹${discountValue.toInt()} OFF';
+  bool get isUsable {
+    final now = DateTime.now();
+    return isValid &&
+        now.isAfter(startDate.subtract(const Duration(days: 1))) &&
+        now.isBefore(endDate.add(const Duration(days: 1))) &&
+        usedCount < maxUsage;
+  }
+
+  String get discountText {
+    if (isPercent) {
+      return "${discountValue.toInt()}% OFF";
+    } else {
+      return "₹${discountValue.toInt()} OFF";
+    }
+  }
 }
 
 
 
+
+
 class CouponResponse {
-  final String status; // ✅ String
+  final String status;
   final String message;
   final List<Coupon> data;
 
@@ -1994,17 +2112,17 @@ class CouponResponse {
 
   factory CouponResponse.fromJson(Map<String, dynamic> json) {
     return CouponResponse(
-      status: json['status'] ?? '',
-      message: json['message'] ?? '',
+      status: json['status']?.toString() ?? '',
+      message: json['message']?.toString() ?? '',
       data: (json['data'] as List<dynamic>? ?? [])
-          .map((e) => Coupon.fromJson(e))
+          .map((e) => Coupon.fromJson(Map<String, dynamic>.from(e)))
           .toList(),
     );
   }
 
-  // ✅ helper
-  bool get isSuccess => status == 'success';
+  bool get isSuccess => status.toLowerCase() == 'success';
 }
+
 
 
 class ApplyCouponRequest {

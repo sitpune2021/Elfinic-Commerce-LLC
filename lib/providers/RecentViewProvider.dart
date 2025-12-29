@@ -107,23 +107,40 @@ class RecentViewProvider with ChangeNotifier {
         "${ApiService.baseUrl}/api/getProductByType?user_id=$userId&type=RecentlyViewed&page=$_currentPage";
 
     try {
+      if (kDebugMode) {
+        print("➡️ RECENT VIEWS API");
+        print("URL: $url");
+      }
+
       final response =
       await http.get(Uri.parse(url), headers: await _getHeaders());
 
+      if (kDebugMode) {
+        print("⬅️ STATUS: ${response.statusCode}");
+        print("⬅️ BODY: ${response.body}");
+      }
+
       final jsonData = jsonDecode(response.body);
 
-      if (jsonData["status"] == true) {
+      // ✅ FIXED: status is now string
+      final rawStatus = jsonData["status"];
+      final bool isSuccess = rawStatus == "success" || rawStatus == true;
+
+      if (isSuccess) {
         final List items = jsonData["data"] ?? [];
         final pagination = jsonData["pagination"];
 
-        _recentViews = items.map((e) => Product.fromJson(e)).toList();
-        _lastPage = pagination["last_page"];
+        _recentViews = items
+            .map((e) => Product.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+
+        _lastPage = int.tryParse(pagination["last_page"].toString()) ?? 1;
 
         if (kDebugMode) {
-          print("✅ RecentViews Page 1 Loaded: ${_recentViews.length}");
+          print("✅ Recent Views Loaded: ${_recentViews.length}");
         }
       } else {
-        _error = jsonData["message"];
+        _error = jsonData["message"] ?? "Failed to load recent views";
       }
     } catch (e) {
       _error = e.toString();
@@ -133,6 +150,7 @@ class RecentViewProvider with ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+
 
   // ========================================================
   // ✅ LOAD MORE (PAGINATION)

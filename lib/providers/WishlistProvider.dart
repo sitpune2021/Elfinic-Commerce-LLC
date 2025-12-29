@@ -122,10 +122,9 @@ class WishlistProvider with ChangeNotifier {
         final data = jsonDecode(response.body);
         if (data['status'] == 'success' && data['data'] is List) {
           final List<int> serverList = (data['data'] as List)
-              .map<int>((item) =>
-          int.tryParse(item['product_id']?.toString() ?? '') ?? 0)
-              .where((id) => id > 0)
+              .map<int>((item) => item['id'])
               .toList();
+
 
           _wishlistItems = serverList;
           await _saveWishlistToStorage();
@@ -266,235 +265,20 @@ class WishlistProvider with ChangeNotifier {
     await _saveWishlistToStorage();
     notifyListeners();
   }
-}
 
-/*
-class WishlistProvider with ChangeNotifier {
-  List<int> _wishlistItems = [];
-
-  List<int> get wishlistItems => _wishlistItems;
-
-  bool isInWishlist(int productId) => _wishlistItems.contains(productId);
-
-
-
-  // Add a method to refresh wishlist and notify all listeners
-  Future<void> refreshWishlist() async {
-    await fetchWishlist();
-    notifyListeners(); // This will update ALL consumers
-  }
-
-
-
-
-  // ✅ Load wishlist from SharedPreferences
-*/
-/*  Future<void> _loadWishlistFromStorage() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final wishlistString = prefs.getString('wishlist_items');
-
-      if (wishlistString != null && wishlistString.isNotEmpty) {
-        final List<dynamic> wishlistData = jsonDecode(wishlistString);
-        _wishlistItems = wishlistData.map<int>((item) => item as int).toList();
-        print('📥 Loaded wishlist from storage: $_wishlistItems');
-        notifyListeners();
-      }
-    } catch (e) {
-      print('⚠️ Error loading wishlist from storage: $e');
-    }
-  }*//*
-
-
-  // ✅ Save wishlist to SharedPreferences
-  Future<void> _saveWishlistToStorage() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('wishlist_items', jsonEncode(_wishlistItems));
-      print('💾 Saved wishlist to storage: $_wishlistItems');
-    } catch (e) {
-      print('⚠️ Error saving wishlist to storage: $e');
-    }
-  }
-
-  // ✅ Add to Wishlist with persistence
-  Future<bool> addToWishlist(int productId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("auth_token");
-    final userIdString = prefs.getString('user_id');
-    final userId = int.tryParse(userIdString ?? '0') ?? 0;
-
-    if (userId == 0) {
-      print('❌ Wishlist Add Failed: User not logged in');
-      return false;
-    }
-
-    final url = Uri.parse('https://admin.elfinic.com/api/wishlist/add');
-    print('📤 Wishlist Add URL: $url');
-    print('📦 Request Body: {"user_id": $userId, "product_id": $productId}');
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode({
-          "user_id": userId,
-          "product_id": productId,
-        }),
-      );
-
-      print('✅ Wishlist Add Response [${response.statusCode}]: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        if (data['status'] == 'success') {
-          if (!_wishlistItems.contains(productId)) {
-            _wishlistItems.add(productId);
-            await _saveWishlistToStorage(); // Save to storage
-            notifyListeners();
-          }
-          return true;
-        }
-      }
-      return false;
-    } catch (e) {
-      print('⚠️ Wishlist Add Error: $e');
-      return false;
-    }
-  }
-
-  // ✅ Remove from Wishlist with persistence
-  Future<bool> removeFromWishlist(int productId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("auth_token");
-    final userIdString = prefs.getString('user_id');
-    final userId = int.tryParse(userIdString ?? '0') ?? 0;
-
-    if (userId == 0) {
-      print('❌ Wishlist Remove Failed: User not logged in');
-      return false;
-    }
-
-    final url = Uri.parse('https://admin.elfinic.com/api/wishlist/remove');
-    print('📤 Wishlist Remove URL: $url');
-    print('📦 Request Body: {"user_id": $userId, "product_id": $productId}');
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode({
-          "user_id": userId,
-          "product_id": productId,
-        }),
-      );
-
-      print('✅ Wishlist Remove Response [${response.statusCode}]: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        if (data['status'] == 'success') {
-          _wishlistItems.remove(productId);
-          await _saveWishlistToStorage(); // Save to storage
-          notifyListeners();
-          return true;
-        }
-      }
-      return false;
-    } catch (e) {
-      print('⚠️ Wishlist Remove Error: $e');
-      return false;
-    }
-  }
-
-  // 🔁 Toggle wishlist (add/remove based on current state)
-  // Update your toggle method to automatically refresh
-  Future<bool> toggleWishlist(int productId) async {
-    final isCurrentlyWishlisted = isInWishlist(productId);
-
-    print('🔁 [TOGGLE WISHLIST] Product ID: $productId | Currently Wishlisted: $isCurrentlyWishlisted');
-
-    bool success;
-    if (isCurrentlyWishlisted) {
-      success = await removeFromWishlist(productId);
-    } else {
-      success = await addToWishlist(productId);
-    }
-
-    // Refresh the wishlist after toggling
-    if (success) {
-      await refreshWishlist();
-    }
-
-    return success;
-  }
-  // ✅ Sync local wishlist with server on app start
-  Future<void> syncWishlistWithServer() async {
-    try {
-      print('🔄 Syncing wishlist with server...');
-      await fetchWishlist(); // This will update _wishlistItems from server
-      await _saveWishlistToStorage(); // Save the synced data
-    } catch (e) {
-      print('⚠️ Wishlist sync error: $e');
-    }
-  }
-
-  Future<void> fetchWishlist() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("auth_token");
-    final userIdString = prefs.getString('user_id');
-    final userId = int.tryParse(userIdString ?? '0') ?? 0;
-
-    if (userId == 0) {
-      print('❌ Fetch Wishlist Failed: User not logged in');
-      return;
-    }
-
-    final url = Uri.parse('${ApiService.baseUrl}/api/getProductByType?user_id=$userId&type=Wishlist');
-    print('📥 Fetch Wishlist URL: $url');
-
-    try {
-      final response = await http.get(
-        url,
-        headers: {"Authorization": "Bearer $token"},
-      );
-
-      print('✅ Fetch Wishlist Response [${response.statusCode}]: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        if (data['status'] == 'success' && data['data'] is List) {
-          _wishlistItems = (data['data'] as List)
-              .map<int>((item) =>
-          int.tryParse(item['product_id']?.toString() ?? '0') ?? 0)
-              .where((id) => id > 0)
-              .toList();
-          notifyListeners();
-        }
-      }
-    } catch (e) {
-      print('⚠️ Fetch Wishlist Error: $e');
-    }
-  }
-
-  void clearWishlist() {
+  void clear() {
     _wishlistItems.clear();
-    _saveWishlistToStorage(); // Also clear from storage
     notifyListeners();
   }
 
-  int get wishlistCount => _wishlistItems.length;
+  void addLocal(int productId) {
+    if (!_wishlistItems.contains(productId)) {
+      _wishlistItems.add(productId);
+    }
+  }
+
 }
-*/
+
 
 
 class WishlistService {

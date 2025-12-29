@@ -263,8 +263,8 @@ class _AddressScreenState extends State<AddressScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "${address.addressLine1}, ${address.city}, ${address.state}, ${address.country} - ${address.postalCode}",
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
+          "${address.addressLine1}, ${address.city}, ${address.state}, ${address.country.isNotEmpty ? address.country : 'India'} - ${address.postalCode}",
+          style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 4),
               Text(
@@ -363,11 +363,24 @@ class _AddressScreenState extends State<AddressScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => DeliveryScreen(
-          selectedAddress: address,
+          selectedAddress: Address(
+            id: address.id,
+            userId: address.userId,
+            name: address.name,
+            type: address.type,
+            phone: address.phone,
+            addressLine1: address.addressLine1,
+            addressLine2: address.addressLine2 ?? '',
+            city: address.city,
+            state: address.state,
+            country: address.country.isNotEmpty ? address.country : 'India',
+            postalCode: address.postalCode,
+            isDefault: address.isDefault,
+          ),
           subtotalAmount: _displaySubtotal,
-
           cartItems: widget.cartItems,
         ),
+
       ),
     );
 
@@ -508,16 +521,31 @@ class _AddressScreenState extends State<AddressScreen> {
       },
     );
   }
-  Future<void> _deleteAddress(BuildContext context, AddressProvider addressProvider, Address address) async {
+  Future<void> _deleteAddress(
+      BuildContext context,
+      AddressProvider addressProvider,
+      Address address,
+      ) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
+      // 🛡️ Prevent null crash
+      if (address.id == null) {
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('Invalid address. Please refresh.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
       final success = await addressProvider.deleteAddress(address.id!);
 
       if (success) {
         scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: Text('${address.name}\'s address deleted successfully'),
+            content: Text("${address.name}'s address deleted successfully"),
             backgroundColor: Colors.green,
           ),
         );
@@ -538,5 +566,6 @@ class _AddressScreenState extends State<AddressScreen> {
       );
     }
   }
+
 }
 

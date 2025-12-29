@@ -16,6 +16,7 @@ import '../model/SubcategoriesResponse.dart';
 import '../model/cart_models.dart';
 import '../model/delivery_type.dart';
 import '../screens/CartScreen.dart';
+import '../screens/OrdersScreen.dart';
 import '../screens/ProductDetailPage.dart';
 
 
@@ -54,14 +55,85 @@ class ApiService {
 
 
   // Review endpoints
-  static String get addReview => '$_baseUrl/api/products/addReview';
+  static String get addReview => '$_baseUrl/api/addReview';
   static String get productReviews => '$_baseUrl/api/products/productReviews';
   static String get productReviewsById => '$_baseUrl/api/products'; // Base for /{id}/reviews
-  static Uri getProductBySlugUrl(String slug) {
+
+
+ /* static Uri getProductBySlugUrl(String slug) {
     return Uri.parse('$_baseUrl/api/productDetails/$slug');
+  }*/
+
+
+  String getProductBySlugUrl(String slug) {
+    return 'https://admin.elfinic.com/api/productDetails/${Uri.encodeComponent(slug)}';
+  }
+  static String get productImagePath =>
+      '$baseUrl/assets/img/products-thumbs/';
+
+  static Future<List<OrderItem>> fetchOrders(int userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("auth_token");
+
+    final url = Uri.parse('$baseUrl/api/user/order?id=$userId');
+
+    // 🔹 Print request
+    debugPrint("➡️ ORDERS API URL: $url");
+    debugPrint("🔑 TOKEN: $token");
+
+    final response = await http.get(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+    );
+
+    // 🔹 Print response
+    debugPrint("⬅️ STATUS CODE: ${response.statusCode}");
+    debugPrint("⬅️ RESPONSE BODY: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final List data = json.decode(response.body);
+      return data.map((e) => OrderItem.fromJson(e)).toList();
+    } else {
+      throw Exception("Failed to load orders: ${response.body}");
+    }
   }
 
+  static Future<Map<String, dynamic>> fetchOrderHistory({
+    required int userId,
+    required int orderId,
+    required int productId,
+  }) async {
+    final url = Uri.parse(
+        "$baseUrl/api/user/order/history?user_id=$userId&order_id=$orderId&product_id=$productId");
 
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("auth_token");
+
+    debugPrint("➡️ ORDER HISTORY URL: $url");
+    debugPrint("🔑 TOKEN: $token");
+
+    final response = await http.get(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Accept": "application/json",
+      },
+    );
+
+    debugPrint("⬅️ STATUS: ${response.statusCode}");
+    debugPrint("⬅️ BODY: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      return json;
+    } else {
+      throw Exception("Failed to load order history");
+    }
+  }
 
 
   static Future<List<Product>> getSimilarProducts(int productId) async {
@@ -99,7 +171,7 @@ class ApiService {
 
 
   // If you want a method that makes the actual HTTP call, add this:
-  Future<ProductDetailResponse> getProductBySlug(String slug) async {
+  /*Future<ProductDetailResponse> getProductBySlug(String slug) async {
     try {
       final response = await http.get(
         getProductBySlugUrl(slug),
@@ -117,6 +189,48 @@ class ApiService {
       }
     } catch (e) {
       print('API Error (getProductBySlug): $e');
+      rethrow;
+    }
+  }
+*/
+
+  Future<ProductDetailResponse> getProductBySlug(String slug) async {
+    try {
+      final encodedSlug = Uri.encodeComponent(slug);
+      final url = 'https://admin.elfinic.com/api/productDetails/$encodedSlug';
+
+      print('🔄 Calling API: $url');
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('📥 getProductBySlug Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        print('✅ API Success for slug: $slug');
+
+        // Print variant information from the raw response
+        if (data['data'] != null && data['data']['variants'] != null) {
+          print('📋 Variants found in response:');
+          List<dynamic> variants = data['data']['variants'];
+          for (var variant in variants) {
+            print('   Variant ID: ${variant['id']}, Variant: ${variant['variant']}');
+          }
+        }
+
+        return ProductDetailResponse.fromJson(data);
+      } else {
+        print('❌ API Error - Status Code: ${response.statusCode}');
+        throw Exception('Failed to load product. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('🔥 API Error (getProductBySlug for $slug): $e');
       rethrow;
     }
   }
@@ -507,6 +621,59 @@ class ApiService {
   static Future<AddToCartResponse> addToCartApi({
     required int productId,
     required int quantity,
+    int? variantId, // optional
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = int.parse(prefs.getString("user_id") ?? "0");
+    final token = prefs.getString("auth_token") ?? "";
+
+    if (userId == 0 || token.isEmpty) {
+      throw Exception("User not logged in");
+    }
+
+    final Uri url = addToCartUrl;
+
+    final Map<String, dynamic> body = {
+      "user_id": userId,
+      "product_id": productId,
+      "quantity": quantity,
+    };
+
+    // ✅ Correct key: variant_id
+    if (variantId != null) {
+      body["variant_id"] = variantId;
+    }
+
+    // 🟢 LOG EVERYTHING
+    debugPrint("➡️ ADD TO CART URL: $url");
+    debugPrint("🧩 VARIANT ID: $variantId");
+    debugPrint("📦 REQUEST BODY: ${jsonEncode(body)}");
+    debugPrint("🔑 TOKEN: $token");
+
+    final response = await http.post(
+      url,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: jsonEncode(body),
+    );
+
+    debugPrint("⬅️ STATUS CODE: ${response.statusCode}");
+    debugPrint("⬅️ RESPONSE BODY: ${response.body}");
+
+    if (response.statusCode == 200) {
+      return AddToCartResponse.fromRawJson(response.body);
+    } else {
+      throw Exception("Failed to add to cart: ${response.body}");
+    }
+  }
+
+/*
+  static Future<AddToCartResponse> addToCartApi({
+    required int productId,
+    required int quantity,
     int? variantId, // ✅ NEW
   }) async {
     final prefs = await SharedPreferences.getInstance();
@@ -548,6 +715,7 @@ class ApiService {
       throw Exception("Failed to add to cart: ${response.body}");
     }
   }
+*/
 
   /// Delivery Charges API
   static Future<List<DeliveryType>> fetchDeliveryTypes() async {
@@ -578,7 +746,7 @@ class ApiService {
 
 
   /// ✅ Add new address
-  static Future<Address> addAddressApi({required Address address}) async {
+  /*static Future<Address> addAddressApi({required Address address}) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("auth_token") ?? "";
 
@@ -608,6 +776,48 @@ class ApiService {
     } else {
       throw Exception("Failed to add address: ${response.statusCode}");
     }
+  }*/
+  static Future<Address> addAddressApi({required Address address}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("auth_token") ?? "";
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+
+    final bodyMap = address.toJson();   // Already uses snake_case
+    final body = jsonEncode(bodyMap);
+
+    print("📤 ADD ADDRESS BODY => $body");
+
+    final response = await http.post(
+      addAddressUrl,
+      headers: headers,
+      body: body,
+    );
+
+    print("⬅️ STATUS: ${response.statusCode}");
+    print("⬅️ BODY: ${response.body}");
+
+    logApiCall(method: 'POST', url: addAddressUrl, response: response);
+
+    final data = json.decode(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      if (data["status"] == "success" && data["data"] != null) {
+        return Address.fromJson(data["data"]);
+      } else {
+        throw Exception(data["message"] ?? "Failed to add address");
+      }
+    } else if (response.statusCode == 422) {
+      // 🔥 Laravel validation error
+      final errors = data["message"];
+      throw Exception("Validation error: $errors");
+    } else {
+      throw Exception("Failed to add address: ${response.statusCode}");
+    }
   }
 
   /// ✅ Update address
@@ -616,11 +826,13 @@ class ApiService {
     final token = prefs.getString('auth_token') ?? '';
 
     final headers = {
-      'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
+      if (token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
 
-    final body = json.encode(address.toJson());
+    final body = jsonEncode(address.toJson());
+
+    print("📤 UPDATE ADDRESS BODY => $body");
 
     final response = await http.post(
       updateAddressUrl,
@@ -628,15 +840,22 @@ class ApiService {
       body: body,
     );
 
+    print("⬅️ STATUS: ${response.statusCode}");
+    print("⬅️ BODY: ${response.body}");
+
     logApiCall(method: 'POST', url: updateAddressUrl, response: response);
 
+    final data = json.decode(response.body);
+
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
       return data['status'] == 'success';
+    } else if (response.statusCode == 422) {
+      throw Exception("Validation error: ${data['message']}");
     } else {
       throw Exception("Failed to update address: ${response.statusCode}");
     }
   }
+
 
   /// ✅ Delete address
   static Future<bool> deleteAddressApi({required int addressId}) async {
@@ -677,34 +896,44 @@ class ApiService {
   static Future<CouponResponse> fetchActiveCoupons() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-
-      // ✅ FIX HERE
       final token = prefs.getString('auth_token');
 
       final url = '$baseUrl/api/coupons';
       debugPrint("➡️ FETCH COUPONS URL: $url");
+      debugPrint("🔐 TOKEN: ${token != null ? 'Present' : 'Missing'}");
 
       final response = await http.get(
         Uri.parse(url),
         headers: {
           'Accept': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
+          if (token != null && token.isNotEmpty)
+            'Authorization': 'Bearer $token',
         },
       );
 
-      
-      debugPrint("⬅️ STATUS: ${response.statusCode}");
-      debugPrint("⬅️ BODY: ${response.body}");
+      debugPrint("⬅️ STATUS CODE: ${response.statusCode}");
+      debugPrint("⬅️ RESPONSE BODY: ${response.body}");
 
+      final decoded = jsonDecode(response.body);
+
+      // Handle API-level failure (status != success)
       if (response.statusCode == 200) {
-        return CouponResponse.fromJson(jsonDecode(response.body));
+        final couponResponse = CouponResponse.fromJson(decoded);
+
+        if (!couponResponse.isSuccess) {
+          throw Exception(couponResponse.message);
+        }
+
+        return couponResponse;
       } else {
-        throw Exception('Failed to load coupons');
+        throw Exception(decoded['message'] ?? 'Failed to load coupons');
       }
     } catch (e) {
+      debugPrint("❌ Coupon Fetch Error: $e");
       throw Exception('Error fetching coupons: $e');
     }
   }
+
 
 
 

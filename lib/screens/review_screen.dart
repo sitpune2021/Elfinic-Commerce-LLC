@@ -1,7 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../model/AddressModel.dart';
 import '../model/OrderModel.dart';
@@ -20,14 +22,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'DashboardScreen.dart';
 
-
-
-
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
-
 
 class ReviewScreen extends StatefulWidget {
   final Address selectedAddress;
@@ -72,7 +69,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
     _subtotal = widget.subtotalAmount;
     _total = widget.totalAmount;
 
-
     _razorpay = Razorpay();
 
     // Only use the available Razorpay events
@@ -89,8 +85,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
     }
   }
 
-
-
   @override
   void dispose() {
     _promoCodeController.dispose();
@@ -99,17 +93,18 @@ class _ReviewScreenState extends State<ReviewScreen> {
     super.dispose();
   }
 
-
-
   double _getSellingPrice(UserCartProduct product) {
-    final regularPrice = double.tryParse(product.price.replaceAll(',', '')) ?? 0;
-    final discountAmount = double.tryParse(product.discountPrice.replaceAll(',', '')) ?? 0;
+    final regularPrice =
+        double.tryParse(product.price.replaceAll(',', '')) ?? 0;
+    final discountAmount =
+        double.tryParse(product.discountPrice.replaceAll(',', '')) ?? 0;
     final finalPrice = regularPrice - discountAmount;
     return finalPrice > 0 ? finalPrice : regularPrice;
   }
 
   bool _hasDiscount(UserCartProduct product) {
-    final discountAmount = double.tryParse(product.discountPrice.replaceAll(',', '')) ?? 0;
+    final discountAmount =
+        double.tryParse(product.discountPrice.replaceAll(',', '')) ?? 0;
     return discountAmount > 0;
   }
 
@@ -128,7 +123,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
 // delivery cost remains same
           _total = _subtotal + widget.deliveryCost;
-
         });
       } else {
         await cartProvider.updateQuantity(item, newQuantity);
@@ -142,7 +136,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
 // delivery cost remains same
           _total = _subtotal + widget.deliveryCost;
-
         });
       }
     } catch (e) {
@@ -152,7 +145,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
     }
   }
 
-  void _incrementQuantity(UserCartItem item) => _updateQuantity(item, item.quantity + 1);
+  void _incrementQuantity(UserCartItem item) =>
+      _updateQuantity(item, item.quantity + 1);
 
   void _decrementQuantity(UserCartItem item) {
     if (item.quantity > 1) {
@@ -165,9 +159,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Remove Item"),
-        content: const Text("Are you sure you want to remove this item from your cart?"),
+        content: const Text(
+            "Are you sure you want to remove this item from your cart?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel")),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
@@ -197,7 +194,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
     if (isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Promo code ${_promoCodeController.text} applied successfully!'),
+          content: Text(
+              'Promo code ${_promoCodeController.text} applied successfully!'),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 3),
         ),
@@ -255,7 +253,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
       final String? userIdStr = prefs.getString("user_id");
       final String? email = prefs.getString("user_email");
 
-
       if (userIdStr == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -268,11 +265,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
       final int userId = int.parse(userIdStr);
       // Create order using the API with all required parameters
-      final CreateOrderResponse? orderResponse = await orderProvider.createOrder(
-        userId: userId,                         // ✅ correct user id
-        addressId: widget.selectedAddress.id!,  // ✅ address id
-        totalAmount: _total,                   // ✅ total
-        cartItems: _cartItems,                 // ✅ cart list
+      final CreateOrderResponse? orderResponse =
+          await orderProvider.createOrder(
+        userId: userId,
+        // ✅ correct user id
+        addressId: widget.selectedAddress.id!,
+        // ✅ address id
+        totalAmount: _total,
+        // ✅ total
+        cartItems: _cartItems,
+        // ✅ cart list
         couponCode: _promoCodeController.text.trim().isNotEmpty
             ? _promoCodeController.text.trim()
             : null,
@@ -281,7 +283,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
       );
 
       if (orderResponse == null) {
-        _logPaymentFlow('Order creation failed', extra: {'error': orderProvider.error});
+        _logPaymentFlow('Order creation failed',
+            extra: {'error': orderProvider.error});
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to create order: ${orderProvider.error}'),
@@ -344,20 +347,23 @@ class _ReviewScreenState extends State<ReviewScreen> {
       try {
         _razorpay.open(options);
       } catch (e) {
-        _logPaymentFlow('Razorpay opening error', extra: {'error': e.toString()});
+        _logPaymentFlow('Razorpay opening error',
+            extra: {'error': e.toString()});
 
         // More specific error handling
         if (e.toString().contains('INVALID_OPTIONS')) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Invalid payment configuration. Please contact support.'),
+              content: Text(
+                  'Invalid payment configuration. Please contact support.'),
               backgroundColor: Colors.red,
             ),
           );
         } else if (e.toString().contains('NETWORK_ERROR')) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Network error. Please check your internet connection.'),
+              content:
+                  Text('Network error. Please check your internet connection.'),
               backgroundColor: Colors.red,
             ),
           );
@@ -370,7 +376,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
           );
         }
       }
-
     } catch (e) {
       _logPaymentFlow('Checkout process error', extra: {'error': e.toString()});
       ScaffoldMessenger.of(context).showSnackBar(
@@ -382,19 +387,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
     }
   }
 
-
-  
-
-
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
-
-
     _logPaymentFlow("Razorpay Payment Success", extra: {
       "razorpay_order_id": response.orderId,
       "razorpay_payment_id": response.paymentId,
-      "razorpay_signature": response.signature,   // 🔥 THIS IS THE SIGNATURE
+      "razorpay_signature": response.signature, // 🔥 THIS IS THE SIGNATURE
     });
-
 
     if (kDebugMode) {
       print('┌─────────────────────────────────────────────────────────────');
@@ -420,7 +418,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
     try {
       // Verify that we have all required data
-      if (response.orderId == null || response.paymentId == null || response.signature == null) {
+      if (response.orderId == null ||
+          response.paymentId == null ||
+          response.signature == null) {
         throw Exception('Missing payment data from Razorpay');
       }
 
@@ -439,7 +439,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
       Navigator.pop(context);
 
       if (verifyResponse != null && verifyResponse.success) {
-
         await cartProvider.fetchCartItems();
         // Payment verified successfully
         if (kDebugMode) {
@@ -473,10 +472,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
           // Fallback: clear cart locally
           cartProvider.handleEmptyCart();
         }
-
       } else {
         // Payment verification failed
-        final errorMessage = verifyResponse?.message ?? 'Unknown verification error';
+        final errorMessage =
+            verifyResponse?.message ?? 'Unknown verification error';
         if (kDebugMode) {
           print('❌ Payment verification failed: $errorMessage');
         }
@@ -496,13 +495,13 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Payment received but verification pending: $errorMessage'),
+            content: Text(
+                'Payment received but verification pending: $errorMessage'),
             backgroundColor: Colors.orange,
             duration: const Duration(seconds: 5),
           ),
         );
       }
-
     } catch (e, stackTrace) {
       // Close verifying dialog
       Navigator.pop(context);
@@ -560,7 +559,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
       // Other payment errors
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Payment failed: ${response.code} - ${response.message}"),
+          content:
+              Text("Payment failed: ${response.code} - ${response.message}"),
           backgroundColor: Colors.red,
         ),
       );
@@ -592,7 +592,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
         );
         return false;
       },
-
       child: BaseScreen(
         child: Scaffold(
           backgroundColor: const Color(0xfffdf6ef),
@@ -612,11 +611,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   ),
                 );
               },
-
             ),
             title: const Text(
               "Checkout",
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
             ),
             actions: [
               Padding(
@@ -626,7 +625,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   children: [
                     Text(
                       "₹${_total.toStringAsFixed(2)}",
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
+                      style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black),
                     ),
                     const Text(
                       "Estimated Total",
@@ -683,24 +685,32 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         children: [
                           const Text(
                             "Delivery Information",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 10),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.location_on, color: Colors.green, size: 20),
+                              const Icon(Icons.location_on,
+                                  color: Colors.green, size: 20),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(widget.selectedAddress.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    Text(widget.selectedAddress.name,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
                                     Text(widget.selectedAddress.addressLine1),
-                                    if (widget.selectedAddress.addressLine2!.isNotEmpty)
-                                      Text(widget.selectedAddress.addressLine2.toString()),
-                                    Text("${widget.selectedAddress.city}, ${widget.selectedAddress.state} - ${widget.selectedAddress.postalCode}"),
-                                    Text("Phone: ${widget.selectedAddress.phone}"),
+                                    if (widget.selectedAddress.addressLine2!
+                                        .isNotEmpty)
+                                      Text(widget.selectedAddress.addressLine2
+                                          .toString()),
+                                    Text(
+                                        "${widget.selectedAddress.city}, ${widget.selectedAddress.state} - ${widget.selectedAddress.postalCode}"),
+                                    Text(
+                                        "Phone: ${widget.selectedAddress.phone}"),
                                   ],
                                 ),
                               ),
@@ -709,12 +719,14 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           const SizedBox(height: 10),
                           Row(
                             children: [
-                              const Icon(Icons.delivery_dining, color: Colors.blue, size: 20),
+                              const Icon(Icons.delivery_dining,
+                                  color: Colors.blue, size: 20),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   "${widget.deliveryOption} Delivery - ₹${widget.deliveryCost.toStringAsFixed(2)}",
-                                  style: const TextStyle(fontWeight: FontWeight.w500),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500),
                                 ),
                               ),
                             ],
@@ -727,7 +739,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     // Payment Details Section
                     const Text(
                       "Payment Detail",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF160042)),
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF160042)),
                     ),
                     const SizedBox(height: 10),
                     Container(
@@ -739,11 +754,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       ),
                       child: Column(
                         children: [
-                          _buildSummaryRow("Subtotal", "₹${_subtotal.toStringAsFixed(2)}"),
+                          _buildSummaryRow(
+                              "Subtotal", "₹${_subtotal.toStringAsFixed(2)}"),
                           _buildSummaryRow(
                             "Shipment Fee",
-                            widget.deliveryCost == 0 ? "Free" : "₹${widget.deliveryCost.toStringAsFixed(2)}",
-                            color: widget.deliveryCost == 0 ? Colors.green : Colors.black,
+                            widget.deliveryCost == 0
+                                ? "Free"
+                                : "₹${widget.deliveryCost.toStringAsFixed(2)}",
+                            color: widget.deliveryCost == 0
+                                ? Colors.green
+                                : Colors.black,
                           ),
                           const Divider(),
                           _buildSummaryRow(
@@ -783,7 +803,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     const SizedBox(height: 20),*/
 
                     // Add Note Section
-                   /* const Text("Add Note", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF160042))),
+                    /* const Text("Add Note", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF160042))),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _noteController,
@@ -804,14 +824,20 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         children: [
                           CheckboxListTile(
                             value: _agreeToTerms,
-                            onChanged: (v) => setState(() => _agreeToTerms = v ?? false),
+                            onChanged: (v) =>
+                                setState(() => _agreeToTerms = v ?? false),
                             title: const Text.rich(
                               TextSpan(
                                 children: [
                                   TextSpan(text: "I agree to the "),
-                                  TextSpan(text: "Terms & Conditions, Privacy Policy, Return Policy", style: TextStyle(color: Colors.blue)),
+                                  TextSpan(
+                                      text:
+                                          "Terms & Conditions, Privacy Policy, Return Policy",
+                                      style: TextStyle(color: Colors.blue)),
                                   TextSpan(text: " and "),
-                                  TextSpan(text: "Contact Seller", style: TextStyle(color: Colors.blue)),
+                                  TextSpan(
+                                      text: "Contact Seller",
+                                      style: TextStyle(color: Colors.blue)),
                                 ],
                               ),
                             ),
@@ -820,8 +846,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           ),
                           CheckboxListTile(
                             value: _agreeToMarketing,
-                            onChanged: (v) => setState(() => _agreeToMarketing = v ?? false),
-                            title: const Text("Send me marketing communications via email and SMS"),
+                            onChanged: (v) =>
+                                setState(() => _agreeToMarketing = v ?? false),
+                            title: const Text(
+                                "Send me marketing communications via email and SMS"),
                             controlAffinity: ListTileControlAffinity.leading,
                             contentPadding: EdgeInsets.zero,
                           ),
@@ -831,10 +859,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
 
                     const SizedBox(height: 20),
 
-                    _mainButton(
-                        "CONTINUE TO PAYMENT",
-                        orderProvider.isLoading ? null : _openRazorpayCheckout
-                    ),
+                    _mainButton("CONTINUE TO PAYMENT",
+                        orderProvider.isLoading ? null : _openRazorpayCheckout),
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -849,7 +875,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                         SizedBox(height: 16),
                         Text(
@@ -924,7 +951,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
               final product = item.product;
               final sellingPrice = _getSellingPrice(product);
               final hasDiscount = _hasDiscount(product);
-              final regularPrice = double.tryParse(product.price.replaceAll(',', '')) ?? 0;
+              final regularPrice =
+                  double.tryParse(product.price.replaceAll(',', '')) ?? 0;
               final totalPrice = item.quantity * sellingPrice;
 
               return Container(
@@ -942,32 +970,56 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     // Product Image
                     Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFD39841), width: 0),
+                        border: Border.all(
+                          color: const Color(0xFFD39841),
+                          width: 0,
+                        ),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: (product.thumb == null || product.thumb!.isEmpty)
                             ? Image.asset(
-                          'assets/images/no_product_img2.png',
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
-                        )
-                            : Image.network(
-                          "${ApiService.baseUrl}/assets/img/products-thumbs/${product.thumb}",
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Image.asset(
-                            'assets/images/no_product_img2.png',
-                            width: 60,
-                            height: 60,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                                'assets/images/no_product_img2.png',
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                              )
+                            : CachedNetworkImage(
+                                imageUrl:
+                                    "${ApiService.baseUrl}/assets/img/products-thumbs/${product.thumb}",
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+
+                                // 🔥 Cache optimization (important for lists)
+                                memCacheWidth: 120,
+                                memCacheHeight: 120,
+                                maxWidthDiskCache: 120,
+                                maxHeightDiskCache: 120,
+
+                                // 🔥 Smooth fade-in
+                                fadeInDuration:
+                                    const Duration(milliseconds: 300),
+                                fadeOutDuration:
+                                    const Duration(milliseconds: 200),
+
+                                // 🔥 Shimmer placeholder
+                                placeholder: (context, url) =>
+                                    _thumbShimmer60(),
+
+                                // 🔥 Error fallback
+                                errorWidget: (context, url, error) =>
+                                    Image.asset(
+                                  'assets/images/no_product_img2.png',
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                       ),
                     ),
+
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -1066,7 +1118,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         ],
                       ),
                     ),
-
                   ],
                 ),
               );
@@ -1077,7 +1128,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
     );
   }
 
-  Widget _buildSummaryRow(String title, String value, {
+  Widget _buildSummaryRow(
+    String title,
+    String value, {
     bool isBold = false,
     double fontSize = 16,
     Color color = Colors.black,
@@ -1138,12 +1191,14 @@ class _ReviewScreenState extends State<ReviewScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.indigo.shade900,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         ),
         onPressed: onPressed,
         child: Text(
           text,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -1164,7 +1219,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
       ),
     );
   }
-
 
   InputDecoration _inputDecoration(String hintText) {
     return InputDecoration(
@@ -1200,6 +1254,18 @@ class _ReviewScreenState extends State<ReviewScreen> {
       print('│ Timestamp: ${DateTime.now()}');
       print('└─────────────────────────────────────────────────────────────');
     }
+  }
+
+  Widget _thumbShimmer60() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: Container(
+        width: 60,
+        height: 60,
+        color: Colors.white,
+      ),
+    );
   }
 }
 
@@ -1283,7 +1349,9 @@ class OrderSuccessDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: paymentVerified ? Colors.green.shade600 : Colors.orange.shade600,
+                color: paymentVerified
+                    ? Colors.green.shade600
+                    : Colors.orange.shade600,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -1352,7 +1420,8 @@ class OrderSuccessDialog extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.verified, color: Colors.green.shade600, size: 16),
+                          Icon(Icons.verified,
+                              color: Colors.green.shade600, size: 16),
                           const SizedBox(width: 8),
                           Text(
                             "Payment Verified",
@@ -1438,8 +1507,9 @@ class OrderSuccessDialog extends StatelessWidget {
                   Navigator.pop(context);
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                        (route) => false,
+                    MaterialPageRoute(
+                        builder: (context) => const DashboardScreen()),
+                    (route) => false,
                   );
                 },
                 child: const Text(
@@ -1487,7 +1557,7 @@ class OrderSuccessDialog extends StatelessWidget {
     Navigator.pushNamedAndRemoveUntil(
       context,
       '/home',
-          (route) => false,
+      (route) => false,
     );
   }
 
@@ -1497,7 +1567,7 @@ class OrderSuccessDialog extends StatelessWidget {
     Navigator.pushNamedAndRemoveUntil(
       context,
       '/order-details',
-          (route) => false,
+      (route) => false,
       arguments: {
         'orderNumber': razorpayOrderId ?? orderProvider.orderId,
         'totalAmount': totalAmount,
@@ -1506,8 +1576,6 @@ class OrderSuccessDialog extends StatelessWidget {
     );
   }
 }
-
-
 
 class ReviewResult {
   final double subtotal;

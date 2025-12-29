@@ -583,16 +583,32 @@ class _HomeScreenState extends State<HomeScreen>
 
     return GestureDetector(
       onTap: () {
+        if (product.slug == null || product.slug!.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Product not available")),
+          );
+          return;
+        }
+
         Navigator.push(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) => ProductDetailScreen(product: product),
-            transitionsBuilder: (_, animation, __, child) =>
-                FadeTransition(opacity: animation, child: child),
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                ProductDetailScreen(
+                  product: product,
+                  slug: product.slug!, // ✅ PASS SLUG
+                ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
             transitionDuration: const Duration(milliseconds: 300),
           ),
         );
       },
+
       child: Container(
         width: itemWidth,
         margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
