@@ -518,6 +518,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       }
     }
     _printSelectedVariantInfo();
+
     _selectedVariant = null;
   }
 
@@ -642,16 +643,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return choices.toSet().toList();
   }
 
-  ProductDetail _convertToProduct(ProductDetail p, {ProductVariant? selectedVariant}) {
+  ProductDetail _convertToProduct(ProductDetail p, {ProductVariant? selectedVariant, int? variantId}) {
     // Use variant price if available, otherwise use product price
     String price = p.price ?? "0";
     String stock = p.stock ?? "0";
     String sku = p.sku ?? "";
+    int? actualVariantId = variantId ?? selectedVariant?.id;
 
     if (selectedVariant != null) {
       price = selectedVariant.variantPrice ?? price;
       stock = selectedVariant.inventory.toString();
       sku = selectedVariant.sku ?? sku;
+      actualVariantId = selectedVariant.id;
     }
 
     final basePrice = double.tryParse(price.replaceAll(',', '')) ?? 0;
@@ -1293,39 +1296,66 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         onPressed: (stateId) async {
                           if (stateId == AddToCartButtonStateId.idle) {
                             setState(() => _addToCartState = AddToCartButtonStateId.loading);
-                            await Future.delayed(const Duration(seconds: 1));
 
-                            final productToAdd = _convertToProduct(
-                              getProduct,
-                              selectedVariant: _selectedVariant,
-                            );
+                            final product = getProduct;
+                            int? variantId;
 
-                            await cartProvider.addToCart(
-                              productToAdd,
-                              1,
-                              variantId: _selectedVariant?.id, // 🔥 PASS VARIANT ID
-                            );
+                            // 🔥 LOGIC TO GET VARIANT ID
+                            // 1. Check if we have a selected variant from options
+                            if (_selectedVariant != null) {
+                              variantId = _selectedVariant!.id;
+                              print('✅ Selected variant ID: $variantId');
+                            }
+                            // 2. If no variant selected but product has variants, use the first one
+                            else if (product.variants.isNotEmpty) {
+                              variantId = product.variants.first.id;
+                              print('✅ Using first variant ID: $variantId');
+                            }
+                            // 3. If product has no variants, variantId remains null
+                            else {
+                              print('ℹ️ Product has no variants, adding without variant_id');
+                            }
 
+                            // Debug output
+                            print('🛒 Adding to Cart:');
+                            print('   Product ID: ${product.id}');
+                            print('   Product Name: ${product.name}');
+                            print('   Variant ID: $variantId');
+                            print('   Variant Selected: $_selectedVariant');
 
-                            setState(() => _addToCartState = AddToCartButtonStateId.done);
+                            try {
+                              await cartProvider.addToCart(
+                                product,
+                                1,
+                                variantId: variantId, // 🔥 PASS VARIANT ID (could be null)
+                              );
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: const Text("Item added to cart!"),
-                                action: SnackBarAction(
-                                  label: "View Cart",
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const CartScreen()),
-                                    );
-                                  },
+                              setState(() => _addToCartState = AddToCartButtonStateId.done);
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text("Item added to cart!"),
+                                  action: SnackBarAction(
+                                    label: "View Cart",
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const CartScreen()),
+                                      );
+                                    },
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
 
-                            await Future.delayed(const Duration(seconds: 2));
-                            if (mounted) {
+                              await Future.delayed(const Duration(seconds: 2));
+                              if (mounted) {
+                                setState(() => _addToCartState = AddToCartButtonStateId.idle);
+                              }
+                            } catch (e) {
+                              print('❌ Error adding to cart: $e');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to add to cart: $e')),
+                              );
                               setState(() => _addToCartState = AddToCartButtonStateId.idle);
                             }
                           } else if (stateId == AddToCartButtonStateId.done) {
