@@ -18,57 +18,59 @@ import '../screens/CartScreen.dart';
 import '../screens/OrdersScreen.dart';
 import '../screens/ProductDetailPage.dart';
 
-
 class ApiService {
   // static const String _baseUrl = 'https://business.elfinic.com';
   static const String _baseUrl = 'https://admin.elfinic.com';
   // static const String _baseUrl = 'https://elfinic.thecanatech.com';
 
-
   static String get baseUrl => _baseUrl; // public getter
-
-
 
   static Uri getBannersByTypeUrl(String type) {
     return Uri.parse('$_baseUrl/api/getBannersByType?type=$type');
   }
+
   /// API Endpoints
-  static Uri get getCategoriesUrl => Uri.parse('$_baseUrl/api/getAllCategories');
+  static Uri get getCategoriesUrl =>
+      Uri.parse('$_baseUrl/api/getAllCategories');
+
   /// Products API
   static Uri get getProductsUrl => Uri.parse('$_baseUrl/api/getProductsList');
   // static Uri get getProductsUrl => Uri.parse('$_baseUrl/api/getAllProducts');
 
-  static Uri get getSubcategoriesUrl => Uri.parse('$_baseUrl/api/getSubcategories');
+  static Uri get getSubcategoriesUrl =>
+      Uri.parse('$_baseUrl/api/getSubcategories');
 
   static Uri get registerUrl => Uri.parse("$_baseUrl/api/register");
 
   static Uri get addToCartUrl => Uri.parse("$_baseUrl/api/cart/add");
 
-  static Uri get deliveryChargesUrl => Uri.parse('$_baseUrl/api/delivery-charges/getallDeliveryType');
+  static Uri get deliveryChargesUrl =>
+      Uri.parse('$_baseUrl/api/delivery-charges/getallDeliveryType');
 
-
-  static Uri get addressesUrl => Uri.parse('$_baseUrl/api/addresses/getallAdresses');
-  static Uri get addAddressUrl => Uri.parse('$_baseUrl/api/addresses/addaddress');
-  static Uri get updateAddressUrl => Uri.parse('$_baseUrl/api/addresses/updateAddress');
-  static Uri get deleteAddressUrl => Uri.parse('$_baseUrl/api/addresses/deleteAddress');
-
+  static Uri get addressesUrl =>
+      Uri.parse('$_baseUrl/api/addresses/getallAdresses');
+  static Uri get addAddressUrl =>
+      Uri.parse('$_baseUrl/api/addresses/addaddress');
+  static Uri get updateAddressUrl =>
+      Uri.parse('$_baseUrl/api/addresses/updateAddress');
+  static Uri get deleteAddressUrl =>
+      Uri.parse('$_baseUrl/api/addresses/deleteAddress');
 
   // Review endpoints
   static String get addReview => '$_baseUrl/api/addReview';
   static String get productReviews => '$_baseUrl/api/products/productReviews';
-  static String get productReviewsById => '$_baseUrl/api/products'; // Base for /{id}/reviews
+  static String get productReviewsById =>
+      '$_baseUrl/api/products'; // Base for /{id}/reviews
 
-
- /* static Uri getProductBySlugUrl(String slug) {
+  /* static Uri getProductBySlugUrl(String slug) {
     return Uri.parse('$_baseUrl/api/productDetails/$slug');
   }*/
-
 
   String getProductBySlugUrl(String slug) {
     return 'https://admin.elfinic.com/api/productDetails/${Uri.encodeComponent(slug)}';
   }
-  static String get productImagePath =>
-      '$baseUrl/assets/img/products-thumbs/';
+
+  static String get productImagePath => '$baseUrl/assets/img/products-thumbs/';
 
   static Future<List<OrderItem>> fetchOrders(int userId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -134,7 +136,6 @@ class ApiService {
     }
   }
 
-
   static Future<List<Product>> getSimilarProducts(int productId) async {
     final url = Uri.parse(
       "${ApiService.baseUrl}/api/getSimilarProducts?product_id=$productId",
@@ -167,7 +168,6 @@ class ApiService {
 
     throw Exception("Failed to fetch similar products");
   }
-
 
   // If you want a method that makes the actual HTTP call, add this:
   /*Future<ProductDetailResponse> getProductBySlug(String slug) async {
@@ -219,14 +219,16 @@ class ApiService {
           print('📋 Variants found in response:');
           List<dynamic> variants = data['data']['variants'];
           for (var variant in variants) {
-            print('   Variant ID: ${variant['id']}, Variant: ${variant['variant']}');
+            print(
+                '   Variant ID: ${variant['id']}, Variant: ${variant['variant']}');
           }
         }
 
         return ProductDetailResponse.fromJson(data);
       } else {
         print('❌ API Error - Status Code: ${response.statusCode}');
-        throw Exception('Failed to load product. Status code: ${response.statusCode}');
+        throw Exception(
+            'Failed to load product. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('🔥 API Error (getProductBySlug for $slug): $e');
@@ -368,7 +370,6 @@ class ApiService {
     }
   }
 
-
   /// Fetch Categories from API
 
   static Future<List<CategoryModel>> fetchCategories() async {
@@ -383,8 +384,7 @@ class ApiService {
         final categoriesResponse = CategoriesResponse.fromJson(jsonData);
         return categoriesResponse.data;
       } else {
-        throw Exception(
-            "Failed to load categories (${response.statusCode})");
+        throw Exception("Failed to load categories (${response.statusCode})");
       }
     } catch (e, st) {
       debugPrint("fetchCategories error: $e\n$st");
@@ -408,7 +408,8 @@ class ApiService {
       if (perPage != null) params['per_page'] = perPage.toString();
       if (page != null) params['page'] = page.toString();
 
-      url = Uri.parse("$baseUrl/api/getProductsList").replace(queryParameters: params);
+      url = Uri.parse("$baseUrl/api/getProductsList")
+          .replace(queryParameters: params);
     }
 
     print("🔵 API CALL → fetchProducts()");
@@ -436,7 +437,6 @@ class ApiService {
       throw Exception("Failed to load products (${response.statusCode})");
     }
   }
-
 
   /// Fetch a single product
   static Future<Product?> fetchSingleProduct(int productId) async {
@@ -475,13 +475,13 @@ class ApiService {
         final subCategoriesResponse = SubCategoriesResponse.fromJson(jsonData);
         return subCategoriesResponse.data;
       } else {
-        throw Exception("Failed to load Subcategories (${response.statusCode})");
+        throw Exception(
+            "Failed to load Subcategories (${response.statusCode})");
       }
     } catch (e) {
       rethrow;
     }
   }
-
 
   // Common headers
   static Future<Map<String, String>> _headers() async {
@@ -529,8 +529,6 @@ class ApiService {
     }
   }
 
-
-
   /// ✅ Update Quantity (Add or Decrease)
 /*  static Future<int> updateQuantity({
     required int userId,
@@ -569,9 +567,7 @@ class ApiService {
     required bool increase,
   }) async {
     final url = Uri.parse(
-      increase
-          ? "$_baseUrl/api/cart/add"
-          : "$_baseUrl/api/cart/decrease",
+      increase ? "$_baseUrl/api/cart/add" : "$_baseUrl/api/cart/decrease",
     );
 
     final body = jsonEncode({
@@ -581,7 +577,8 @@ class ApiService {
       "quantity": 1,
     });
 
-    final response = await http.post(url, headers: await _headers(), body: body);
+    final response =
+        await http.post(url, headers: await _headers(), body: body);
 
     logApiCall(method: "POST", url: url, response: response);
 
@@ -591,8 +588,6 @@ class ApiService {
       throw Exception(json["message"] ?? "Quantity update failed");
     }
   }
-
-
 
   /// ✅ Remove Cart Item
   static Future<bool> removeCartItem(int cartId) async {
@@ -614,7 +609,6 @@ class ApiService {
       throw Exception("Server error: ${response.statusCode}");
     }
   }
-
 
   /// Add to Cart API
   static Future<AddToCartResponse> addToCartApi({
@@ -640,7 +634,7 @@ class ApiService {
 
     // ✅ Correct key: variant_id
     if (variantId != null) {
-      body["variant_id"] = variantId;
+      body["variants_id"] = variantId;
     }
 
     // 🟢 LOG EVERYTHING
@@ -740,10 +734,6 @@ class ApiService {
     }
   }
 
-
-
-
-
   /// ✅ Add new address
   /*static Future<Address> addAddressApi({required Address address}) async {
     final prefs = await SharedPreferences.getInstance();
@@ -786,7 +776,7 @@ class ApiService {
       if (token.isNotEmpty) 'Authorization': 'Bearer $token',
     };
 
-    final bodyMap = address.toJson();   // Already uses snake_case
+    final bodyMap = address.toJson(); // Already uses snake_case
     final body = jsonEncode(bodyMap);
 
     print("📤 ADD ADDRESS BODY => $body");
@@ -855,7 +845,6 @@ class ApiService {
     }
   }
 
-
   /// ✅ Delete address
   static Future<bool> deleteAddressApi({required int addressId}) async {
     final prefs = await SharedPreferences.getInstance();
@@ -886,9 +875,6 @@ class ApiService {
       throw Exception("Failed to delete address: ${response.statusCode}");
     }
   }
-
-
-
 
   // Fetch active coupons
   // Fetch active coupons
@@ -933,9 +919,6 @@ class ApiService {
     }
   }
 
-
-
-
   // Apply coupon to cart
 // Apply coupon to cart
   static Future<ApplyCouponResponse> applyCoupon({
@@ -957,8 +940,9 @@ class ApiService {
             variantId: item.product.selectedVariantId, // ✅ FIXED
             quantity: item.quantity,
             clientPrice: double.tryParse(
-              item.product.discountPrice.replaceAll(',', ''),
-            ) ?? 0,
+                  item.product.discountPrice.replaceAll(',', ''),
+                ) ??
+                0,
           );
         }).toList(),
       ),
@@ -987,10 +971,6 @@ class ApiService {
       throw Exception(json['message'] ?? 'Failed to apply coupon');
     }
   }
-
-
-
-
 
   // Remove applied coupon
   // Remove applied coupon
@@ -1045,16 +1025,13 @@ class ApiService {
     }
   }
 
-
-
-
   static Future<Map<String, dynamic>> fetchProductsBySectionPaginated({
     required String section,
     required int page,
   }) async {
     try {
-      final uri = Uri.parse("$baseUrl/api/getProductsList")
-          .replace(queryParameters: {
+      final uri =
+          Uri.parse("$baseUrl/api/getProductsList").replace(queryParameters: {
         "show_section": section,
         "page": page.toString(),
       });
@@ -1095,25 +1072,32 @@ class ApiService {
       }
 
       // --- SAFE DATA & PAGINATION PARSING ---
-      final List<dynamic> dataList = (json['data'] is List) ? json['data'] as List : [];
+      final List<dynamic> dataList =
+          (json['data'] is List) ? json['data'] as List : [];
 
       final paginationRaw = json['pagination'];
-      final int lastPage = (paginationRaw is Map && paginationRaw['last_page'] != null)
-          ? int.tryParse('${paginationRaw['last_page']}') ?? 1
-          : 1;
-      final int currentPage = (paginationRaw is Map && paginationRaw['current_page'] != null)
-          ? int.tryParse('${paginationRaw['current_page']}') ?? page
-          : page;
+      final int lastPage =
+          (paginationRaw is Map && paginationRaw['last_page'] != null)
+              ? int.tryParse('${paginationRaw['last_page']}') ?? 1
+              : 1;
+      final int currentPage =
+          (paginationRaw is Map && paginationRaw['current_page'] != null)
+              ? int.tryParse('${paginationRaw['current_page']}') ?? page
+              : page;
 
-      final products = dataList.map((e) {
-        try {
-          return Product.fromJson(Map<String, dynamic>.from(e));
-        } catch (err) {
-          print('⚠️ Product parse error: $err — raw: $e');
-          // skip malformed product by returning null; caller receives only valid ones
-          return null;
-        }
-      }).where((p) => p != null).map((p) => p as Product).toList();
+      final products = dataList
+          .map((e) {
+            try {
+              return Product.fromJson(Map<String, dynamic>.from(e));
+            } catch (err) {
+              print('⚠️ Product parse error: $err — raw: $e');
+              // skip malformed product by returning null; caller receives only valid ones
+              return null;
+            }
+          })
+          .where((p) => p != null)
+          .map((p) => p as Product)
+          .toList();
 
       return {
         "products": products,
@@ -1125,9 +1109,6 @@ class ApiService {
       throw Exception("fetchProductsBySectionPaginated Error: $e");
     }
   }
-
-
-
 
   static String getFullImageUrl(String? image, String folder) {
     if (image == null || image.isEmpty) {
@@ -1142,10 +1123,8 @@ class ApiService {
     // ✅ If only filename, attach base URL
     return "$_baseUrl/assets/img/$folder/$image";
   }
-
-
-
 }
+
 void logApiCall({
   required String method,
   required Uri url,

@@ -10,19 +10,12 @@ import 'home_screen.dart';
 import 'package:elfinic_commerce_llc/utils/BaseScreen.dart';
 // 👈 needed for ScrollDirection
 
-
-
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:async';
 
-
-
-
-
-  class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
@@ -38,7 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     HomeScreen(),
     ProfileScreen(),
     CategoriesScreen(),
-    CartScreen(),
+    CartScreen(fromNavBar: true),
   ];
 
   final List<IconData> _navIcons = const [
@@ -71,7 +64,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _checkInitialConnection() async {
     final List<ConnectivityResult> results =
-    await Connectivity().checkConnectivity();
+        await Connectivity().checkConnectivity();
     _updateConnectionStatus(results);
   }
 
@@ -107,11 +100,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           items: _navIcons
               .map(
                 (icon) => Icon(
-              icon,
-              size: 28,
-              color: Colors.white,
-            ),
-          )
+                  icon,
+                  size: 28,
+                  color: Colors.white,
+                ),
+              )
               .toList(),
           onTap: (index) {
             setState(() {
@@ -135,11 +128,11 @@ class NoInternetWidget extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-           Lottie.asset(
-        'assets/animations/no_internet.json',
-        width: 180,
-        fit: BoxFit.contain,
-      ),
+          Lottie.asset(
+            'assets/animations/no_internet.json',
+            width: 180,
+            fit: BoxFit.contain,
+          ),
           const SizedBox(height: 16),
           const Text(
             'No Internet Connection',
@@ -161,7 +154,10 @@ class NoInternetWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Retry',style: TextStyle(color: Colors.white),),
+            child: const Text(
+              'Retry',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

@@ -21,13 +21,17 @@ import 'package:provider/provider.dart';
 
 class CartScreen extends StatefulWidget {
   final bool fromProductDetail;
+  final bool fromNavBar;
 
-  const CartScreen({super.key, this.fromProductDetail = false});
+  const CartScreen({
+    super.key,
+    this.fromProductDetail = false,
+    this.fromNavBar = false,
+  });
 
   @override
   State<CartScreen> createState() => _CartScreenState();
 }
-
 
 class _CartScreenState extends State<CartScreen> {
   bool _isApplyingPromo = false;
@@ -43,7 +47,6 @@ class _CartScreenState extends State<CartScreen> {
       _couponProvider = Provider.of<CouponProvider>(context, listen: false);
       _couponProvider.loadAppliedCoupon();
       _couponProvider.fetchCoupons();
-
     });
   }
 
@@ -56,6 +59,7 @@ class _CartScreenState extends State<CartScreen> {
         cartProvider.selectAll();
       }
 
+      if (!mounted) return;
       // Update coupon provider subtotal
       final subtotal = _calculateSubtotal(cartProvider);
       final couponProvider =
@@ -67,6 +71,8 @@ class _CartScreenState extends State<CartScreen> {
   Future<void> _refreshCartData() async {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     await cartProvider.fetchCartItems();
+
+    if (!mounted) return;
 
     // Update subtotal in coupon provider
     final subtotal = _calculateSubtotal(cartProvider);
@@ -114,6 +120,9 @@ class _CartScreenState extends State<CartScreen> {
 
     if (userId == null || userId == 0) {
       setState(() => _isApplyingPromo = false);
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User not logged in')),
       );
@@ -130,6 +139,8 @@ class _CartScreenState extends State<CartScreen> {
     setState(() => _isApplyingPromo = false);
 
     if (result['success'] == true) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message'] ?? 'Coupon applied'),
@@ -138,9 +149,10 @@ class _CartScreenState extends State<CartScreen> {
       );
 
       // Keep coupon visible in input
-      _promoCodeController.text = couponCode;   // ✅ show applied coupon
-    }
-    else {
+      _promoCodeController.text = couponCode; // ✅ show applied coupon
+    } else {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message'] ?? 'Failed to apply coupon'),
@@ -149,10 +161,6 @@ class _CartScreenState extends State<CartScreen> {
       );
     }
   }
-
-
-
-
 
   double _getUnitPrice(UserCartProduct product) {
     try {
@@ -179,14 +187,21 @@ class _CartScreenState extends State<CartScreen> {
     return total;
   }
 
+  String formatPrice(double value) {
+    if (value % 1 == 0) {
+      return value.toInt().toString();
+    }
+    return value
+        .toStringAsFixed(2)
+        .replaceAll(RegExp(r'0+$'), '')
+        .replaceAll(RegExp(r'\.$'), '');
+  }
+
   @override
   void dispose() {
     _promoCodeController.dispose();
     super.dispose();
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -206,19 +221,19 @@ class _CartScreenState extends State<CartScreen> {
 
               final selectedItems = cartProvider.getSelectedCartItems();
               couponProvider.validateAppliedCoupon(selectedItems);
-              final removed = couponProvider.validateAppliedCoupon(selectedItems);
+              final removed =
+                  couponProvider.validateAppliedCoupon(selectedItems);
 
               if (removed) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Applied coupon removed as it is no longer applicable'),
+                    content: Text(
+                        'Applied coupon removed as it is no longer applicable'),
                     backgroundColor: Colors.orange,
                   ),
                 );
               }
-
             });
-
 
             return PopScope(
               canPop: false,
@@ -266,33 +281,40 @@ class _CartScreenState extends State<CartScreen> {
     bool allSelected,
     double subtotal,
   ) {
-    return Column(
-      children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.only(top: 25,right: 16),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.black),
+    return Scaffold(
+      backgroundColor: const Color(0xffffffff),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.3),
+        leading: widget.fromNavBar
+            ? null // Don't show back button when from navbar
+            : IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
                 onPressed: () {
                   if (widget.fromProductDetail) {
-                    Navigator.pop(context);   // Go back to ProductDetailScreen
+                    Navigator.pop(context); // Go back to ProductDetailScreen
                   } else {
                     _refreshCartData();
-                    _onPopInvoked(context);   // Go to DashboardScreen
+                    _onPopInvoked(context); // Go to DashboardScreen
                   }
-
                 },
               ),
-              const SizedBox(width: 12),
-              Text(
-                "Cart (${cartItems.length} items)",
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-              GestureDetector(
+        automaticallyImplyLeading: !widget.fromNavBar,
+        title: Text(
+          "Cart (${cartItems.length} items)",
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: GestureDetector(
                 onTap: () {
                   if (allSelected) {
                     cartProvider.clearSelection();
@@ -309,41 +331,38 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: _refreshCartData,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            children: [
+              // Cart Items List
+              ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: cartItems.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemBuilder: (context, index) {
+                  final item = cartItems[index];
+                  return CartItemWidget(
+                    key: ValueKey('${item.cartId}_${item.quantity}'),
+                    item: item,
+                    onQuantityChanged: _refreshCartData,
+                  );
+                },
+              ),
+
+              // Promo Code and Note Section
+              _buildPromoAndNoteSection(couponProvider, subtotal),
             ],
           ),
         ),
-
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: _refreshCartData,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                children: [
-                  // Cart Items List
-                  ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: cartItems.length,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      final item = cartItems[index];
-                      return CartItemWidget(
-                        key: ValueKey('${item.cartId}_${item.quantity}'),
-                        item: item,
-                        onQuantityChanged: _refreshCartData,
-                      );
-                    },
-                  ),
-
-                  // Promo Code and Note Section
-                  _buildPromoAndNoteSection(couponProvider, subtotal),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -410,7 +429,7 @@ class _CartScreenState extends State<CartScreen> {
         children: [
           // Applied Coupon Section
           // if (couponProvider.hasAppliedCoupon)
-            // _buildAppliedCouponSection(couponProvider),
+          // _buildAppliedCouponSection(couponProvider),
 
           // Promo Code Section
           _buildPromoCodeSection(couponProvider),
@@ -426,8 +445,6 @@ class _CartScreenState extends State<CartScreen> {
       ),
     );
   }
-
-
 
   Widget _buildPromoCodeSection(CouponProvider couponProvider) {
     return Column(
@@ -506,10 +523,12 @@ class _CartScreenState extends State<CartScreen> {
                     itemCount: couponProvider.coupons.length,
                     itemBuilder: (context, index) {
                       final coupon = couponProvider.coupons[index];
-                      final cartProvider = Provider.of<CartProvider>(context, listen: false);
+                      final cartProvider =
+                          Provider.of<CartProvider>(context, listen: false);
                       final selectedItems = cartProvider.getSelectedCartItems();
 
-                      final isValid = couponProvider.isCouponValid(coupon, selectedItems);
+                      final isValid =
+                          couponProvider.isCouponValid(coupon, selectedItems);
 
                       return Padding(
                         padding: const EdgeInsets.only(right: 8.0),
@@ -562,15 +581,6 @@ class _CartScreenState extends State<CartScreen> {
               repeat: false,
             ),
           )
-/*    Container(
-            width: 80,
-            height: 48,
-            padding: const EdgeInsets.all(12),
-            child: const CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF050040)),
-            ),
-          )*/
         : SizedBox(
             height: 48,
             child: ElevatedButton(
@@ -622,7 +632,8 @@ class _CartScreenState extends State<CartScreen> {
 
                   if (selectedCoupon != null && selectedCoupon.isNotEmpty) {
                     setState(() {
-                      _promoCodeController.text = selectedCoupon; // 👈 Autofill textfield
+                      _promoCodeController.text =
+                          selectedCoupon; // 👈 Autofill textfield
                     });
 
                     // Optional: auto apply
@@ -671,13 +682,10 @@ class _CartScreenState extends State<CartScreen> {
                 );
               }
 
-
               // Show first 2 coupons
-              final cartProvider = Provider.of<CartProvider>(context, listen: false);
+              final cartProvider =
+                  Provider.of<CartProvider>(context, listen: false);
               final selectedItems = cartProvider.getSelectedCartItems();
-
-
-
 
               final displayedCoupons = couponProvider.coupons
                   .where((c) => couponProvider.isCouponValid(c, selectedItems))
@@ -708,7 +716,6 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                 );
               }
-
 
               return Column(
                 children: displayedCoupons.map((coupon) {
@@ -745,7 +752,7 @@ class _CartScreenState extends State<CartScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
+              color: Colors.grey.withValues(alpha: 0.3),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -795,7 +802,7 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Min. order: ₹${coupon.minimumAmount.toStringAsFixed(2)}',
+                      'Min. order: ₹${formatPrice(coupon.minimumAmount)}',
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
@@ -815,62 +822,19 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   Text(
                     "${coupon.endDate.day.toString().padLeft(2, '0')}/"
-                        "${coupon.endDate.month.toString().padLeft(2, '0')}/"
-                        "${coupon.endDate.year}",
+                    "${coupon.endDate.month.toString().padLeft(2, '0')}/"
+                    "${coupon.endDate.year}",
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-
                 ],
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildAddNoteSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          children: [
-            Icon(Icons.note_add_outlined, color: Colors.black54),
-            SizedBox(width: 8),
-            Text(
-              "Add Note",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: "e.g. Leave outside the door",
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: BorderSide(color: Colors.blue.shade300, width: 1),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: BorderSide(color: Colors.blue.shade300, width: 1),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30),
-              borderSide: BorderSide(color: Colors.blue.shade300, width: 1),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -885,7 +849,7 @@ class _CartScreenState extends State<CartScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),
@@ -906,7 +870,7 @@ class _CartScreenState extends State<CartScreen> {
                     style: TextStyle(color: Colors.grey),
                   ),
                   Text(
-                    "₹${subtotal.toStringAsFixed(2)}",
+                    "₹${formatPrice(subtotal)}",
                     style: const TextStyle(color: Colors.grey),
                   ),
                 ],
@@ -924,7 +888,7 @@ class _CartScreenState extends State<CartScreen> {
                     style: const TextStyle(color: Colors.green),
                   ),
                   Text(
-                    "-₹${couponProvider.couponDiscount.toStringAsFixed(2)}",
+                    "-₹${formatPrice(couponProvider.couponDiscount)}",
                     style: const TextStyle(color: Colors.green),
                   ),
                 ],
@@ -940,7 +904,7 @@ class _CartScreenState extends State<CartScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "₹${finalAmount.toStringAsFixed(2)}",
+                    "₹${formatPrice(finalAmount)}",
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -1003,13 +967,13 @@ class _CartScreenState extends State<CartScreen> {
       // Get existing AddressProvider from widget tree
       final addressProvider =
           Provider.of<AddressProvider>(context, listen: false);
-      final couponProvider =
-          Provider.of<CouponProvider>(context, listen: false);
+      Provider.of<CouponProvider>(context, listen: false);
 
       // Fetch addresses before navigation
       await addressProvider.fetchAddresses();
 
       if (mounted) Navigator.of(context).pop();
+      if (!mounted) return;
 
       await NavigationHelper.navigateToAddressScreen(
         context: context,
@@ -1080,11 +1044,12 @@ class _AllCouponsScreenState extends State<AllCouponsScreen> {
             itemCount: couponProvider.coupons.length,
             itemBuilder: (context, index) {
               final coupon = couponProvider.coupons[index];
-              final cartProvider = Provider.of<CartProvider>(context, listen: false);
+              final cartProvider =
+                  Provider.of<CartProvider>(context, listen: false);
               final selectedItems = cartProvider.getSelectedCartItems();
 
-              final isValid = couponProvider.isCouponValid(coupon, selectedItems);
-
+              final isValid =
+                  couponProvider.isCouponValid(coupon, selectedItems);
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -1220,8 +1185,6 @@ class _AllCouponsScreenState extends State<AllCouponsScreen> {
   }
 }
 
-
-
 class CouponGridScreen extends StatelessWidget {
   final String title;
 
@@ -1264,11 +1227,11 @@ class CouponGridScreen extends StatelessWidget {
             ),
             itemBuilder: (context, index) {
               final coupon = coupons[index];
-              final cartProvider = Provider.of<CartProvider>(context, listen: false);
+              final cartProvider =
+                  Provider.of<CartProvider>(context, listen: false);
               final selectedItems = cartProvider.getSelectedCartItems();
 
               final disabled = !provider.isCouponValid(coupon, selectedItems);
-
 
               return Opacity(
                 opacity: disabled ? 0.5 : 1,
@@ -1343,7 +1306,6 @@ class CouponGridScreen extends StatelessWidget {
   }
 }
 
-
 class CartItemWidget extends StatelessWidget {
   final UserCartItem item;
   final VoidCallback? onQuantityChanged;
@@ -1364,6 +1326,8 @@ class CartItemWidget extends StatelessWidget {
         onQuantityChanged!();
       }
     } catch (e) {
+      if (!context.mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to update quantity: $e'),
@@ -1391,7 +1355,20 @@ class CartItemWidget extends StatelessWidget {
   }
 
   String _calculateDiscountedPrice(UserCartProduct product) {
-    return _getUnitPrice(product).toStringAsFixed(2);
+    return formatPrice(_getUnitPrice(product));
+  }
+
+// doublle pass
+  String formatPrice(double value) {
+    // If value has no decimal part → show as int
+    if (value % 1 == 0) {
+      return value.toInt().toString();
+    }
+    // Otherwise show up to 2 decimals (no trailing zeros)
+    return value
+        .toStringAsFixed(2)
+        .replaceAll(RegExp(r'0+$'), '')
+        .replaceAll(RegExp(r'\.$'), '');
   }
 
   @override
@@ -1426,8 +1403,6 @@ class CartItemWidget extends StatelessWidget {
                     onTap: () => _openProduct(context, product),
                     child: _buildProductImage(product),
                   ),
-
-
                   const SizedBox(width: 10),
                   Expanded(
                     child: GestureDetector(
@@ -1466,6 +1441,13 @@ class CartItemWidget extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             "Qty: ${item.quantity}",
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          Text(
+                            "Size: ${product.variants.isNotEmpty ? product.variants.first.variant : 'N/A'}",
                             style: const TextStyle(
                               fontSize: 12,
                               color: Colors.grey,
@@ -1528,7 +1510,7 @@ class CartItemWidget extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    "₹${totalPrice.toStringAsFixed(2)}",
+                    "₹${formatPrice(totalPrice)}",
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -1581,8 +1563,8 @@ class CartItemWidget extends StatelessWidget {
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
             ProductDetailScreen(
-              slug: product.slug!,   // ✅ Cart → ProductDetail via slug
-            ),
+          slug: product.slug!, // ✅ Cart → ProductDetail via slug
+        ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
@@ -1590,7 +1572,6 @@ class CartItemWidget extends StatelessWidget {
       ),
     );
   }
-
 
   Widget _buildOptimizedImage(String? thumb) {
     if (thumb == null || thumb.isEmpty) {
@@ -1602,8 +1583,7 @@ class CartItemWidget extends StatelessWidget {
       );
     }
 
-    final imageUrl =
-        "${ApiService.baseUrl}/assets/img/products-thumbs/$thumb";
+    final imageUrl = "${ApiService.baseUrl}/assets/img/products-thumbs/$thumb";
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
@@ -1614,7 +1594,7 @@ class CartItemWidget extends StatelessWidget {
         fit: BoxFit.cover,
 
         // 🔥 Cache optimization (VERY IMPORTANT)
-        memCacheWidth: 140,   // 2x for better quality on high DPI
+        memCacheWidth: 140, // 2x for better quality on high DPI
         memCacheHeight: 140,
         maxWidthDiskCache: 140,
         maxHeightDiskCache: 140,
@@ -1640,7 +1620,6 @@ class CartItemWidget extends StatelessWidget {
     );
   }
 
-
   Widget _thumbShimmer() {
     return Shimmer.fromColors(
       baseColor: Colors.grey.shade300,
@@ -1652,7 +1631,6 @@ class CartItemWidget extends StatelessWidget {
       ),
     );
   }
-
 
   void _showDeleteBottomSheet(
       BuildContext context, UserCartItem item, Function(int) onDelete) {
@@ -1798,7 +1776,8 @@ class CouponProvider with ChangeNotifier {
     try {
       final response = await ApiService.fetchActiveCoupons();
 
-      if (response.isSuccess) { // ✅ FIX
+      if (response.isSuccess) {
+        // ✅ FIX
         _coupons = response.data;
       } else {
         _error = response.message;
@@ -1815,10 +1794,10 @@ class CouponProvider with ChangeNotifier {
 
   // Apply coupon
   Future<Map<String, dynamic>> applyCoupon(
-      String couponCode,
-      List<UserCartItem> selectedItems,
-      int userId,
-      ) async {
+    String couponCode,
+    List<UserCartItem> selectedItems,
+    int userId,
+  ) async {
     _isLoading = true;
     notifyListeners();
 
@@ -1832,13 +1811,12 @@ class CouponProvider with ChangeNotifier {
 
       _couponDiscount = response.pricing.totalDiscount;
       final apiCoupon = _coupons.firstWhere(
-            (c) => c.code == couponCode,
+        (c) => c.code == couponCode,
         orElse: () => throw Exception("Coupon not found"),
       );
 
       _appliedCoupon = apiCoupon;
       _couponDiscount = response.pricing.totalDiscount;
-
 
       return {
         'success': true,
@@ -1906,7 +1884,6 @@ class CouponProvider with ChangeNotifier {
     }
   }
 
-
   // Calculate final amount after discount
   double get finalAmount {
     return _subtotal - _couponDiscount;
@@ -1920,19 +1897,16 @@ class CouponProvider with ChangeNotifier {
     // Product based validation
     if (coupon.productIds.isNotEmpty) {
       final selectedProductIds =
-      selectedItems.map((e) => e.product.id).toList();
+          selectedItems.map((e) => e.product.id).toList();
 
       final hasMatch =
-      selectedProductIds.any((id) => coupon.productIds.contains(id));
+          selectedProductIds.any((id) => coupon.productIds.contains(id));
 
       if (!hasMatch) return false;
     }
 
     return true;
   }
-
-
-
 
   // Load applied coupon from shared preferences
   Future<void> loadAppliedCoupon() async {
@@ -1954,7 +1928,6 @@ class CouponProvider with ChangeNotifier {
   }
 
   // Save applied coupon to shared preferences
-
 
   // Remove applied coupon from shared preferences
   Future<void> _removeAppliedCoupon() async {
@@ -1991,7 +1964,6 @@ class CouponProvider with ChangeNotifier {
     }
     return false;
   }
-
 }
 
 class Coupon {
@@ -2039,8 +2011,7 @@ class Coupon {
       endDate: DateTime.tryParse(json['end_date'] ?? '') ?? DateTime.now(),
       productIds: _parseProductIds(json['product_id']),
       termCondition: json['term_condition'] ?? '',
-      minimumAmount:
-      double.tryParse(json['minimum_amount'].toString()) ?? 0,
+      minimumAmount: double.tryParse(json['minimum_amount'].toString()) ?? 0,
       maxUsage: int.tryParse(json['max_usage'].toString()) ?? 0,
       usedCount: int.tryParse(json['used_count'].toString()) ?? 0,
       couponStatus: json['coupon_status'] ?? '',
@@ -2087,10 +2058,6 @@ class Coupon {
   }
 }
 
-
-
-
-
 class CouponResponse {
   final String status;
   final String message;
@@ -2114,8 +2081,6 @@ class CouponResponse {
 
   bool get isSuccess => status.toLowerCase() == 'success';
 }
-
-
 
 class ApplyCouponRequest {
   final int userId;
@@ -2193,9 +2158,8 @@ class ApplyCouponResponse {
   factory ApplyCouponResponse.fromJson(Map<String, dynamic> json) {
     return ApplyCouponResponse(
       success: json['success'] == 'success',
-      coupon: json['coupon'] != null
-          ? CouponInfo.fromJson(json['coupon'])
-          : null,
+      coupon:
+          json['coupon'] != null ? CouponInfo.fromJson(json['coupon']) : null,
       pricing: PricingInfo.fromJson(json['pricing']),
       itemDiscounts: (json['item_discounts'] as List? ?? [])
           .map((e) => ItemDiscount.fromJson(e))
@@ -2240,12 +2204,10 @@ class PricingInfo {
 
   factory PricingInfo.fromJson(Map<String, dynamic> json) {
     return PricingInfo(
-      totalDiscount:
-      double.tryParse(json['total_discount'].toString()) ?? 0,
-      cartSubtotal:
-      double.tryParse(json['cart_subtotal'].toString()) ?? 0,
+      totalDiscount: double.tryParse(json['total_discount'].toString()) ?? 0,
+      cartSubtotal: double.tryParse(json['cart_subtotal'].toString()) ?? 0,
       totalPayableAmount:
-      double.tryParse(json['total_payable_amount'].toString()) ?? 0,
+          double.tryParse(json['total_payable_amount'].toString()) ?? 0,
     );
   }
 }
@@ -2265,11 +2227,7 @@ class ItemDiscount {
     return ItemDiscount(
       productId: json['product_id'] ?? 0,
       variantId: json['variant_id'],
-      discountAmount:
-      double.tryParse(json['discount_amount'].toString()) ?? 0,
+      discountAmount: double.tryParse(json['discount_amount'].toString()) ?? 0,
     );
   }
 }
-
-
-
