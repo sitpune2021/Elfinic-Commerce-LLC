@@ -2,20 +2,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 // ------------------- ORDERS SCREEN -------------------
 
-import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../services/api_service.dart';
 
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/api_service.dart';
 import 'ProductDetailPage.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../services/api_service.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -1601,7 +1593,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   'Coins Used', '- ₹${coinsUsed.toStringAsFixed(2)}',
                   isDiscount: true),
             if (couponCode != null)
-              _buildPriceDetailRow('Coupon Applied', couponCode!),
+              _buildPriceDetailRow('Coupon Applied', couponCode),
             _buildPriceDetailRow('Delivery Charges', 'FREE', isDiscount: true),
             Container(
               height: 1,
@@ -1706,7 +1698,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
               final item = entry.value;
               final isLast = index == _historyItems.length - 1;
               return _buildTimelineStep(item, isLast);
-            }).toList(),
+            }),
           ],
         ),
       ),

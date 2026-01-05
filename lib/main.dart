@@ -17,7 +17,6 @@ import 'package:elfinic_commerce_llc/providers/delivery_provider.dart';
 import 'package:elfinic_commerce_llc/providers/product_provider.dart';
 import 'package:elfinic_commerce_llc/screens/CartScreen.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart';
-import 'package:elfinic_commerce_llc/screens/review_screen.dart';
 import 'package:elfinic_commerce_llc/screens/splash_screen.dart';
 import 'package:elfinic_commerce_llc/utils/NoInternetOverlay.dart';
 import 'package:flutter/material.dart';

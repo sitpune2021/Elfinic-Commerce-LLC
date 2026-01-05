@@ -3,23 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 // providers/order_provider.dart
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
 import '../model/OrderModel.dart';
 
 
 // providers/order_provider.dart
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 import '../model/VerifyPaymentModels.dart';
 import '../model/cart_models.dart';

@@ -4,19 +4,10 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 
 // connectivity_provider.dart
-import 'dart:async';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/material.dart';
 
 // providers/connectivity_provider.dart
-import 'dart:async';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/material.dart';
 
 // providers/connectivity_provider.dart
-import 'dart:async';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/material.dart';
 
 class ConnectivityProvider with ChangeNotifier {
   bool _isConnected = true;

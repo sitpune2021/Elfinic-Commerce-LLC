@@ -3,13 +3,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import '../model/SubcategoriesResponse.dart';
-import 'package:flutter/material.dart';
 
 
 
-import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/category_provider.dart';
@@ -18,22 +14,14 @@ import '../services/api_service.dart';
 
 import '../providers/SubCategoryProvider.dart';
 
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 
-import '../services/api_service.dart';
-import '../providers/category_provider.dart';
 
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 
 import 'ProductDetailPage.dart';
 
 
 class HomeCategoriesScreen extends StatefulWidget {
-  const HomeCategoriesScreen({Key? key}) : super(key: key);
+  const HomeCategoriesScreen({super.key});
 
   @override
   _HomeCategoriesScreenState createState() => _HomeCategoriesScreenState();
@@ -43,7 +31,7 @@ class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
   int? selectedCategoryId;
 
 
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   String searchQuery = "";
 
 
@@ -583,10 +571,10 @@ class ProductListScreen extends StatefulWidget {
   final String subcategoryName;
 
   const ProductListScreen({
-    Key? key,
+    super.key,
     required this.categoryName,
     required this.subcategoryName,
-  }) : super(key: key);
+  });
 
   @override
   State<ProductListScreen> createState() => _ProductListScreenState();

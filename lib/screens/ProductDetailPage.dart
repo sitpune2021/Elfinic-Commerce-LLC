@@ -1,11 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_add_to_cart_button/flutter_add_to_cart_button.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
 import 'package:readmore/readmore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,22 +16,13 @@ import '../providers/RecentViewProvider.dart';
 import '../providers/ReviewProvider.dart';
 import '../providers/SimilarProductProvider.dart';
 import '../providers/WishlistProvider.dart';
-import '../providers/product_provider.dart';
 import '../services/api_service.dart';
 import '../utils/BaseScreen.dart';
 
 import 'CartScreen.dart';
-import 'address_screen.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:html/parser.dart' as html_parser;
-import 'package:shimmer/shimmer.dart';
 
 
 // ===============================
@@ -288,10 +276,10 @@ class ProductDetailScreen extends StatefulWidget {
   final String? slug;
 
   const ProductDetailScreen({
-    Key? key,
+    super.key,
     this.product,
     this.slug,
-  }) : super(key: key);
+  });
 
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
@@ -428,9 +416,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final product = getProduct;
     _selectedVariant = null;
 
-    if (product.variants != null && product.variants!.isNotEmpty) {
+    if (product.variants.isNotEmpty) {
       // Try to find a variant matching the initial color/size
-      for (final variant in product.variants!) {
+      for (final variant in product.variants) {
         if (variant.variant != null) {
           final variantParts = variant.variant!.split('/');
           if (variantParts.length > 1) {
@@ -634,7 +622,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     if (product.options.isNotEmpty)
     {
-      for (final option in product.options!) {
+      for (final option in product.options) {
         if (option.optionType != null) {
           choices.add(option.optionType!);
         }
@@ -1100,7 +1088,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       "Style Code": product.sku ?? "Not specified",
                       "Brand": product.brand ?? "Not specified",
                       "Category": product.category ?? "Not specified",
-                      "Subcategory": product.subcategory?.join(", ") ?? "Not specified",
+                      "Subcategory": product.subcategory.join(", ") ?? "Not specified",
                       "Stock": product.stock ?? "0",
                       "Selected Color": selectedColor ?? "Not selected",
                       "Selected Size": selectedSize ?? "Not selected",
@@ -1734,7 +1722,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Container(
+              child: SizedBox(
                 height: 130,
                 width: double.infinity,
                 child: imageUrl != null

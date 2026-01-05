@@ -3,20 +3,9 @@ import 'package:flutter/material.dart';
 import '../model/LoginResponse.dart';
 import '../services/api_service.dart';
 
-import 'package:flutter/material.dart';
-import '../model/LoginResponse.dart';
-import '../services/api_service.dart';
 
-import 'package:flutter/material.dart';
-import '../model/LoginResponse.dart';
-import '../services/api_service.dart';
-import 'package:flutter/material.dart';
-import '../model/LoginResponse.dart';
-import '../services/api_service.dart';
 
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final ApiService _authService = ApiService();

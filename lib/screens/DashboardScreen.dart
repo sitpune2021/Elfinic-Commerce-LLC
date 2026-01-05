@@ -5,18 +5,16 @@ import 'package:lottie/lottie.dart';
 import 'CartScreen.dart';
 import 'CategoriesScreen.dart';
 import 'ProfileScreen.dart';
-import 'WishlistScreen.dart';
 import 'home_screen.dart';
 // dashboard_screen.dart
 import 'package:elfinic_commerce_llc/utils/BaseScreen.dart';
-import 'package:flutter/rendering.dart'; // 👈 needed for ScrollDirection
+// 👈 needed for ScrollDirection
 
 
 
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 
-import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:async';
 
@@ -25,7 +23,7 @@ import 'dart:async';
 
 
   class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -129,7 +127,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 class NoInternetWidget extends StatelessWidget {
   final VoidCallback onRetry;
 
-  const NoInternetWidget({Key? key, required this.onRetry}) : super(key: key);
+  const NoInternetWidget({super.key, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {

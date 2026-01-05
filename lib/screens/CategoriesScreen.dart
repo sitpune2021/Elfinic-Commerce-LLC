@@ -7,18 +7,13 @@ import 'package:elfinic_commerce_llc/providers/category_provider.dart';
 import 'package:elfinic_commerce_llc/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart' as dashboard;
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../model/CategoriesResponse.dart';
 import '../providers/SubCategoryProvider.dart';
-import '../utils/ShimmerCategoryCard.dart';
 import '../utils/lottie_overlay.dart';
 import 'SubCategoriesScreen.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -171,7 +166,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final cat = categories[index];
-          final imageUrl = (cat.image != null && cat.image!.isNotEmpty)
+          final imageUrl = (cat.image.isNotEmpty)
               ? "${ApiService.baseUrl}/assets/img/category-images/${cat.image}"
               : "assets/images/no_product_img2.png";
 

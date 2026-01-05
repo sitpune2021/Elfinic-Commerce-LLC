@@ -1,30 +1,22 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../model/AddressModel.dart';
 import '../model/OrderModel.dart';
 import '../model/cart_models.dart';
-import '../model/delivery_type.dart';
 import '../providers/AuthProvider.dart';
 import '../providers/CartProvider.dart';
 import '../providers/OrderProvider.dart';
-import '../providers/ShippingProvider.dart';
-import '../providers/delivery_provider.dart';
 import '../services/api_service.dart';
 import '../utils/BaseScreen.dart';
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'DashboardScreen.dart';
 
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class ReviewScreen extends StatefulWidget {
   final Address selectedAddress;
@@ -978,7 +970,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: (product.thumb == null || product.thumb!.isEmpty)
+                        child: (product.thumb.isEmpty)
                             ? Image.asset(
                                 'assets/images/no_product_img2.png',
                                 width: 60,

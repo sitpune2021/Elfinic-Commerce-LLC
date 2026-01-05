@@ -120,9 +120,9 @@ class _AddressScreenState extends State<AddressScreen> {
     return Column(
       children: [
         // Order Summary (only for checkout)
-        if (!widget.fromProfile && widget.subtotalAmount != null) ...[
+        if (!widget.fromProfile) ...[
           _buildOrderSummary(),
-          if (widget.cartItems != null && widget.cartItems!.isNotEmpty)
+          if (widget.cartItems.isNotEmpty)
             _buildCartSummary(),
         ],
         Expanded(
@@ -179,7 +179,7 @@ class _AddressScreenState extends State<AddressScreen> {
           const Icon(Icons.shopping_cart, size: 16, color: Colors.blue),
           const SizedBox(width: 8),
           Text(
-            "${widget.cartItems!.length} item${widget.cartItems!.length != 1 ? 's' : ''} selected",
+            "${widget.cartItems.length} item${widget.cartItems.length != 1 ? 's' : ''} selected",
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,

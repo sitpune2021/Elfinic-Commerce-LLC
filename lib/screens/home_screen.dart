@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:elfinic_commerce_llc/providers/product_provider.dart';
 import 'package:elfinic_commerce_llc/screens/NotificationsScreen.dart';
@@ -8,51 +6,32 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_countdown_timer/flutter_countdown_timer.dart';
-import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 // import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../model/CategoriesResponse.dart';
 import '../model/ProductsResponse.dart';
 import '../providers/ArrivalProductProvider.dart';
 import '../providers/BannerProvider.dart';
-import '../providers/ConnectivityProvider.dart';
 import '../providers/RecentViewProvider.dart';
 import '../providers/SubCategoryProvider.dart';
 import '../providers/category_provider.dart';
 import '../services/api_service.dart';
 
 import '../utils/lottie_overlay.dart';
-import '../utils/product_list_shimmer.dart';
-import 'CartScreen.dart';
-import 'CategoriesScreen.dart';
 import 'ProductDetailPage.dart';
 
 // home_screen.dart
 
 import 'SubCategoriesScreen.dart';
 import 'category_list.dart';
-import 'package:http/http.dart' as http;
 
-import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:video_player/video_player.dart';
-import 'package:flutter/foundation.dart';
 
 // Import your custom classes and providers
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -75,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen>
   ];
 
   final _scrollController = ScrollController();
-  bool _isScrolling = false;
+  final bool _isScrolling = false;
   final _recentScrollController = ScrollController();
   final int userId = 15;
 
@@ -135,9 +114,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _loadInitialData() {
     final categoryProvider =
-    Provider.of<CategoryProvider>(context, listen: false);
+        Provider.of<CategoryProvider>(context, listen: false);
     final productProvider =
-    Provider.of<ProductProvider>(context, listen: false);
+        Provider.of<ProductProvider>(context, listen: false);
 
     Future.microtask(() {
       categoryProvider.fetchCategories();
@@ -166,9 +145,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _precacheNetworkImages() {
     final categoryProvider =
-    Provider.of<CategoryProvider>(context, listen: false);
+        Provider.of<CategoryProvider>(context, listen: false);
     final productProvider =
-    Provider.of<ProductProvider>(context, listen: false);
+        Provider.of<ProductProvider>(context, listen: false);
 
     Future.microtask(() {
       for (final category in categoryProvider.categories.take(6)) {
@@ -267,12 +246,12 @@ class _HomeScreenState extends State<HomeScreen>
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
             ChangeNotifierProvider(
-              create: (_) => SubCategoryProvider(),
-              child: SubCategoriesScreen(
-                categoryId: categoryId,
-                categoryName: categoryName,
-              ),
-            ),
+          create: (_) => SubCategoryProvider(),
+          child: SubCategoriesScreen(
+            categoryId: categoryId,
+            categoryName: categoryName,
+          ),
+        ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,
@@ -317,9 +296,9 @@ class _HomeScreenState extends State<HomeScreen>
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
             ProductDetailScreen(
-              product: product,
-              slug: product.slug!, // ✅ now 100% safe
-            ),
+          product: product,
+          slug: product.slug!, // ✅ now 100% safe
+        ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
             opacity: animation,
@@ -330,7 +309,6 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
-
 
   Future<void> _addToRecentViews(int productId) async {
     if (kDebugMode) {
@@ -574,11 +552,11 @@ class _HomeScreenState extends State<HomeScreen>
     String? imageUrl;
     if (product.images.isNotEmpty && product.images.first.isNotEmpty) {
       imageUrl =
-      "${ApiService.baseUrl}/assets/img/products-images/${product.images.first}";
+          "${ApiService.baseUrl}/assets/img/products-images/${product.images.first}";
     } else if (product.productThumb != null &&
         product.productThumb!.isNotEmpty) {
       imageUrl =
-      "${ApiService.baseUrl}/assets/img/products-images/${product.productThumb}";
+          "${ApiService.baseUrl}/assets/img/products-images/${product.productThumb}";
     }
 
     return GestureDetector(
@@ -595,10 +573,11 @@ class _HomeScreenState extends State<HomeScreen>
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 ProductDetailScreen(
-                  product: product,
-                  slug: product.slug!, // ✅ PASS SLUG
-                ),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              product: product,
+              slug: product.slug!, // ✅ PASS SLUG
+            ),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
               return FadeTransition(
                 opacity: animation,
                 child: child,
@@ -608,116 +587,119 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         );
       },
-
       child: Container(
         width: itemWidth,
         margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-        decoration: BoxDecoration( border: Border.all(color: Colors.black12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.black12),
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                AspectRatio(
-                  aspectRatio: 1 / 1.25,
-                  child: Container(
-                    padding: const EdgeInsets.all(1),
-                    child: imageUrl != null
-                        ? CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.contain,
-                      placeholder: (_, __) => _buildProductImageShimmer(),
-                      errorWidget: (_, __, ___) => _buildErrorImage(),
-                    )
-                        : _buildErrorImage(),
-                  ),
-                ),
-                if (_shouldShowDiscount(product))
-                  Positioned(
-                    top: 5,
-                    left: 8,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1 / 1.25,
                     child: Container(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        _calculateDiscountPercentage(product),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                      padding: const EdgeInsets.all(1),
+                      child: imageUrl != null
+                          ? CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.contain,
+                              placeholder: (_, __) =>
+                                  _buildProductImageShimmer(),
+                              errorWidget: (_, __, ___) => _buildErrorImage(),
+                            )
+                          : _buildErrorImage(),
+                    ),
+                  ),
+                  if (_shouldShowDiscount(product))
+                    Positioned(
+                      top: 5,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          _calculateDiscountPercentage(product),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      if (_shouldShowDiscount(product)) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        if (_shouldShowDiscount(product)) ...[
+                          Text(
+                            "₹${product.price}",
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
                         Text(
-                          "₹${product.price}",
+                          "₹${_calculateFinalPrice(product).toStringAsFixed(0)}",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, size: 14, color: Colors.orange),
+                        const SizedBox(width: 4),
+                        Text(
+                          product.averageRating.toStringAsFixed(1),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          "(${product.ratingCount})",
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.grey,
-                            decoration: TextDecoration.lineThrough,
                           ),
                         ),
-                        const SizedBox(width: 6),
                       ],
-                      Text(
-                        "₹${_calculateFinalPrice(product).toStringAsFixed(0)}",
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, size: 14, color: Colors.orange),
-                      const SizedBox(width: 4),
-                      Text(
-                        product.averageRating.toStringAsFixed(1),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        "(${product.ratingCount})",
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -756,7 +738,7 @@ class _HomeScreenState extends State<HomeScreen>
                     context,
                     PageRouteBuilder(
                       pageBuilder: (context, animation, secondaryAnimation) =>
-                      const SerchBarScreen(),
+                          const SerchBarScreen(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) {
                         return FadeTransition(
@@ -789,8 +771,7 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             const SizedBox(width: 15),
             IconButton(
-              icon:
-              const Icon(Icons.share, size: 28, color: Colors.black87),
+              icon: const Icon(Icons.share, size: 28, color: Colors.black87),
               onPressed: () {
                 print("Share clicked");
               },
@@ -803,7 +784,7 @@ class _HomeScreenState extends State<HomeScreen>
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation, secondaryAnimation) =>
-                    const NotificationsScreen(),
+                        const NotificationsScreen(),
                     transitionsBuilder:
                         (context, animation, secondaryAnimation, child) {
                       return FadeTransition(
@@ -829,24 +810,24 @@ class _HomeScreenState extends State<HomeScreen>
           child: categoryProvider.isLoading
               ? _buildCategoryShimmer()
               : categoryProvider.error != null
-              ? Center(child: Text(categoryProvider.error!))
-              : ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            itemCount: categoryProvider.categories.length > 5
-                ? 6
-                : categoryProvider.categories.length,
-            itemBuilder: (context, index) {
-              if (categoryProvider.categories.length > 5 &&
-                  index == 5) {
-                return _buildViewAllCategoryButton();
-              }
-              final cat = categoryProvider.categories[index];
-              final imageUrl =
-                  "${ApiService.baseUrl}/assets/img/category-images/${cat.image}";
-              return _buildCategory(cat.name, imageUrl, cat.id);
-            },
-          ),
+                  ? Center(child: Text(categoryProvider.error!))
+                  : ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      itemCount: categoryProvider.categories.length > 5
+                          ? 6
+                          : categoryProvider.categories.length,
+                      itemBuilder: (context, index) {
+                        if (categoryProvider.categories.length > 5 &&
+                            index == 5) {
+                          return _buildViewAllCategoryButton();
+                        }
+                        final cat = categoryProvider.categories[index];
+                        final imageUrl =
+                            "${ApiService.baseUrl}/assets/img/category-images/${cat.image}";
+                        return _buildCategory(cat.name, imageUrl, cat.id);
+                      },
+                    ),
         );
       },
     );
@@ -903,7 +884,7 @@ class _HomeScreenState extends State<HomeScreen>
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-            const HomeCategoriesScreen(),
+                const HomeCategoriesScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               return FadeTransition(
@@ -1102,7 +1083,7 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                           ),
                           errorWidget: (context, error, stackTrace) =>
-                          const Icon(Icons.broken_image, size: 50),
+                              const Icon(Icons.broken_image, size: 50),
                         ),
                       ),
                     );
@@ -1157,7 +1138,7 @@ class _HomeScreenState extends State<HomeScreen>
                 context,
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) =>
-                  navigateTo,
+                      navigateTo,
                   transitionsBuilder:
                       (context, animation, secondaryAnimation, child) {
                     return FadeTransition(
@@ -1341,7 +1322,7 @@ class _HomeScreenState extends State<HomeScreen>
               const SizedBox(width: 5),
               CountdownTimer(
                 endTime:
-                DateTime.now().millisecondsSinceEpoch + 1000 * 60 * 60 * 12,
+                    DateTime.now().millisecondsSinceEpoch + 1000 * 60 * 60 * 12,
                 textStyle: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -1456,14 +1437,14 @@ class ProductListWidget extends StatefulWidget {
   final VoidCallback? onLoadMore;
 
   const ProductListWidget({
-    Key? key,
+    super.key,
     required this.products,
     required this.isLoading,
     required this.onProductTap,
     this.scrollDirection = Axis.horizontal,
     this.height = 250,
     this.onLoadMore,
-  }) : super(key: key);
+  });
 
   @override
   State<ProductListWidget> createState() => _ProductListWidgetState();
@@ -1517,7 +1498,7 @@ class _ProductListWidgetState extends State<ProductListWidget> {
 
   String _discountText(Product product) {
     if (!_showDiscount(product)) return "";
-    final percent = ((product.discountPrice! / product.price!) * 100).round();
+    final percent = ((product.discountPrice / product.price) * 100).round();
     return "$percent% OFF";
   }
 
@@ -1569,11 +1550,11 @@ class _ProductListWidgetState extends State<ProductListWidget> {
     String? imageUrl;
     if (product.images.isNotEmpty) {
       imageUrl =
-      "${ApiService.baseUrl}/assets/img/products-images/${product.images.first}";
+          "${ApiService.baseUrl}/assets/img/products-images/${product.images.first}";
     } else if (product.productThumb != null &&
         product.productThumb!.isNotEmpty) {
       imageUrl =
-      "${ApiService.baseUrl}/assets/img/products-images/${product.productThumb}";
+          "${ApiService.baseUrl}/assets/img/products-images/${product.productThumb}";
     }
 
     return GestureDetector(
@@ -1581,114 +1562,115 @@ class _ProductListWidgetState extends State<ProductListWidget> {
       child: Container(
         width: cardWidth,
         margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-        decoration: BoxDecoration( border: Border.all(color: Colors.black12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.black12),
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
-
         ),
-
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                AspectRatio(
-                  aspectRatio: 1 / 1.25,
-                  child: Container(
-                    padding: const EdgeInsets.all(1),
-                    child: imageUrl != null
-                        ? CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.contain,
-                      placeholder: (_, __) => _imageShimmer(),
-                      errorWidget: (_, __, ___) => _errorImage(),
-                    )
-                        : _errorImage(),
-                  ),
-                ),
-                if (_discountText(product).isNotEmpty)
-                  Positioned(
-                    top: 2,
-                    left: 8,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1 / 1.25,
                     child: Container(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        _discountText(product),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                      padding: const EdgeInsets.all(1),
+                      child: imageUrl != null
+                          ? CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.contain,
+                              placeholder: (_, __) => _imageShimmer(),
+                              errorWidget: (_, __, ___) => _errorImage(),
+                            )
+                          : _errorImage(),
+                    ),
+                  ),
+                  if (_discountText(product).isNotEmpty)
+                    Positioned(
+                      top: 2,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          _discountText(product),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      if (_showDiscount(product)) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        if (_showDiscount(product)) ...[
+                          Text(
+                            "₹${product.price}",
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
                         Text(
-                          "₹${product.price}",
+                          "₹${_finalPrice(product).toStringAsFixed(0)}",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, size: 14, color: Colors.orange),
+                        const SizedBox(width: 4),
+                        Text(
+                          product.averageRating.toStringAsFixed(1),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          "(${product.ratingCount})",
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.grey,
-                            decoration: TextDecoration.lineThrough,
                           ),
                         ),
-                        const SizedBox(width: 6),
                       ],
-                      Text(
-                        "₹${_finalPrice(product).toStringAsFixed(0)}",
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, size: 14, color: Colors.orange),
-                      const SizedBox(width: 4),
-                      Text(
-                        product.averageRating.toStringAsFixed(1),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        "(${product.ratingCount})",
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

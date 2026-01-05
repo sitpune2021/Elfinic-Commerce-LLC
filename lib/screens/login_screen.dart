@@ -9,13 +9,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/AuthProvider.dart';
 import 'DashboardScreen.dart';
 import 'forgot_password.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   _LoginScreenState createState() => _LoginScreenState();

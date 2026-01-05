@@ -4,7 +4,7 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 
 import 'forgot_password_otp.dart';
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+  const ForgotPasswordScreen({super.key});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();

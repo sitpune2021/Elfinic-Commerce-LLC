@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart' as dashboard;
 import '../model/cart_models.dart';
 import '../providers/LogoutProvider.dart';

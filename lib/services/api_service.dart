@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:elfinic_commerce_llc/model/CategoriesResponse.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
@@ -8,23 +7,16 @@ import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../model/AddressModel.dart';
 import '../model/cart_models.dart';
 import '../providers/CartProvider.dart';
 import '../providers/ShippingProvider.dart';
 import '../services/api_service.dart';
 import '../utils/BaseScreen.dart';
 import '../utils/lottie_overlay.dart';
-import 'AddressListScreen.dart';
 import 'ProductDetailPage.dart';
 import 'ProfileScreen.dart';
-import 'address_screen.dart';
-import 'DashboardScreen.dart';
-import 'EditAddressScreen.dart';
-import 'ShoppingScreen.dart';
 
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart' as dashboard;
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 class CartScreen extends StatefulWidget {
@@ -39,7 +31,7 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   bool _isApplyingPromo = false;
-  bool _showSuccessAnimation = false;
+  final bool _showSuccessAnimation = false;
   final TextEditingController _promoCodeController = TextEditingController();
   late CouponProvider _couponProvider;
 

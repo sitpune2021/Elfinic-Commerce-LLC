@@ -1,12 +1,7 @@
 // providers/delivery_provider.dart
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../model/delivery_type.dart';
 
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 import '../services/api_service.dart';
 class DeliveryProvider with ChangeNotifier {

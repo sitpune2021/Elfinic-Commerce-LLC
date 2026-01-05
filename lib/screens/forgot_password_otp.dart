@@ -4,7 +4,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'new_password_screen.dart';
 
 class ForgotPasswordOTPScreen extends StatefulWidget {
-  const ForgotPasswordOTPScreen({Key? key}) : super(key: key);
+  const ForgotPasswordOTPScreen({super.key});
 
   @override
   State<ForgotPasswordOTPScreen> createState() => _ForgotPasswordOTPScreenState();

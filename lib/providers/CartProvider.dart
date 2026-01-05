@@ -1,10 +1,6 @@
-import 'dart:convert';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
-import '../model/ProductsResponse.dart';
 import '../model/cart_models.dart';
 import '../screens/ProductDetailPage.dart';
 import '../services/api_service.dart';
@@ -12,7 +8,6 @@ import '../services/api_service.dart';
 
 
 
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 class CartProvider with ChangeNotifier {
   bool _isLoading = false;

@@ -1,22 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../model/AddressModel.dart';
 import '../model/cart_models.dart';
-import '../model/delivery_type.dart';
-import '../providers/CartProvider.dart';
 import '../providers/ShippingProvider.dart';
-import '../providers/delivery_provider.dart';
-import '../services/api_service.dart';
-import '../utils/BaseScreen.dart';
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'DashboardScreen.dart';
 import 'address_screen.dart';
-import 'delivery_screen.dart';
 
 
 

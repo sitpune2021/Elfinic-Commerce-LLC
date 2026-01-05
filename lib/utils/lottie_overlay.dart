@@ -3,7 +3,7 @@ import 'package:lottie/lottie.dart';
 class LottieOverlay extends StatefulWidget {
   final Widget child;
 
-  const LottieOverlay({Key? key, required this.child}) : super(key: key);
+  const LottieOverlay({super.key, required this.child});
 
   @override
   State<LottieOverlay> createState() => _LottieOverlayState();

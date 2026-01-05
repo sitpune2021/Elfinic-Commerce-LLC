@@ -1,13 +1,10 @@
 import 'package:elfinic_commerce_llc/screens/ProductDetailPage.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../model/ProductsResponse.dart';
 import '../providers/WishlistProvider.dart';
 import '../services/api_service.dart';
-import 'DashboardScreen.dart';
 
-import 'home_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,17 +13,9 @@ import 'package:provider/provider.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
 
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
-import '../model/ProductsResponse.dart';
-import '../providers/WishlistProvider.dart';
 
-import '../model/WishlistProductItem.dart'; // your WishlistItem model
+// your WishlistItem model
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
 
