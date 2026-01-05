@@ -326,8 +326,8 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   String _calculateDiscountPercentage(Product product) {
-    final double price = product.price ?? 0.0;
-    final double discount = product.discountPrice ?? 0.0;
+    final double price = product.price;
+    final double discount = product.discountPrice;
 
     if (price > 0 && discount > 0 && discount < price) {
       final percentage = ((discount / price) * 100).round();
