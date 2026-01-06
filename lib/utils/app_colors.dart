@@ -1,13 +1,11 @@
-
-import 'package:flutter/cupertino.dart';
-
+import 'package:flutter/material.dart';
 
 class AppColors {
   // Primary Brand Colors
-  static const Color primaryDark = Color(0xFF050040);      // #050040
-  static const Color primaryAccent = Color(0xFFD39841);    // #D39841
-  static const Color primaryLight = Color(0xFFA9D4E7);     // #A9D4E7
-  static const Color pureBlack = Color(0xFF000000);        // #000000
+  static const Color primaryDark = Color(0xFF050040); // #050040
+  static const Color primaryAccent = Color(0xFFD39841); // #D39841
+  static const Color primaryLight = Color(0xFFA9D4E7); // #A9D4E7
+  static const Color pureBlack = Color(0xFF000000); // #000000
 
   // Secondary Colors
   static const Color secondaryDark = Color(0xFF2A2A72);
@@ -36,24 +34,24 @@ class AppColors {
   static const Color textHint = Color(0xFFBDBDBD);
 
   // Button Colors
-  static const Color buttonPrimary = primaryDark;      // #050040
-  static const Color buttonSecondary = primaryAccent;  // #D39841
-  static const Color buttonLight = primaryLight;       // #A9D4E7
+  static const Color buttonPrimary = primaryDark; // #050040
+  static const Color buttonSecondary = primaryAccent; // #D39841
+  static const Color buttonLight = primaryLight; // #A9D4E7
   static const Color buttonDisabled = Color(0xFFE0E0E0);
 
   // Border Colors
-  static const Color borderPrimary = primaryDark;      // #050040
-  static const Color borderAccent = primaryAccent;     // #D39841
+  static const Color borderPrimary = primaryDark; // #050040
+  static const Color borderAccent = primaryAccent; // #D39841
   static const Color borderLight = Color(0xFFE0E0E0);
 
   // Icon Colors
-  static const Color iconPrimary = primaryDark;        // #050040
-  static const Color iconAccent = primaryAccent;       // #D39841
-  static const Color iconLight = primaryLight;         // #A9D4E7
+  static const Color iconPrimary = primaryDark; // #050040
+  static const Color iconAccent = primaryAccent; // #D39841
+  static const Color iconLight = primaryLight; // #A9D4E7
 
   // Shadow Colors
-  static const Color shadowLight = Color(0x1A000000);  // 10% opacity black
-  static const Color shadowDark = Color(0x33000000);   // 20% opacity black
+  static const Color shadowLight = Color(0x1A000000); // 10% opacity black
+  static const Color shadowDark = Color(0x33000000); // 20% opacity black
 
   // Gradient Colors
   static const Gradient primaryGradient = LinearGradient(
@@ -75,12 +73,20 @@ class AppColors {
   );
 
   // Card Colors
-  static const Color cardDark = primaryDark;           // #050040
-  static const Color cardAccent = primaryAccent;       // #D39841
-  static const Color cardLight = primaryLight;         // #A9D4E7
+  static const Color cardDark = primaryDark; // #050040
+  static const Color cardAccent = primaryAccent; // #D39841
+  static const Color cardLight = primaryLight; // #A9D4E7
 
   // Text Specific Colors
-  static const Color textDark = primaryDark;           // #050040
-  static const Color textAccent = primaryAccent;       // #D39841
-  static const Color textLightBlue = primaryLight;     // #A9D4E7
+  static const Color textDark = primaryDark; // #050040
+  static const Color textAccent = primaryAccent; // #D39841
+  static const Color textLightBlue = primaryLight; // #A9D4E7
+
+  //
+  // Additional Colors
+  static const Color kCardBg = Colors.white;
+  static const Color kPrimary = Color(0xFF1E3A8A); // Indigo Dark
+  static const Color kAccent = Color(0xFFF59E0B); // Amber
+  static const Color kBorder = Color(0xFFE5E7EB); // Light Grey
+  static const Color kError = Color(0xFFDC2626); // Red
 }

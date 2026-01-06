@@ -1,8 +1,14 @@
+// ignore_for_file: file_names
+
 import 'dart:convert';
+import 'dart:io';
+import 'package:async/async.dart';
 import 'package:elfinic_commerce_llc/services/review_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 import '../model/Review.dart';
 import '../services/api_service.dart';
@@ -16,12 +22,113 @@ class ReviewProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String get error => _error;
 
-  //
+  int rating = 0;
+  bool isUploading = false;
+  double uploadProgress = 0;
+
+  CancelableOperation? _uploadTask;
+
+  //add eligibility
   bool _eligible = false;
   bool _loading = false;
 
   bool get eligible => _eligible;
   bool get loading => _loading;
+
+  List<File> images = [];
+  List<File> videos = [];
+
+  File? videoThumbnail;
+  bool isVideoThumbLoading = false;
+  bool _isVideoProcessing = false;
+  bool get isVideoProcessing => _isVideoProcessing;
+
+  /// ---------------- RATING ----------------
+  void setRating(int value) {
+    rating = value;
+    debugPrint('⭐ Provider Rating: $rating');
+    notifyListeners();
+  }
+
+  /// ---------------- IMAGES ----------------
+
+  void addImages(List<File> files) {
+    final remaining = 5 - images.length;
+    if (remaining <= 0) {
+      debugPrint('❌ Image limit reached (5)');
+      return;
+    }
+
+    // 🔒 Only take allowed number
+    final limitedFiles = files.take(remaining);
+
+    images.addAll(limitedFiles);
+
+    debugPrint('🖼️ Provider Images Count: ${images.length}');
+    notifyListeners();
+  }
+
+  /// ✅ NEW: Set video processing state
+  void setVideoProcessing(bool value) {
+    _isVideoProcessing = value;
+    notifyListeners();
+  }
+
+  /// ---------------- VIDEOS ----------------
+  Future<void> addVideo(File file) async {
+    videos.clear(); // 🔒 only 1 video allowed
+    videoThumbnail = null;
+    isVideoThumbLoading = true;
+    notifyListeners();
+
+    videos.add(file);
+
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final thumbPath = await VideoThumbnail.thumbnailFile(
+        video: file.path,
+        thumbnailPath: tempDir.path,
+        imageFormat: ImageFormat.JPEG,
+        maxHeight: 200,
+        quality: 75,
+      );
+
+      if (thumbPath != null) {
+        videoThumbnail = File(thumbPath);
+      }
+    } catch (e) {
+      debugPrint('❌ Video thumbnail error: $e');
+    }
+
+    isVideoThumbLoading = false;
+    notifyListeners();
+  }
+
+  void removeImage(File file) {
+    images.remove(file);
+    notifyListeners();
+  }
+
+  void removeVideo(File file) {
+    videos.clear();
+    videoThumbnail = null;
+    isVideoThumbLoading = false;
+    _isVideoProcessing = false;
+    notifyListeners();
+  }
+
+  /// ---------------- RESET ----------------
+  void resetForm() {
+    rating = 0;
+    images.clear();
+    videos.clear();
+    _error = '';
+    videoThumbnail = null;
+    isVideoThumbLoading = false;
+    _isVideoProcessing = false;
+    notifyListeners();
+    debugPrint('🔄 Provider Form Reset');
+  }
 
   Future<void> loadEligibility(int productId) async {
     debugPrint('🟣 ReviewProvider → loadEligibility START');
@@ -41,6 +148,93 @@ class ReviewProvider with ChangeNotifier {
     debugPrint('🟣 ReviewProvider → reset');
     _eligible = false;
     _loading = false;
+    notifyListeners();
+  }
+
+  // add product review
+  Future<bool> submitReview({
+    required int productId,
+    required String title,
+    required String content,
+  }) async {
+    debugPrint('━━━━━━━━━━━━━━━━━━━━━━');
+    debugPrint('🟢 PROVIDER SUBMIT START');
+
+    if (rating == 0) {
+      _error = 'Please select rating';
+      notifyListeners();
+      return false;
+    }
+
+    // _isLoading = true;
+    // uploadProgress = 0;
+    // _error = '';
+    isUploading = true;
+    uploadProgress = 0;
+    _error = '';
+    notifyListeners();
+
+    // final success = await ReviewService.addReview(
+    //   productId: productId,
+    //   rating: rating,
+    //   title: title,
+    //   content: content,
+    //   images: images,
+    //   videos: videos,
+    // );
+
+    // debugPrint('⬅️ PROVIDER API RESULT: $success');
+
+    // _isLoading = false;
+
+    // if (!success) {
+    //   _error = 'Failed to submit review';
+    // } else {
+    //   resetForm();
+    // }
+    _uploadTask = CancelableOperation.fromFuture(
+      ReviewService.addReview(
+        productId: productId,
+        rating: rating,
+        title: title,
+        content: content,
+        images: images,
+        videos: videos,
+        onProgress: (p) {
+          uploadProgress = p;
+          debugPrint(
+            '📊 PROVIDER PROGRESS: ${(p * 100).toStringAsFixed(1)}%',
+          );
+          notifyListeners();
+        },
+      ),
+    );
+
+    final success = await _uploadTask!.valueOrCancellation(false);
+
+    isUploading = false;
+    uploadProgress = 0;
+
+    if (success) {
+      debugPrint('✅ UPLOAD SUCCESS');
+      resetForm();
+    } else {
+      debugPrint('❌ UPLOAD FAILED / CANCELED');
+      _error = 'Upload failed or canceled';
+    }
+
+    notifyListeners();
+    debugPrint('🟢 PROVIDER SUBMIT END');
+    debugPrint('━━━━━━━━━━━━━━━━━━━━━━');
+
+    return success;
+  }
+
+  void cancelUpload() {
+    debugPrint('⛔ CANCEL UPLOAD');
+    _uploadTask?.cancel();
+    isUploading = false;
+    uploadProgress = 0;
     notifyListeners();
   }
 

@@ -1,14 +1,26 @@
+// ignore_for_file: file_names
+
+import 'dart:io';
+import 'package:elfinic_commerce_llc/utils/image_preview_dialog.dart';
+import 'package:elfinic_commerce_llc/utils/video_player_dialog.dart';
+import 'package:path/path.dart' as p;
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:elfinic_commerce_llc/utils/app_colors.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_add_to_cart_button/flutter_add_to_cart_button.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:readmore/readmore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:video_compress/video_compress.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 import '../model/ProductsResponse.dart';
 import '../model/Review.dart';
@@ -288,7 +300,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? selectedVariantName; // varient name
 
   final TextEditingController _reviewController = TextEditingController();
-  int _selectedRating = 0;
   AddToCartButtonStateId _addToCartState = AddToCartButtonStateId.idle;
 
   ProductDetail? _fetchedProduct;
@@ -296,6 +307,312 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String _error = '';
 
   ProductVariant? _selectedVariant;
+
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _contentController = TextEditingController();
+
+  final ImagePicker _picker = ImagePicker();
+
+  //===================== compress ========================
+  Future<File?> _compressImage(File file) async {
+    final dir = await getTemporaryDirectory();
+    final targetPath =
+        p.join(dir.path, '${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+    final xFile = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      targetPath,
+      quality: 70, // 🔥 balanced quality
+    );
+
+    if (xFile == null) return null;
+    return File(xFile.path);
+  }
+
+  Future<File?> _compressVideo(File file) async {
+    final info = await VideoCompress.compressVideo(
+      file.path,
+      quality: VideoQuality.MediumQuality,
+      includeAudio: true,
+      deleteOrigin: false,
+    );
+
+    if (info == null || info.file == null) return null;
+
+    return info.file; // ✅ File?
+  }
+
+  Future<void> _pickImageFromCamera(BuildContext context) async {
+    final provider = context.read<ReviewProvider>();
+    const maxSize = 20 * 1024 * 1024;
+
+    if (provider.images.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Maximum 5 images allowed')),
+      );
+      return;
+    }
+
+    final picked = await _picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 100,
+    );
+
+    if (picked == null) return;
+
+    final image = File(picked.path);
+
+    final compressed = await _compressImage(image);
+    if (compressed == null) return;
+
+    final size = await compressed.length();
+    if (size > maxSize) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Image must be under 20 MB')),
+      );
+      return;
+    }
+
+    provider.addImages([compressed]);
+  }
+
+  Future<void> _pickImagesFromGallery(BuildContext context) async {
+    final provider = context.read<ReviewProvider>();
+    const maxSize = 20 * 1024 * 1024;
+
+    if (provider.images.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Maximum 5 images allowed')),
+      );
+      return;
+    }
+
+    final remaining = 5 - provider.images.length;
+
+    final pickedFiles = await _picker.pickMultiImage();
+    if (pickedFiles.isEmpty) return;
+
+    if (pickedFiles.length > remaining) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Only $remaining more images allowed')),
+      );
+    }
+
+    for (final xFile in pickedFiles.take(remaining)) {
+      final image = File(xFile.path);
+
+      final compressed = await _compressImage(image);
+      if (compressed == null) continue;
+
+      final size = await compressed.length();
+      if (size > maxSize) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image must be under 20 MB')),
+        );
+        continue;
+      }
+
+      provider.addImages([compressed]);
+    }
+  }
+
+  // ======================= UPDATED VIDEO PICK WITH INSTANT LOADING =======================
+  Future<void> _pickVideoFromCamera(BuildContext context) async {
+    final provider = context.read<ReviewProvider>();
+    const maxSize = 20 * 1024 * 1024;
+
+    if (provider.videos.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Only 1 video allowed')),
+      );
+      return;
+    }
+
+    // 1️⃣ Open video picker
+    final picked = await _picker.pickVideo(
+      source: ImageSource.camera,
+      maxDuration: const Duration(seconds: 30),
+    );
+
+    // 2️⃣ If user cancelled, return early
+    if (picked == null) return;
+
+    // 3️⃣ ✅ IMMEDIATELY show loading state BEFORE any processing
+    // This ensures the loader appears right after picker closes
+    provider.setVideoProcessing(true);
+
+    try {
+      final video = File(picked.path);
+
+      // 4️⃣ Compress video (heavy operation)
+      final compressed = await _compressVideo(video);
+
+      if (compressed == null) {
+        provider.setVideoProcessing(false);
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to compress video')),
+        );
+        return;
+      }
+
+      // 5️⃣ Check size
+      final size = await compressed.length();
+      if (size > maxSize) {
+        provider.setVideoProcessing(false);
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Video must be under 20 MB')),
+        );
+        return;
+      }
+
+      // 6️⃣ Add video (this will generate thumbnail and update UI)
+      await provider.addVideo(compressed);
+
+      debugPrint('✅ Video processing complete');
+    } catch (e) {
+      debugPrint('❌ Error processing video: $e');
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      // 7️⃣ ✅ Always hide loader when done
+      provider.setVideoProcessing(false);
+    }
+  }
+
+  Future<void> _pickVideoFromGallery(BuildContext context) async {
+    final provider = context.read<ReviewProvider>();
+    const maxSize = 20 * 1024 * 1024;
+
+    if (provider.videos.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Only 1 video allowed')),
+      );
+      return;
+    }
+
+    // 1️⃣ Open gallery picker
+    final picked = await _picker.pickVideo(source: ImageSource.gallery);
+
+    // 2️⃣ If user cancelled, return early
+    if (picked == null) return;
+
+    // 3️⃣ ✅ IMMEDIATELY show loading state
+    provider.setVideoProcessing(true);
+
+    try {
+      final video = File(picked.path);
+
+      // 4️⃣ Compress video
+      final compressed = await _compressVideo(video);
+
+      if (compressed == null) {
+        provider.setVideoProcessing(false);
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to compress video')),
+        );
+        return;
+      }
+
+      // 5️⃣ Check size
+      final size = await compressed.length();
+      if (size > maxSize) {
+        provider.setVideoProcessing(false);
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Video must be under 20 MB')),
+        );
+        return;
+      }
+
+      // 6️⃣ Add video and generate thumbnail
+      await provider.addVideo(compressed);
+
+      debugPrint('✅ Video processing complete');
+    } catch (e) {
+      debugPrint('❌ Error processing video: $e');
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      // 7️⃣ ✅ Always hide loader
+      provider.setVideoProcessing(false);
+    }
+  }
+
+  void _showImageSourceSheet(BuildContext context) {
+    showModalBottomSheet(
+      backgroundColor: Colors.white,
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Camera'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromCamera(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImagesFromGallery(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showVideoSourceSheet(BuildContext context) {
+    showModalBottomSheet(
+      backgroundColor: Colors.white,
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.videocam),
+              title: const Text('Record Video'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickVideoFromCamera(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.video_library),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickVideoFromGallery(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -509,105 +826,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     debugPrint('   Size: $selectedSize');
     debugPrint('   Variant ID: ${_selectedVariant!.id}');
   }
-
-  //
-
-  // // Replace the _initializeSelectedOptions method with this updated version:
-  // void _initializeSelectedOptions() {
-  //   final product = getProduct;
-  //   _selectedVariant = null;
-
-  //   // ALWAYS reset and set default values for each product
-  //   selectedVariantName = null;
-  //   selectedSize = null;
-  //   selectedColor = null;
-
-  //   if (product.variants.isEmpty) {
-  //     debugPrint('ℹ️ No variants available for this product');
-  //     return;
-  //   }
-
-  //   if (product.variants.isNotEmpty) {
-  //     // Get available sizes and colors from options
-  //     final availableSizes = _availableSizes;
-  //     final availableColors = _availableColors;
-
-  //     // ALWAYS set default size if available
-  //     if (availableSizes.isNotEmpty) {
-  //       selectedSize = availableSizes.first;
-  //       print('🎯 Default size set to....: $selectedSize');
-  //     }
-
-  //     // ALWAYS set default color if available
-  //     if (availableColors.isNotEmpty) {
-  //       selectedColor = availableColors.first;
-  //       print('🎯 Default color set to: $selectedColor');
-  //     }
-
-  //     // Try to find a variant matching the selected color/size
-  //     for (final variant in product.variants) {
-  //       if (variant.variant != null) {
-  //         final variantParts = variant.variant!.split('/');
-
-  //         // Handle variants with format: something/color/size
-  //         if (variantParts.length >= 3) {
-  //           final variantColor = variantParts[1].trim();
-  //           final variantSize = variantParts[2].trim();
-
-  //           if ((selectedColor == null || variantColor == selectedColor) &&
-  //               (selectedSize == null || variantSize == selectedSize)) {
-  //             _selectedVariant = variant;
-  //             print('✅ Default variant selected: ${variant.variant}');
-  //             break;
-  //           }
-  //         }
-  //         // Handle variants with format: something/color OR something/size
-  //         else if (variantParts.length == 2) {
-  //           final variantValue = variantParts[1].trim();
-
-  //           if ((selectedColor != null && variantValue == selectedColor) ||
-  //               (selectedSize != null && variantValue == selectedSize)) {
-  //             _selectedVariant = variant;
-  //             print('✅ Default variant selected: ${variant.variant}');
-  //             break;
-  //           }
-  //         }
-  //       }
-  //     }
-
-  //     // If no exact match found and we have a size or color selected, find the first matching variant
-  //     if (_selectedVariant == null) {
-  //       for (final variant in product.variants) {
-  //         if (variant.variant != null) {
-  //           final variantParts = variant.variant!.split('/');
-
-  //           if (variantParts.length >= 2) {
-  //             final variantValue = variantParts[1].trim();
-
-  //             if ((selectedColor != null && variantValue == selectedColor) ||
-  //                 (selectedSize != null && variantValue == selectedSize)) {
-  //               _selectedVariant = variant;
-  //               print('✅ Fallback variant selected: ${variant.variant}');
-  //               break;
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-
-  //     // If still no variant selected, select the first available variant
-  //     if (_selectedVariant == null && product.variants.isNotEmpty) {
-  //       _selectedVariant = product.variants.first;
-  //       print(
-  //           '✅ First variant selected as default: ${_selectedVariant!.variant}');
-  //     }
-
-  //     // Print the final selected variant info
-  //     _printSelectedVariantInfo();
-  //   } else {
-  //     print('ℹ️ No variants available for this product');
-  //   }
-  // }
 
   void _printSelectedVariantInfo() {
     if (_selectedVariant != null) {
@@ -1170,36 +1388,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ],
                 ),
-
-              // // Size Selection
-              // if (product.variants.isNotEmpty && _availableSizes.isNotEmpty)
-              //   Column(
-              //     crossAxisAlignment: CrossAxisAlignment.start,
-              //     children: [
-              //       Padding(
-              //         padding: const EdgeInsets.symmetric(
-              //             horizontal: 12, vertical: 8),
-              //         child: Row(
-              //           children: [
-              //             Text(
-              //               "Size: ${selectedSize ?? "Select Size"}",
-              //               style: const TextStyle(fontWeight: FontWeight.w600),
-              //             ),
-              //             const Spacer(),
-              //           ],
-              //         ),
-              //       ),
-              //       Padding(
-              //         padding: const EdgeInsets.symmetric(
-              //             horizontal: 12, vertical: 8),
-              //         child: Wrap(
-              //           spacing: 8,
-              //           runSpacing: 8,
-              //           children: _buildSizeOptions(),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
 
               // Variant Selection
               if (product.variants.isNotEmpty)
@@ -1786,39 +1974,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }).toList();
   }
 
-  List<Widget> _buildSizeOptions() {
-    return _availableSizes.map((size) {
-      final bool isSelected = selectedSize == size;
-
-      return GestureDetector(
-        onTap: () {
-          setState(() {
-            selectedSize = size;
-            _updateSelectedVariant();
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: isSelected ? Colors.orange : Colors.grey,
-              width: isSelected ? 2 : 1,
-            ),
-            color: isSelected ? Colors.orange : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            size,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.black,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      );
-    }).toList();
-  }
-
   Widget _buildSimilarProductsList() {
     return Consumer<SimilarProductProvider>(
       builder: (context, provider, _) {
@@ -2212,57 +2367,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  // Widget _buildAvailableOfferContent() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       const Text(
-  //         'Available Offers',
-  //         style: TextStyle(
-  //           fontSize: 18,
-  //           fontWeight: FontWeight.bold,
-  //         ),
-  //       ),
-  //       const SizedBox(height: 12),
-  //       _buildOfferItem('Free delivery on orders over ₹500'),
-  //       _buildOfferItem('Special Price Get extra 8% off T&C'),
-  //       _buildOfferItem(
-  //         'Bank Offer 10% instant discount on SBI Credit Card EMI Transactions, '
-  //         'up to ₹1,500 on orders of ₹5,000 and above',
-  //       ),
-  //       _buildOfferItem(
-  //         'No Cost EMI on select cards for orders above ₹3,000 T&C',
-  //       ),
-  //       _buildOfferItem(
-  //         'Partner Offer Sign up for Amazon Pay ICICI Credit Card and get ₹750 '
-  //         'Amazon.in Gift Card T&C',
-  //       ),
-  //       _buildOfferItem('Additional Offer 15% off on first order'),
-  //       _buildOfferItem('Seasonal Sale Extra 20% off on selected items'),
-  //       _buildOfferItem('Buy 1 Get 1 Free on premium products'),
-  //       const SizedBox(height: 8),
-  //       const Text(
-  //         'Show Less -',
-  //         style: TextStyle(
-  //           color: Colors.blue,
-  //           fontSize: 14,
-  //           fontWeight: FontWeight.w500,
-  //         ),
-  //       ),
-  //       const SizedBox(height: 16),
-  //       const Divider(),
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceAround,
-  //         children: const [
-  //           _BottomInfo(icon: Icons.verified, label: 'Original Products'),
-  //           _BottomInfo(icon: Icons.money, label: 'Cash on Delivery'),
-  //           _BottomInfo(icon: Icons.schedule, label: '7-day Returns'),
-  //         ],
-  //       ),
-  //     ],
-  //   );
-  // }
-
   Widget _buildOfferItem(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -2277,103 +2381,318 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
+  // ======================= COMPLETE UPDATED _buildReviewFormUI =======================
   Widget _buildReviewFormUI() {
     return Consumer<ReviewProvider>(
-      builder: (context, reviewProvider, _) {
-        return Card(
-          color: Colors.white,
-          elevation: 2,
-          margin: const EdgeInsets.all(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Add Your Review",
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                const Text("Rating*",
-                    style: TextStyle(fontWeight: FontWeight.w500)),
-                const SizedBox(height: 8),
-                Row(
-                  children: List.generate(5, (index) {
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedRating = index + 1),
-                      child: Icon(
-                        index < _selectedRating
-                            ? Icons.star
-                            : Icons.star_border,
-                        color: Colors.orange,
-                        size: 32,
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 16),
-                const Text("Review*",
-                    style: TextStyle(fontWeight: FontWeight.w500)),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: _reviewController,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    hintText: "Write your review here...",
-                    alignLabelWithHint: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 16),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide:
-                          BorderSide(color: Colors.blue.shade300, width: 1),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide:
-                          BorderSide(color: Colors.blue.shade300, width: 1),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide:
-                          BorderSide(color: Colors.blue.shade300, width: 1),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (reviewProvider.error.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      reviewProvider.error,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-                Row(
-                  children: [
-                    const Spacer(),
-                    if (reviewProvider.isLoading)
-                      const CustomLoader()
-                    else
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.indigo.shade900,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30)),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 28, vertical: 12),
-                        ),
-                        onPressed: _submitReview,
-                        child: const Text(
-                          "Publish Review",
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white),
+      builder: (context, provider, _) {
+        final width = MediaQuery.of(context).size.width;
+        final isTablet = width > 600;
+
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: Card(
+            key: ValueKey(provider.isLoading),
+            color: AppColors.kCardBg,
+            elevation: 4,
+            shadowColor: Colors.black12,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            margin: EdgeInsets.symmetric(
+              horizontal: isTablet ? 24 : 12,
+              vertical: 12,
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 24 : 16,
+                vertical: 20,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// HEADER
+                  Row(
+                    children: const [
+                      Icon(Icons.rate_review, color: AppColors.kPrimary),
+                      SizedBox(width: 8),
+                      Text(
+                        "Add Your Review",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.kPrimary,
                         ),
                       ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// RATING
+                  const Text(
+                    "Rating *",
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+
+                  Row(
+                    children: List.generate(5, (index) {
+                      return GestureDetector(
+                        onTap: () => provider.setRating(index + 1),
+                        child: AnimatedScale(
+                          scale: index < provider.rating ? 1.15 : 1.0,
+                          duration: const Duration(milliseconds: 150),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: Icon(
+                              index < provider.rating
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              color: AppColors.kAccent,
+                              size: isTablet ? 36 : 32,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// TITLE FIELD
+                  _inputField(
+                    controller: _titleController,
+                    hint: "Review title (optional)",
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  /// CONTENT FIELD
+                  _inputField(
+                    controller: _contentController,
+                    hint: "Write your review...",
+                    maxLines: 4,
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  /// MEDIA BUTTONS
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      _mediaButton(
+                        icon: Icons.image,
+                        label: "Add Images",
+                        onTap: provider.images.length >= 5
+                            ? null
+                            : () => _showImageSourceSheet(context),
+                      ),
+                      _mediaButton(
+                        icon: Icons.videocam,
+                        label: "Add Video",
+                        onTap: provider.videos.isNotEmpty ||
+                                provider.isVideoProcessing
+                            ? null
+                            : () => _showVideoSourceSheet(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Max: 5 images • 1 video (20 MB)",
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  /// UPLOAD PROGRESS
+                  if (provider.isUploading) ...[
+                    const SizedBox(height: 12),
+                    LinearProgressIndicator(
+                      value: provider.uploadProgress,
+                      color: AppColors.kPrimary,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${(provider.uploadProgress * 100).toStringAsFixed(0)}% uploading',
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ],
-                ),
-              ],
+
+                  /// MEDIA PREVIEW SECTION
+                  if (provider.images.isNotEmpty ||
+                      provider.videos.isNotEmpty ||
+                      provider.isVideoProcessing) ...[
+                    const SizedBox(height: 20),
+
+                    /// COUNT LABEL
+                    Text(
+                      'Images: ${provider.images.length}/5  |  Video: ${provider.videos.isNotEmpty || provider.isVideoProcessing ? "1" : "0"}/1',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    /// MEDIA GRID
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        /// IMAGE PREVIEWS (with tap to preview)
+                        ...provider.images.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final file = entry.value;
+
+                          return Stack(
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  // Open image preview dialog
+                                  showDialog(
+                                    context: context,
+                                    barrierColor: Colors.black87,
+                                    builder: (context) => ImagePreviewDialog(
+                                      imageFile: file,
+                                      allImages: provider.images,
+                                      initialIndex: index,
+                                    ),
+                                  );
+                                },
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.grey.shade300,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Image.file(
+                                      file,
+                                      width: 80,
+                                      height: 80,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: -6,
+                                right: -6,
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.close,
+                                    size: 18,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () => provider.removeImage(file),
+                                ),
+                              ),
+                            ],
+                          );
+                        }),
+
+                        /// 🎥 VIDEO PREVIEW - USING NEW METHOD
+                        _buildVideoPreview(provider),
+                      ],
+                    ),
+
+                    // /// MEDIA GRID
+                    // Wrap(
+                    //   spacing: 8,
+                    //   runSpacing: 8,
+                    //   children: [
+                    //     /// IMAGE PREVIEWS
+                    //     ...provider.images.map((file) {
+                    //       return Stack(
+                    //         children: [
+                    //           ClipRRect(
+                    //             borderRadius: BorderRadius.circular(10),
+                    //             child: Image.file(
+                    //               file,
+                    //               width: 80,
+                    //               height: 80,
+                    //               fit: BoxFit.cover,
+                    //             ),
+                    //           ),
+                    //           Positioned(
+                    //             top: -6,
+                    //             right: -6,
+                    //             child: IconButton(
+                    //               icon: const Icon(Icons.close,
+                    //                   size: 18, color: Colors.red),
+                    //               onPressed: () => provider.removeImage(file),
+                    //             ),
+                    //           ),
+                    //         ],
+                    //       );
+                    //     }),
+
+                    //     /// 🎥 VIDEO PREVIEW - USING NEW METHOD
+                    //     _buildVideoPreview(provider),
+                    //   ],
+                    // ),
+                  ],
+
+                  const SizedBox(height: 20),
+
+                  /// SUBMIT BUTTON
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: provider.isUploading
+                          ? TextButton(
+                              onPressed: provider.cancelUpload,
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            )
+                          : ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.kPrimary,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isTablet ? 36 : 28,
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                              onPressed: () async {
+                                await provider.submitReview(
+                                  productId: getProduct.id,
+                                  title: _titleController.text,
+                                  content: _contentController.text,
+                                );
+
+                                _titleController.clear();
+                                _contentController.clear();
+                              },
+                              child: const Text(
+                                "Publish Review",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -2381,33 +2700,240 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  void _submitReview() async {
-    if (_selectedRating == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a rating')));
-      return;
+// ======================= VIDEO PREVIEW WIDGET =======================
+  Widget _buildVideoPreview(ReviewProvider provider) {
+    // Don't show anything if no video and not processing
+    if (provider.videos.isEmpty && !provider.isVideoProcessing) {
+      return const SizedBox.shrink();
     }
 
-    if (_reviewController.text.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Please write a review')));
-      return;
-    }
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: _buildVideoContent(provider),
+          ),
+        ),
 
-    final reviewProvider = Provider.of<ReviewProvider>(context, listen: false);
-    final success = await reviewProvider.addReview(
-      productId: getProduct.id,
-      rating: _selectedRating,
-      review: _reviewController.text,
+        // ▶️ Play icon overlay (only when video is ready)
+        if (!provider.isVideoThumbLoading &&
+            !provider.isVideoProcessing &&
+            provider.videoThumbnail != null)
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => _playVideo(context, provider.videos.first),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.4),
+                    ],
+                  ),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.play_circle_fill,
+                    color: Colors.white,
+                    size: 40,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black45,
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        // ❌ Remove button (only when not processing)
+        if (!provider.isVideoProcessing && provider.videos.isNotEmpty)
+          Positioned(
+            top: -16,
+            right: -16,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 14,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.close, size: 20, color: Colors.red),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 22,
+                  minHeight: 22,
+                ),
+                onPressed: () => provider.removeVideo(provider.videos.first),
+              ),
+            ),
+          ),
+      ],
     );
+  }
 
-    if (success) {
-      _reviewController.clear();
-      setState(() => _selectedRating = 0);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Review submitted successfully!')));
+// ======================= VIDEO CONTENT BUILDER =======================
+  Widget _buildVideoContent(ReviewProvider provider) {
+    // STATE 1: Video is being compressed
+    if (provider.isVideoProcessing) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: CustomLoader(),
+            ),
+            SizedBox(height: 6),
+            Text(
+              'Compressing...',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.black54,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
     }
+
+    // STATE 2: Thumbnail is being generated
+    if (provider.isVideoThumbLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: CustomLoader(),
+            ),
+            SizedBox(height: 6),
+            Text(
+              'Loading...',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.black54,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // STATE 3: Thumbnail ready - show it
+    if (provider.videoThumbnail != null) {
+      return Image.file(
+        provider.videoThumbnail!,
+        width: 80,
+        height: 80,
+        fit: BoxFit.cover,
+      );
+    }
+
+    // STATE 4: Fallback icon
+    return Icon(
+      Icons.videocam,
+      size: 36,
+      color: Colors.grey[400],
+    );
+  }
+
+// ======================= VIDEO PLAYER METHOD =======================
+  void _playVideo(BuildContext context, File videoFile) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (context) => VideoPlayerDialog(videoFile: videoFile),
+    );
+  }
+
+  Widget _inputField({
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+
+      /// 🔥 CURSOR COLOR
+      cursorColor: AppColors.kPrimary,
+      cursorWidth: 2,
+      cursorRadius: const Radius.circular(2),
+      decoration: InputDecoration(
+        hintText: hint,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.kBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.kBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.kPrimary, width: 1.4),
+        ),
+      ),
+    );
+  }
+
+// ======================= MEDIA BUTTON =======================
+  Widget _mediaButton({
+    required IconData icon,
+    required String label,
+    VoidCallback? onTap,
+  }) {
+    final isDisabled = onTap == null;
+
+    return OutlinedButton.icon(
+      onPressed: onTap,
+      icon: Icon(
+        icon,
+        size: 18,
+        color: isDisabled ? Colors.grey : AppColors.kPrimary,
+      ),
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isDisabled ? Colors.grey : AppColors.kPrimary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: AppColors.kPrimary),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+    );
   }
 
   void _showProductReviews(BuildContext context) {

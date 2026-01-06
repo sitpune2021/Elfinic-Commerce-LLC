@@ -20,13 +20,14 @@ class ProfileScreen extends StatelessWidget {
       context: context,
       builder: (context) => _buildLogoutDialog(context),
     );
+    if (!context.mounted) return;
 
     if (confirmed == true) {
       final logoutProvider =
           Provider.of<LogoutProvider>(context, listen: false);
 
       await logoutProvider.logout("admin@gmail.com", "Shubham12");
-
+      if (!context.mounted) return;
       if (logoutProvider.logoutResponse?.status == "success") {
         // ✅ Navigate to login after success
         Navigator.pushAndRemoveUntil(
@@ -36,6 +37,7 @@ class ProfileScreen extends StatelessWidget {
         );
       } else {
         // ❌ Show error
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(logoutProvider.errorMessage ?? "Logout failed")),
@@ -145,7 +147,7 @@ class ProfileScreen extends StatelessWidget {
                       );
                     },
                     child: CircleAvatar(
-                      backgroundColor: Colors.white.withOpacity(0.9),
+                      backgroundColor: Colors.white.withValues(alpha: 0.9),
                       child: const Icon(Icons.edit, color: Color(0xFFD39841)),
                     ),
                   ),
@@ -253,11 +255,11 @@ class ProfileScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.amber.shade50.withOpacity(0.5),
+        color: Colors.amber.shade50.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -268,7 +270,7 @@ class ProfileScreen extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: const Color(0xFF050040).withOpacity(0.1),
+            color: const Color(0xFF050040).withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -304,7 +306,7 @@ class ProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       elevation: 10,
-      shadowColor: Colors.black.withOpacity(0.3),
+      shadowColor: Colors.black.withValues(alpha: 0.3),
       backgroundColor: Colors.white,
       child: Container(
         padding: const EdgeInsets.all(24),
@@ -320,7 +322,7 @@ class ProfileScreen extends StatelessWidget {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: Colors.redAccent.withOpacity(0.1),
+                color: Colors.redAccent.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -404,7 +406,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 2,
-                      shadowColor: Colors.redAccent.withOpacity(0.3),
+                      shadowColor: Colors.redAccent.withValues(alpha: 0.3),
                     ),
                     child: const Text(
                       "Logout",
@@ -440,7 +442,7 @@ class NavigationHelper {
     if (addressProvider.addresses.isEmpty) {
       await addressProvider.fetchAddresses();
     }
-
+    if (!context.mounted) return;
     await Navigator.push(
       context,
       MaterialPageRoute(
