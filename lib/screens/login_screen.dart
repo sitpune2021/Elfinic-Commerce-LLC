@@ -1,15 +1,12 @@
-
 import 'package:elfinic_commerce_llc/screens/register_screen.dart';
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
-
 import '../providers/AuthProvider.dart';
 import 'DashboardScreen.dart';
 import 'forgot_password.dart';
-
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -56,7 +53,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   bool get _isFormValid {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}').hasMatch(_emailController.text.trim()) &&
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}')
+            .hasMatch(_emailController.text.trim()) &&
         _isLengthValid &&
         _hasUppercaseAndNumber &&
         _hasSpecialChar;
@@ -131,8 +129,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderSide: BorderSide.none),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return 'Email is required';
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}').hasMatch(value)) {
+                  if (value == null || value.isEmpty) {
+                    return 'Email is required';
+                  }
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}')
+                      .hasMatch(value)) {
                     return 'Enter a valid email';
                   }
                   return null;
@@ -163,7 +164,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderSide: BorderSide.none),
                   suffixIcon: IconButton(
                     icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                         color: Colors.grey),
                     onPressed: () {
                       setState(() {
@@ -175,8 +178,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 onChanged: _validatePassword,
                 validator: (value) {
                   _validatePassword(value ?? '');
-                  if (value == null || value.isEmpty) return 'Password is required';
-                  if (!_isLengthValid || !_hasUppercaseAndNumber || !_hasSpecialChar) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password is required';
+                  }
+                  if (!_isLengthValid ||
+                      !_hasUppercaseAndNumber ||
+                      !_hasSpecialChar) {
                     return 'Password does not meet requirements';
                   }
                   return null;
@@ -227,47 +234,54 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: authProvider.isLoading
                     ? null
                     : () async {
-                  if (!_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please fill all required fields")),
-                    );
-                    return;
-                  }
+                        if (!_formKey.currentState!.validate()) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                    Text("Please fill all required fields")),
+                          );
+                          return;
+                        }
 
-                  await authProvider.login(
-                    _emailController.text.trim(),
-                    _passwordController.text.trim(),
-                  );
+                        await authProvider.login(
+                          _emailController.text.trim(),
+                          _passwordController.text.trim(),
+                        );
 
-                  if (authProvider.loginResponse != null &&
-                      authProvider.loginResponse!.status.toLowerCase() == "success") {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setString(
-                        "auth_token", authProvider.loginResponse!.token);
-                    if (_rememberMe) {
-                      await prefs.setString(
-                          "saved_email", _emailController.text.trim());
-                    }
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DashboardScreen(),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(
-                              authProvider.errorMessage ?? "Login failed")),
-                    );
-                  }
-                },
+                        if (authProvider.loginResponse != null &&
+                            authProvider.loginResponse!.status.toLowerCase() ==
+                                "success") {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setString(
+                              "auth_token", authProvider.loginResponse!.token);
+                          if (_rememberMe) {
+                            await prefs.setString(
+                                "saved_email", _emailController.text.trim());
+                          }
+                          if (!context.mounted) return;
+
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DashboardScreen(),
+                            ),
+                          );
+                        } else {
+                          if (!context.mounted) return;
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(authProvider.errorMessage ??
+                                    "Login failed")),
+                          );
+                        }
+                      },
                 child: authProvider.isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const CustomLoader()
                     : const Text(
-                  "LOGIN",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
+                        "LOGIN",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
               ),
 
               const SizedBox(height: 20),

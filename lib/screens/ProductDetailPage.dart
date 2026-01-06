@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_add_to_cart_button/flutter_add_to_cart_button.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -284,6 +285,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int activeIndex = 0;
   String? selectedSize;
   String? selectedColor;
+  String? selectedVariantName; // varient name
+
   final TextEditingController _reviewController = TextEditingController();
   int _selectedRating = 0;
   AddToCartButtonStateId _addToCartState = AddToCartButtonStateId.idle;
@@ -378,6 +381,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
       final reviewProvider =
           Provider.of<ReviewProvider>(context, listen: false);
+
+      reviewProvider.loadEligibility(getProduct.id); // ✅ ADD THIS
+
       reviewProvider.fetchProductReviews(getProduct.id);
     });
   }
@@ -407,128 +413,201 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     throw Exception("Product not available");
   }
 
+  //
+  void _initializeSelectedOptions() {
+    final product = getProduct;
+
+    // Reset everything
+    _selectedVariant = null;
+    selectedSize = null;
+    selectedColor = null;
+    selectedVariantName = null;
+
+    if (product.variants.isEmpty) {
+      debugPrint('ℹ️ No variants available for this product');
+      return;
+    }
+
+    final availableSizes = _availableSizes;
+    final availableColors = _availableColors;
+
+    // Step 1: Try selecting FIRST variant (safe default)
+    _selectedVariant = product.variants.first;
+
+    // Step 2: Set variant name
+    selectedVariantName = _selectedVariant!.variant;
+
+    // Step 3: Extract color & size from variant name
+    if (selectedVariantName != null) {
+      final parts = selectedVariantName!.split('/');
+
+      // Format: product/color/size
+      if (parts.length >= 3) {
+        final color = parts[1].trim();
+        final size = parts[2].trim();
+
+        if (availableColors.contains(color)) {
+          selectedColor = color;
+        }
+
+        if (availableSizes.contains(size)) {
+          selectedSize = size;
+        }
+      }
+      // Format: product/color OR product/size
+      else if (parts.length == 2) {
+        final value = parts[1].trim();
+
+        if (availableSizes.contains(value)) {
+          selectedSize = value;
+        } else if (availableColors.contains(value)) {
+          selectedColor = value;
+        }
+      }
+    }
+
+    // Step 4: Fallback if color/size still null
+    selectedColor ??= availableColors.isNotEmpty ? availableColors.first : null;
+    selectedSize ??= availableSizes.isNotEmpty ? availableSizes.first : null;
+
+    // Step 5: Try to find exact matching variant again
+    for (final variant in product.variants) {
+      if (variant.variant == null) continue;
+
+      final parts = variant.variant!.split('/');
+
+      if (parts.length >= 3) {
+        final vColor = parts[1].trim();
+        final vSize = parts[2].trim();
+
+        if ((selectedColor == null || vColor == selectedColor) &&
+            (selectedSize == null || vSize == selectedSize)) {
+          _selectedVariant = variant;
+          selectedVariantName = variant.variant;
+          break;
+        }
+      } else if (parts.length == 2) {
+        final value = parts[1].trim();
+
+        if ((selectedColor != null && value == selectedColor) ||
+            (selectedSize != null && value == selectedSize)) {
+          _selectedVariant = variant;
+          selectedVariantName = variant.variant;
+          break;
+        }
+      }
+    }
+
+    // Step 6: Final safety fallback
+    _selectedVariant ??= product.variants.first;
+    selectedVariantName ??= _selectedVariant!.variant;
+
+    // Final debug
+    debugPrint('✅ DEFAULT VARIANT INITIALIZED');
+    debugPrint('   Variant Name: $selectedVariantName');
+    debugPrint('   Color: $selectedColor');
+    debugPrint('   Size: $selectedSize');
+    debugPrint('   Variant ID: ${_selectedVariant!.id}');
+  }
+
+  //
+
+  // // Replace the _initializeSelectedOptions method with this updated version:
   // void _initializeSelectedOptions() {
   //   final product = getProduct;
   //   _selectedVariant = null;
 
+  //   // ALWAYS reset and set default values for each product
+  //   selectedVariantName = null;
+  //   selectedSize = null;
+  //   selectedColor = null;
+
+  //   if (product.variants.isEmpty) {
+  //     debugPrint('ℹ️ No variants available for this product');
+  //     return;
+  //   }
+
   //   if (product.variants.isNotEmpty) {
-  //     // Try to find a variant matching the initial color/size
+  //     // Get available sizes and colors from options
+  //     final availableSizes = _availableSizes;
+  //     final availableColors = _availableColors;
+
+  //     // ALWAYS set default size if available
+  //     if (availableSizes.isNotEmpty) {
+  //       selectedSize = availableSizes.first;
+  //       print('🎯 Default size set to....: $selectedSize');
+  //     }
+
+  //     // ALWAYS set default color if available
+  //     if (availableColors.isNotEmpty) {
+  //       selectedColor = availableColors.first;
+  //       print('🎯 Default color set to: $selectedColor');
+  //     }
+
+  //     // Try to find a variant matching the selected color/size
   //     for (final variant in product.variants) {
   //       if (variant.variant != null) {
   //         final variantParts = variant.variant!.split('/');
-  //         if (variantParts.length > 1) {
-  //           final color = variantParts[1].trim();
-  //           if (selectedColor == null || color == selectedColor) {
-  //             if (variantParts.length > 2) {
-  //               final size = variantParts[2].trim();
-  //               if (selectedSize == null || size == selectedSize) {
-  //                 _selectedVariant = variant;
-  //                 break;
-  //               }
-  //             } else {
+
+  //         // Handle variants with format: something/color/size
+  //         if (variantParts.length >= 3) {
+  //           final variantColor = variantParts[1].trim();
+  //           final variantSize = variantParts[2].trim();
+
+  //           if ((selectedColor == null || variantColor == selectedColor) &&
+  //               (selectedSize == null || variantSize == selectedSize)) {
+  //             _selectedVariant = variant;
+  //             print('✅ Default variant selected: ${variant.variant}');
+  //             break;
+  //           }
+  //         }
+  //         // Handle variants with format: something/color OR something/size
+  //         else if (variantParts.length == 2) {
+  //           final variantValue = variantParts[1].trim();
+
+  //           if ((selectedColor != null && variantValue == selectedColor) ||
+  //               (selectedSize != null && variantValue == selectedSize)) {
+  //             _selectedVariant = variant;
+  //             print('✅ Default variant selected: ${variant.variant}');
+  //             break;
+  //           }
+  //         }
+  //       }
+  //     }
+
+  //     // If no exact match found and we have a size or color selected, find the first matching variant
+  //     if (_selectedVariant == null) {
+  //       for (final variant in product.variants) {
+  //         if (variant.variant != null) {
+  //           final variantParts = variant.variant!.split('/');
+
+  //           if (variantParts.length >= 2) {
+  //             final variantValue = variantParts[1].trim();
+
+  //             if ((selectedColor != null && variantValue == selectedColor) ||
+  //                 (selectedSize != null && variantValue == selectedSize)) {
   //               _selectedVariant = variant;
+  //               print('✅ Fallback variant selected: ${variant.variant}');
   //               break;
   //             }
   //           }
   //         }
   //       }
   //     }
+
+  //     // If still no variant selected, select the first available variant
+  //     if (_selectedVariant == null && product.variants.isNotEmpty) {
+  //       _selectedVariant = product.variants.first;
+  //       print(
+  //           '✅ First variant selected as default: ${_selectedVariant!.variant}');
+  //     }
+
+  //     // Print the final selected variant info
+  //     _printSelectedVariantInfo();
+  //   } else {
+  //     print('ℹ️ No variants available for this product');
   //   }
   // }
-
-  // Replace the _initializeSelectedOptions method with this updated version:
-
-  // Replace the _initializeSelectedOptions method with this updated version:
-
-  void _initializeSelectedOptions() {
-    final product = getProduct;
-    _selectedVariant = null;
-
-    // ALWAYS reset and set default values for each product
-    selectedSize = null;
-    selectedColor = null;
-
-    if (product.variants.isNotEmpty) {
-      // Get available sizes and colors from options
-      final availableSizes = _availableSizes;
-      final availableColors = _availableColors;
-
-      // ALWAYS set default size if available
-      if (availableSizes.isNotEmpty) {
-        selectedSize = availableSizes.first;
-        print('🎯 Default size set to....: $selectedSize');
-      }
-
-      // ALWAYS set default color if available
-      if (availableColors.isNotEmpty) {
-        selectedColor = availableColors.first;
-        print('🎯 Default color set to: $selectedColor');
-      }
-
-      // Try to find a variant matching the selected color/size
-      for (final variant in product.variants) {
-        if (variant.variant != null) {
-          final variantParts = variant.variant!.split('/');
-
-          // Handle variants with format: something/color/size
-          if (variantParts.length >= 3) {
-            final variantColor = variantParts[1].trim();
-            final variantSize = variantParts[2].trim();
-
-            if ((selectedColor == null || variantColor == selectedColor) &&
-                (selectedSize == null || variantSize == selectedSize)) {
-              _selectedVariant = variant;
-              print('✅ Default variant selected: ${variant.variant}');
-              break;
-            }
-          }
-          // Handle variants with format: something/color OR something/size
-          else if (variantParts.length == 2) {
-            final variantValue = variantParts[1].trim();
-
-            if ((selectedColor != null && variantValue == selectedColor) ||
-                (selectedSize != null && variantValue == selectedSize)) {
-              _selectedVariant = variant;
-              print('✅ Default variant selected: ${variant.variant}');
-              break;
-            }
-          }
-        }
-      }
-
-      // If no exact match found and we have a size or color selected, find the first matching variant
-      if (_selectedVariant == null) {
-        for (final variant in product.variants) {
-          if (variant.variant != null) {
-            final variantParts = variant.variant!.split('/');
-
-            if (variantParts.length >= 2) {
-              final variantValue = variantParts[1].trim();
-
-              if ((selectedColor != null && variantValue == selectedColor) ||
-                  (selectedSize != null && variantValue == selectedSize)) {
-                _selectedVariant = variant;
-                print('✅ Fallback variant selected: ${variant.variant}');
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      // If still no variant selected, select the first available variant
-      if (_selectedVariant == null && product.variants.isNotEmpty) {
-        _selectedVariant = product.variants.first;
-        print(
-            '✅ First variant selected as default: ${_selectedVariant!.variant}');
-      }
-
-      // Print the final selected variant info
-      _printSelectedVariantInfo();
-    } else {
-      print('ℹ️ No variants available for this product');
-    }
-  }
 
   void _printSelectedVariantInfo() {
     if (_selectedVariant != null) {
@@ -754,7 +833,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(),
+              CustomLoader(),
               SizedBox(height: 20),
               Text('Loading product details...'),
             ],
@@ -1091,8 +1170,38 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ],
                 ),
 
-              // Size Selection
-              if (product.variants.isNotEmpty && _availableSizes.isNotEmpty)
+              // // Size Selection
+              // if (product.variants.isNotEmpty && _availableSizes.isNotEmpty)
+              //   Column(
+              //     crossAxisAlignment: CrossAxisAlignment.start,
+              //     children: [
+              //       Padding(
+              //         padding: const EdgeInsets.symmetric(
+              //             horizontal: 12, vertical: 8),
+              //         child: Row(
+              //           children: [
+              //             Text(
+              //               "Size: ${selectedSize ?? "Select Size"}",
+              //               style: const TextStyle(fontWeight: FontWeight.w600),
+              //             ),
+              //             const Spacer(),
+              //           ],
+              //         ),
+              //       ),
+              //       Padding(
+              //         padding: const EdgeInsets.symmetric(
+              //             horizontal: 12, vertical: 8),
+              //         child: Wrap(
+              //           spacing: 8,
+              //           runSpacing: 8,
+              //           children: _buildSizeOptions(),
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+
+              // Variant Selection
+              if (product.variants.isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1102,7 +1211,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       child: Row(
                         children: [
                           Text(
-                            "Size: ${selectedSize ?? "Select Size"}",
+                            "Size: ${selectedVariantName ?? "Select Variant"}",
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           const Spacer(),
@@ -1115,7 +1224,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       child: Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: _buildSizeOptions(),
+                        children: _buildVariantOptions(),
                       ),
                     ),
                   ],
@@ -1287,8 +1396,34 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                       ],
                     ),
+
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: _buildAvailableOfferContent(),
+                    ),
                     const SizedBox(height: 10),
-                    _buildReviewForm(),
+                    // _buildReviewForm(),
+
+                    /// ✅ CONDITIONAL REVIEW FORM
+                    Consumer<ReviewProvider>(
+                      builder: (context, reviewProvider, _) {
+                        if (reviewProvider.loading) return const SizedBox();
+                        if (!reviewProvider.eligible) return const SizedBox();
+
+                        if (reviewProvider.loading) {
+                          return const SizedBox();
+                        }
+
+                        if (!reviewProvider.eligible) {
+                          debugPrint('❌ Review form hidden (not eligible)');
+                          return const SizedBox();
+                        }
+
+                        debugPrint('✅ Review form visible (eligible)');
+                        return _buildReviewFormUI();
+                      },
+                    ),
+                    ////////----
                   ],
                 ),
               ),
@@ -1423,7 +1558,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(variantId != null
-                                      ? "Item added to cart (Variant: ${_selectedVariant?.variant ?? variantId})"
+                                      ? "Item added"
+                                      // ? "Item added to cart (Variant: ${_selectedVariant?.variant ?? variantId})"
                                       : "Item added to cart!"),
                                   action: SnackBarAction(
                                     label: "View Cart",
@@ -1609,6 +1745,46 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
+  List<Widget> _buildVariantOptions() {
+    return getProduct.variants.map((variant) {
+      final isSelected = _selectedVariant?.id == variant.id;
+      final variantName = variant.variant ?? '';
+
+      return GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedVariant = variant;
+            selectedVariantName = variantName;
+
+            final parts = variantName.split('/');
+            if (parts.length >= 3) {
+              selectedColor = parts[1].trim();
+              selectedSize = parts[2].trim();
+            }
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: isSelected ? Colors.orange : Colors.grey,
+              width: isSelected ? 2 : 1,
+            ),
+            color: isSelected ? Colors.orange : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            variantName,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.black,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+
   List<Widget> _buildSizeOptions() {
     return _availableSizes.map((size) {
       final bool isSelected = selectedSize == size;
@@ -1648,7 +1824,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         if (provider.isLoading) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(child: CustomLoader()),
           );
         }
 
@@ -1722,7 +1898,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         if (recentViewProvider.isLoading) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(child: CustomLoader()),
           );
         }
 
@@ -1971,7 +2147,136 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
-  Widget _buildReviewForm() {
+  // offer
+  Widget _buildAvailableOfferContent() {
+    bool showAll = false;
+
+    final List<String> offers = [
+      'Free delivery on orders over ₹500',
+      'Special Price Get extra 8% off T&C',
+      'Bank Offer 10% instant discount on SBI Credit Card EMI Transactions, '
+          'up to ₹1,500 on orders of ₹5,000 and above',
+      'No Cost EMI on select cards for orders above ₹3,000 T&C',
+      'Partner Offer Sign up for Amazon Pay ICICI Credit Card and get ₹750 '
+          'Amazon.in Gift Card T&C',
+      'Additional Offer 15% off on first order',
+      'Seasonal Sale Extra 20% off on selected items',
+      'Buy 1 Get 1 Free on premium products',
+    ];
+
+    return StatefulBuilder(
+      builder: (context, setState) {
+        final visibleOffers = showAll ? offers : offers.take(5).toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Available Offers',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            ...visibleOffers.map(_buildOfferItem),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  showAll = !showAll;
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  showAll ? 'Show Less -' : 'Show More +',
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: const [
+                _BottomInfo(icon: Icons.verified, label: 'Original Products'),
+                _BottomInfo(icon: Icons.money, label: 'Cash on Delivery'),
+                _BottomInfo(icon: Icons.schedule, label: '7-day Returns'),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Widget _buildAvailableOfferContent() {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       const Text(
+  //         'Available Offers',
+  //         style: TextStyle(
+  //           fontSize: 18,
+  //           fontWeight: FontWeight.bold,
+  //         ),
+  //       ),
+  //       const SizedBox(height: 12),
+  //       _buildOfferItem('Free delivery on orders over ₹500'),
+  //       _buildOfferItem('Special Price Get extra 8% off T&C'),
+  //       _buildOfferItem(
+  //         'Bank Offer 10% instant discount on SBI Credit Card EMI Transactions, '
+  //         'up to ₹1,500 on orders of ₹5,000 and above',
+  //       ),
+  //       _buildOfferItem(
+  //         'No Cost EMI on select cards for orders above ₹3,000 T&C',
+  //       ),
+  //       _buildOfferItem(
+  //         'Partner Offer Sign up for Amazon Pay ICICI Credit Card and get ₹750 '
+  //         'Amazon.in Gift Card T&C',
+  //       ),
+  //       _buildOfferItem('Additional Offer 15% off on first order'),
+  //       _buildOfferItem('Seasonal Sale Extra 20% off on selected items'),
+  //       _buildOfferItem('Buy 1 Get 1 Free on premium products'),
+  //       const SizedBox(height: 8),
+  //       const Text(
+  //         'Show Less -',
+  //         style: TextStyle(
+  //           color: Colors.blue,
+  //           fontSize: 14,
+  //           fontWeight: FontWeight.w500,
+  //         ),
+  //       ),
+  //       const SizedBox(height: 16),
+  //       const Divider(),
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceAround,
+  //         children: const [
+  //           _BottomInfo(icon: Icons.verified, label: 'Original Products'),
+  //           _BottomInfo(icon: Icons.money, label: 'Cash on Delivery'),
+  //           _BottomInfo(icon: Icons.schedule, label: '7-day Returns'),
+  //         ],
+  //       ),
+  //     ],
+  //   );
+  // }
+
+  Widget _buildOfferItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.local_offer, size: 18, color: Colors.indigo),
+          SizedBox(width: 8),
+          Expanded(child: Text(text)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewFormUI() {
     return Consumer<ReviewProvider>(
       builder: (context, reviewProvider, _) {
         return Card(
@@ -2046,7 +2351,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   children: [
                     const Spacer(),
                     if (reviewProvider.isLoading)
-                      const CircularProgressIndicator()
+                      const CustomLoader()
                     else
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -2280,7 +2585,7 @@ class ReviewsBottomSheet extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(),
+                        CustomLoader(),
                         SizedBox(height: 16),
                         Text("Loading reviews...",
                             style: TextStyle(color: Colors.grey)),
@@ -2699,5 +3004,30 @@ String _formatDate(String dateString) {
     }
   } catch (e) {
     return dateString;
+  }
+}
+
+class _BottomInfo extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _BottomInfo({
+    required this.icon,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 22,
+          backgroundColor: Colors.grey.shade200,
+          child: Icon(icon, color: Colors.green),
+        ),
+        const SizedBox(height: 6),
+        Text(label, style: const TextStyle(fontSize: 12)),
+      ],
+    );
   }
 }

@@ -1,5 +1,6 @@
 
 import 'package:elfinic_commerce_llc/screens/review_screen.dart';
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
 
 import '../model/AddressModel.dart';
@@ -123,7 +124,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
             ],
           ),
           body: provider.isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: CustomLoader())
               : provider.errorMessage != null
               ? Center(child: Text(provider.errorMessage!))
               : SingleChildScrollView(

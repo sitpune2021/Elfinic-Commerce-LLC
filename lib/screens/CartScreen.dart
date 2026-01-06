@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -247,7 +248,7 @@ class _CartScreenState extends State<CartScreen> {
                   child: Scaffold(
                     backgroundColor: const Color(0xffffffff),
                     body: isLoading && cartItems.isEmpty
-                        ? const Center(child: CircularProgressIndicator())
+                        ? const Center(child: CustomLoader())
                         : cartItems.isEmpty
                             ? _buildEmptyCart()
                             : _buildCartWithItems(
@@ -654,7 +655,7 @@ class _CartScreenState extends State<CartScreen> {
           Consumer<CouponProvider>(
             builder: (context, couponProvider, _) {
               if (couponProvider.isLoading) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: CustomLoader());
               }
 
               if (couponProvider.coupons.isEmpty) {
@@ -960,7 +961,7 @@ class _CartScreenState extends State<CartScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => const Center(child: CustomLoader()),
     );
 
     try {
@@ -1030,12 +1031,34 @@ class _AllCouponsScreenState extends State<AllCouponsScreen> {
       body: Consumer<CouponProvider>(
         builder: (context, couponProvider, _) {
           if (couponProvider.isLoading && couponProvider.coupons.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CustomLoader());
           }
 
           if (couponProvider.coupons.isEmpty) {
-            return const Center(
-              child: Text('No coupons available'),
+            return Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.white, // 👈 force white background
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Image.asset(
+                      'assets/images/no_coupons.png',
+                      width: 280,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      "No coupons available right now",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
 
@@ -1203,7 +1226,7 @@ class CouponGridScreen extends StatelessWidget {
       body: Consumer<CouponProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CustomLoader());
           }
 
           if (provider.error != null) {
@@ -1213,7 +1236,7 @@ class CouponGridScreen extends StatelessWidget {
           final coupons = provider.coupons;
 
           if (coupons.isEmpty) {
-            return const Center(child: Text("No coupons available"));
+            return const Center(child: Text("No coupons available right now"));
           }
 
           return GridView.builder(

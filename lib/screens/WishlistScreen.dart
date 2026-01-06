@@ -1,4 +1,5 @@
 import 'package:elfinic_commerce_llc/screens/ProductDetailPage.dart';
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
 
 import '../model/ProductsResponse.dart';
@@ -12,8 +13,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
-
-
 
 // your WishlistItem model
 class WishlistScreen extends StatefulWidget {
@@ -67,8 +66,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
         if (isSuccess) {
           final List list = jsonData['data'] ?? [];
 
-          final products =
-          list.map((e) => Product.fromJson(e)).toList();
+          final products = list.map((e) => Product.fromJson(e)).toList();
 
           setState(() {
             _wishlistProducts = products;
@@ -79,9 +77,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
           // 🔥 Sync Provider with backend
           final wishlistProvider =
-          Provider.of<WishlistProvider>(context, listen: false);
-
-
+              Provider.of<WishlistProvider>(context, listen: false);
         } else {
           setState(() => _errorMessage = jsonData['message']);
         }
@@ -94,8 +90,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
       setState(() => _isLoading = false);
     }
   }
-
-
 
   Future<void> _toggleWishlist(int productId) async {
     final provider = Provider.of<WishlistProvider>(context, listen: false);
@@ -122,7 +116,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
       );
     }
   }
-  double _calculateDiscountedPrice(double originalPrice, double discountAmount) {
+
+  double _calculateDiscountedPrice(
+      double originalPrice, double discountAmount) {
     // discountAmount is the flat discount (e.g., ₹10 off)
     if (discountAmount <= 0) return originalPrice;
     return originalPrice - discountAmount;
@@ -131,10 +127,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
   double _getDiscountAmount(Product product) {
     // Return the actual discount amount (₹10 in your example)
     // This depends on how your Product model stores discount information
-    return product.discountPrice ?? 0.0;
+    return product.discountPrice;
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -142,6 +136,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
       builder: (context, wishlistProvider, child) {
         return Scaffold(
           appBar: AppBar(
+            surfaceTintColor: Colors.transparent,
             title: const Text('My Wishlist'),
             backgroundColor: const Color(0xffc98a35),
             foregroundColor: Colors.white,
@@ -150,7 +145,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 padding: const EdgeInsets.only(right: 16.0),
                 child: Center(
                   child: Text(
-                    '${wishlistProvider.wishlistCount}',
+                    'total:${wishlistProvider.wishlistCount}',
                     style: const TextStyle(
                         fontSize: 18, fontWeight: FontWeight.bold),
                   ),
@@ -160,49 +155,48 @@ class _WishlistScreenState extends State<WishlistScreen> {
           ),
           backgroundColor: const Color(0xFFF8F9FA),
           body: _isLoading
-              ? const Center(
-              child: CircularProgressIndicator(color: Color(0xffc98a35)))
+              ? const Center(child: CustomLoader())
               : _wishlistProducts.isEmpty
-              ? _buildEmptyWishlist()
-              : LayoutBuilder(
-            builder: (context, constraints) {
-              // Responsive grid settings
-              int crossAxisCount = 2;
-              double childAspectRatio = 0.7;
+                  ? _buildEmptyWishlist()
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Responsive grid settings
+                        int crossAxisCount = 2;
+                        double childAspectRatio = 0.7;
 
-              if (constraints.maxWidth > 1200) {
-                crossAxisCount = 5;
-                childAspectRatio = 0.8;
-              } else if (constraints.maxWidth > 900) {
-                crossAxisCount = 4;
-              } else if (constraints.maxWidth > 600) {
-                crossAxisCount = 3;
-              }
+                        if (constraints.maxWidth > 1200) {
+                          crossAxisCount = 5;
+                          childAspectRatio = 0.8;
+                        } else if (constraints.maxWidth > 900) {
+                          crossAxisCount = 4;
+                        } else if (constraints.maxWidth > 600) {
+                          crossAxisCount = 3;
+                        }
 
-              return RefreshIndicator(
-                onRefresh: _loadWishlist,
-                color: const Color(0xffc98a35),
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(10),
-                  gridDelegate:
-                  SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: childAspectRatio,
-                  ),
-                  itemCount: _wishlistProducts.length,
-                  itemBuilder: (context, index) {
-                    final product = _wishlistProducts[index];
-                    if (!wishlistProvider.isInWishlist(product.id)) {
-                      return const SizedBox.shrink();
-                    }
-                    return _buildWishlistCard(product);
-                  },
-                ),
-              );
-            },
-          ),
+                        return RefreshIndicator(
+                          onRefresh: _loadWishlist,
+                          color: const Color(0xffc98a35),
+                          child: GridView.builder(
+                            padding: const EdgeInsets.all(10),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: crossAxisCount,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: childAspectRatio,
+                            ),
+                            itemCount: _wishlistProducts.length,
+                            itemBuilder: (context, index) {
+                              final product = _wishlistProducts[index];
+                              if (!wishlistProvider.isInWishlist(product.id)) {
+                                return const SizedBox.shrink();
+                              }
+                              return _buildWishlistCard(product);
+                            },
+                          ),
+                        );
+                      },
+                    ),
         );
       },
     );
@@ -235,7 +229,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xffc98a35),
                 padding:
-                const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30)),
               ),
@@ -264,18 +258,17 @@ class _WishlistScreenState extends State<WishlistScreen> {
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 ProductDetailScreen(
-                  product: product,
-                  slug: product.slug!,
-                ),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              product: product,
+              slug: product.slug!,
+            ),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);
             },
             transitionDuration: const Duration(milliseconds: 300),
           ),
         );
-
       },
-
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -286,13 +279,14 @@ class _WishlistScreenState extends State<WishlistScreen> {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min, // Important: Use min to avoid expanding
+          mainAxisSize:
+              MainAxisSize.min, // Important: Use min to avoid expanding
           children: [
             Stack(
               children: [
                 ClipRRect(
                   borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
+                      const BorderRadius.vertical(top: Radius.circular(12)),
                   child: _buildProductImage(product),
                 ),
                 Positioned(
@@ -326,8 +320,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     },
                   ),
                 ),
-
-
               ],
             ),
             // Use Expanded to constrain the text content
@@ -336,7 +328,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribute space evenly
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween, // Distribute space evenly
                   mainAxisSize: MainAxisSize.max,
                   children: [
                     // Product Name
@@ -360,7 +353,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       children: [
                         // Final price after discount
 
-
                         // const SizedBox(height: 4),
 
                         // Original price and discount
@@ -374,7 +366,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                 color: Color(0xffc98a35),
                               ),
                             ),
-                            SizedBox(width: 5,),
+                            SizedBox(
+                              width: 5,
+                            ),
                             // Original price (crossed out)
                             Text(
                               "₹${product.price.toStringAsFixed(0)}",
@@ -384,25 +378,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                 decoration: TextDecoration.lineThrough,
                               ),
                             ),
-
-                            // const SizedBox(width: 6),
-
-                            // Discount amount
-                            // Container(
-                            //   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            //   decoration: BoxDecoration(
-                            //     color: Colors.red[50],
-                            //     borderRadius: BorderRadius.circular(4),
-                            //   ),
-                            //   child: Text(
-                            //     "₹${_getDiscountAmount(product).toStringAsFixed(0)} off",
-                            //     style: TextStyle(
-                            //       fontSize: 11,
-                            //       color: Colors.red[700],
-                            //       fontWeight: FontWeight.w500,
-                            //     ),
-                            //   ),
-                            // ),
                           ],
                         ),
                       ],
@@ -415,7 +390,8 @@ class _WishlistScreenState extends State<WishlistScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.star, size: 14, color: Colors.orangeAccent),
+                            const Icon(Icons.star,
+                                size: 14, color: Colors.orangeAccent),
                             const SizedBox(width: 2),
                             Text(
                               product.averageRating.toStringAsFixed(1),
@@ -424,26 +400,11 @@ class _WishlistScreenState extends State<WishlistScreen> {
                             const SizedBox(width: 4),
                             Text(
                               "(${product.ratingCount})",
-                              style: const TextStyle(fontSize: 10, color: Colors.grey),
+                              style: const TextStyle(
+                                  fontSize: 10, color: Colors.grey),
                             ),
                           ],
                         ),
-                        // const SizedBox(height: 4),
-                        // Container(
-                        //   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        //   decoration: BoxDecoration(
-                        //     color: product.stock > 0 ? Colors.green[100] : Colors.red[100],
-                        //     borderRadius: BorderRadius.circular(4),
-                        //   ),
-                        //   child: Text(
-                        //     product.stock > 0 ? "In Stock" : "Out of Stock",
-                        //     style: TextStyle(
-                        //       fontSize: 10,
-                        //       color: product.stock > 0 ? Colors.green : Colors.red,
-                        //       fontWeight: FontWeight.w500,
-                        //     ),
-                        //   ),
-                        // ),
                       ],
                     ),
                   ],
@@ -455,13 +416,15 @@ class _WishlistScreenState extends State<WishlistScreen> {
       ),
     );
   }
+
   Widget _buildProductImage(Product product) {
     final baseUrl = ApiService.baseUrl;
     String? imageFile;
 
     if (product.images.isNotEmpty) {
       imageFile = product.images.first;
-    } else if (product.productThumb != null && product.productThumb!.isNotEmpty) {
+    } else if (product.productThumb != null &&
+        product.productThumb!.isNotEmpty) {
       imageFile = product.productThumb;
     }
 
@@ -485,10 +448,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
       placeholder: (context, url) => Container(
         color: Colors.grey[300],
         child: const Center(
-          child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2)),
+          child: SizedBox(width: 20, height: 20, child: CustomLoader()),
         ),
       ),
       errorWidget: (context, url, error) => Image.asset(
@@ -500,5 +460,3 @@ class _WishlistScreenState extends State<WishlistScreen> {
     );
   }
 }
-
-

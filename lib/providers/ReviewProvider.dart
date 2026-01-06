@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:elfinic_commerce_llc/services/review_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +15,34 @@ class ReviewProvider with ChangeNotifier {
   List<Review> get reviews => _reviews;
   bool get isLoading => _isLoading;
   String get error => _error;
+
+  //
+  bool _eligible = false;
+  bool _loading = false;
+
+  bool get eligible => _eligible;
+  bool get loading => _loading;
+
+  Future<void> loadEligibility(int productId) async {
+    debugPrint('🟣 ReviewProvider → loadEligibility START');
+    _loading = true;
+    notifyListeners();
+
+    _eligible = await ReviewService.checkEligibility(productId: productId);
+
+    debugPrint('🟣 ReviewProvider → eligible = $_eligible');
+
+    _loading = false;
+    notifyListeners();
+    debugPrint('🟣 ReviewProvider → loadEligibility END');
+  }
+
+  void reset() {
+    debugPrint('🟣 ReviewProvider → reset');
+    _eligible = false;
+    _loading = false;
+    notifyListeners();
+  }
 
   // Add review method
   Future<bool> addReview({
@@ -97,7 +126,6 @@ class ReviewProvider with ChangeNotifier {
     }
   }
 
-
   // Fetch product reviews with detailed information
   Future<Map<String, dynamic>?> fetchProductReviews(int productId) async {
     try {
@@ -163,8 +191,6 @@ class ReviewProvider with ChangeNotifier {
     }
   }
 
-
-
   // Clear all reviews
   void clearReviews() {
     _reviews.clear();
@@ -189,18 +215,16 @@ class ReviewProvider with ChangeNotifier {
 
     if (userId == 0) return false;
 
-    return _reviews.any((review) =>
-    review.productId == productId && review.userId == userId
-    );
+    return _reviews.any(
+        (review) => review.productId == productId && review.userId == userId);
   }
 
   // Alternative synchronous version
   bool hasUserReviewedSync(int productId, int userId) {
     if (userId == 0) return false;
 
-    return _reviews.any((review) =>
-    review.productId == productId && review.userId == userId
-    );
+    return _reviews.any(
+        (review) => review.productId == productId && review.userId == userId);
   }
 
   // Calculate average rating and distribution
@@ -220,7 +244,8 @@ class ReviewProvider with ChangeNotifier {
 
     for (var review in reviews) {
       totalRating += review.rating;
-      ratingDistribution[review.rating] = (ratingDistribution[review.rating] ?? 0) + 1;
+      ratingDistribution[review.rating] =
+          (ratingDistribution[review.rating] ?? 0) + 1;
     }
 
     double averageRating = totalRating / totalReviews;
@@ -240,7 +265,8 @@ class ReviewProvider with ChangeNotifier {
 
   // Get reviews for specific product with stats
   Map<String, dynamic> getProductReviewStats(int productId) {
-    final productReviews = _reviews.where((review) => review.productId == productId).toList();
+    final productReviews =
+        _reviews.where((review) => review.productId == productId).toList();
     final stats = calculateRatingStats(productReviews);
 
     return {

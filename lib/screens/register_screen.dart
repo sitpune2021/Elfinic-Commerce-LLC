@@ -1,8 +1,8 @@
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
-
 
 import '../providers/RegisterProvider.dart';
 import 'dart:core';
@@ -22,7 +22,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController mobileController = TextEditingController();
   final TextEditingController otpController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -46,8 +47,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _validatePassword(String password) {
     setState(() {
       _isLengthValid = password.length >= 8;
-      _hasUppercaseAndNumber = RegExp(r'^(?=.*[A-Z])(?=.*\d)').hasMatch(password);
-      _hasSpecialChar = RegExp(r'(?=.*[!@#$%^&*(),.?":{}|<>])').hasMatch(password);
+      _hasUppercaseAndNumber =
+          RegExp(r'^(?=.*[A-Z])(?=.*\d)').hasMatch(password);
+      _hasSpecialChar =
+          RegExp(r'(?=.*[!@#$%^&*(),.?":{}|<>])').hasMatch(password);
     });
   }
 
@@ -87,7 +90,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _usernameError = "Username must be at least 3 characters");
       isValid = false;
     } else if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(usernameController.text)) {
-      setState(() => _usernameError = "Username can only contain letters, numbers and underscore");
+      setState(() => _usernameError =
+          "Username can only contain letters, numbers and underscore");
       isValid = false;
     }
 
@@ -95,7 +99,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (emailController.text.isEmpty) {
       setState(() => _emailError = "Email is required");
       isValid = false;
-    } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(emailController.text)) {
+    } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+        .hasMatch(emailController.text)) {
       setState(() => _emailError = "Please enter a valid email address");
       isValid = false;
     }
@@ -145,7 +150,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _submitForm(BuildContext context) async {
     if (!_validateForm()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fix all errors before submitting")),
+        const SnackBar(
+            content: Text("Please fix all errors before submitting")),
       );
       return;
     }
@@ -252,7 +258,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 IntlPhoneField(
                   controller: mobileController,
                   initialCountryCode: 'IN',
-                  decoration: _inputDecoration("Enter your mobile number").copyWith(
+                  decoration:
+                      _inputDecoration("Enter your mobile number").copyWith(
                     errorText: _mobileError,
                   ),
                   keyboardType: TextInputType.phone,
@@ -322,8 +329,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       icon: Icon(_isPasswordVisible
                           ? Icons.visibility
                           : Icons.visibility_off),
-                      onPressed: () =>
-                          setState(() => _isPasswordVisible = !_isPasswordVisible),
+                      onPressed: () => setState(
+                          () => _isPasswordVisible = !_isPasswordVisible),
                     ),
                   ),
                 ),
@@ -345,7 +352,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ? Icons.visibility_off
                           : Icons.visibility),
                       onPressed: () => setState(() =>
-                      _obscureConfirmPassword = !_obscureConfirmPassword),
+                          _obscureConfirmPassword = !_obscureConfirmPassword),
                     ),
                   ),
                 ),
@@ -356,7 +363,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: provider.isLoading ? null : () => _submitForm(context),
+                    onPressed:
+                        provider.isLoading ? null : () => _submitForm(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.indigo[900],
                       shape: RoundedRectangleBorder(
@@ -364,9 +372,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     child: provider.isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
+                        ? const CustomLoader()
                         : const Text("CONTINUE",
-                        style: TextStyle(fontSize: 18, color: Colors.white)),
+                            style:
+                                TextStyle(fontSize: 18, color: Colors.white)),
                   ),
                 ),
               ],
@@ -378,31 +387,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildLabel(String text) => Align(
-    alignment: Alignment.centerLeft,
-    child: Text(
-      text,
-      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
-    ),
-  );
+        alignment: Alignment.centerLeft,
+        child: Text(
+          text,
+          style: const TextStyle(
+              fontWeight: FontWeight.bold, color: Colors.indigo),
+        ),
+      );
 
   InputDecoration _inputDecoration(String hint) => InputDecoration(
-    hintText: hint,
-    filled: true,
-    fillColor: Colors.blue.shade50,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(30),
-      borderSide: BorderSide.none,
-    ),
-    errorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(30),
-      borderSide: const BorderSide(color: Colors.red),
-    ),
-    focusedErrorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(30),
-      borderSide: const BorderSide(color: Colors.red),
-    ),
-  );
+        hintText: hint,
+        filled: true,
+        fillColor: Colors.blue.shade50,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
+      );
 
   Widget _buildPasswordChecks() {
     return Padding(
@@ -410,7 +420,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _passwordCheck(_isLengthValid, "Password Must Be At Least 8 Characters"),
+          _passwordCheck(
+              _isLengthValid, "Password Must Be At Least 8 Characters"),
           const SizedBox(height: 4),
           _passwordCheck(
               _hasUppercaseAndNumber, "At Least One Uppercase & One Number"),

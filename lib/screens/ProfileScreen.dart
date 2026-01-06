@@ -1,3 +1,4 @@
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart' as dashboard;
@@ -21,7 +22,8 @@ class ProfileScreen extends StatelessWidget {
     );
 
     if (confirmed == true) {
-      final logoutProvider = Provider.of<LogoutProvider>(context, listen: false);
+      final logoutProvider =
+          Provider.of<LogoutProvider>(context, listen: false);
 
       await logoutProvider.logout("admin@gmail.com", "Shubham12");
 
@@ -30,12 +32,13 @@ class ProfileScreen extends StatelessWidget {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const LoginScreen()),
-              (route) => false,
+          (route) => false,
         );
       } else {
         // ❌ Show error
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(logoutProvider.errorMessage ?? "Logout failed")),
+          SnackBar(
+              content: Text(logoutProvider.errorMessage ?? "Logout failed")),
         );
       }
     }
@@ -79,7 +82,8 @@ class ProfileScreen extends StatelessWidget {
                   bottomRight: Radius.circular(40),
                 ),
               ),
-              padding: const EdgeInsets.only(top: 60, left: 20, right: 20, bottom: 30),
+              padding: const EdgeInsets.only(
+                  top: 60, left: 20, right: 20, bottom: 30),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -136,7 +140,8 @@ class ProfileScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const EditProfileScreen()),
                       );
                     },
                     child: CircleAvatar(
@@ -157,7 +162,8 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     const Text(
                       "Account Information",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     const Text(
@@ -165,64 +171,62 @@ class ProfileScreen extends StatelessWidget {
                       style: TextStyle(fontSize: 14, color: Colors.black54),
                     ),
                     const SizedBox(height: 20),
-
                     _buildListTile(Icons.shopping_bag_outlined, "Orders", () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const OrdersScreen()),
                       );
                     }),
-
                     _buildListTile(Icons.favorite_border, "Wishlist", () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const WishlistScreen()),
+                        MaterialPageRoute(
+                            builder: (_) => const WishlistScreen()),
                       );
                     }),
-
                     _buildListTile(Icons.card_giftcard, "Rewards", () {
                       // Navigate to RewardsScreen
                     }),
-
                     _buildListTile(Icons.location_on_outlined, "Address", () {
                       NavigationHelper.navigateToAddressScreen(
                         context: context,
                         fromProfile: true,
                       );
                     }),
-
-                    _buildListTile(Icons.share_outlined, "Share with Friends", () {
+                    _buildListTile(Icons.share_outlined, "Share with Friends",
+                        () {
                       // Navigate to Share Friend / Share App logic
                     }),
-
                     _buildListTile(Icons.info_outline, "About Us", () {
                       // Navigate to About Details screen
                     }),
-
                     const SizedBox(height: 30),
-
                     Center(
                       child: Consumer<LogoutProvider>(
                         builder: (context, provider, child) {
                           return ElevatedButton.icon(
-                            onPressed: provider.isLoading ? null : () => _logout(context),
+                            onPressed: provider.isLoading
+                                ? null
+                                : () => _logout(context),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.redAccent,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 30, vertical: 12),
                             ),
                             icon: provider.isLoading
                                 ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                                : const Icon(Icons.logout, color: Colors.white, size: 20),
+                                    width: 16,
+                                    height: 16,
+                                    child: CustomLoader(
+                                        // strokeWidth: 2,
+                                        // color: Colors.white,
+                                        ),
+                                  )
+                                : const Icon(Icons.logout,
+                                    color: Colors.white, size: 20),
                             label: Text(
                               provider.isLoading ? "Logging out..." : "Logout",
                               style: const TextStyle(
@@ -235,7 +239,6 @@ class ProfileScreen extends StatelessWidget {
                         },
                       ),
                     ),
-
                   ],
                 ),
               ),
@@ -429,7 +432,8 @@ class NavigationHelper {
     List<UserCartItem>? cartItems,
   }) async {
     // Get providers from context
-    final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+    final addressProvider =
+        Provider.of<AddressProvider>(context, listen: false);
     final couponProvider = Provider.of<CouponProvider>(context, listen: false);
 
     // Fetch addresses if needed

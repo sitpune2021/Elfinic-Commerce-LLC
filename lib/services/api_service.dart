@@ -57,6 +57,8 @@ class ApiService {
       Uri.parse('$_baseUrl/api/addresses/deleteAddress');
 
   // Review endpoints
+  static String get reviewEligibility =>
+      '$_baseUrl/api/reviews/check-eligibility';
   static String get addReview => '$_baseUrl/api/addReview';
   static String get productReviews => '$_baseUrl/api/products/productReviews';
   static String get productReviewsById =>
@@ -1134,3 +1136,5 @@ void logApiCall({
       '➡️ API [$method] ${url.toString()} | Status: ${response.statusCode}');
   debugPrint('⬅️ Response: ${response.body}');
 }
+
+

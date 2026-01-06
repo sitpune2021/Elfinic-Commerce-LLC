@@ -1,3 +1,4 @@
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -281,7 +282,7 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                   const SizedBox(height: 20),
 
                   if (addressProvider.isLoading)
-                    const Center(child: CircularProgressIndicator())
+                    const Center(child: CustomLoader())
                   else
                     _updateButton("UPDATE ADDRESS", () => _updateAddress(context)),
 
