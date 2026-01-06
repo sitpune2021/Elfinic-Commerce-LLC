@@ -822,6 +822,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget _buildLoadingScreen() {
     return BaseScreen(
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.black),

@@ -1021,12 +1021,11 @@ class _AllCouponsScreenState extends State<AllCouponsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('All Coupons'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
       ),
       body: Consumer<CouponProvider>(
         builder: (context, couponProvider, _) {
