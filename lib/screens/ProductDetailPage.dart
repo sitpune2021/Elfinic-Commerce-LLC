@@ -20,7 +20,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:video_compress/video_compress.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
 
 import '../model/ProductsResponse.dart';
 import '../model/Review.dart';
@@ -2605,42 +2604,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         _buildVideoPreview(provider),
                       ],
                     ),
-
-                    // /// MEDIA GRID
-                    // Wrap(
-                    //   spacing: 8,
-                    //   runSpacing: 8,
-                    //   children: [
-                    //     /// IMAGE PREVIEWS
-                    //     ...provider.images.map((file) {
-                    //       return Stack(
-                    //         children: [
-                    //           ClipRRect(
-                    //             borderRadius: BorderRadius.circular(10),
-                    //             child: Image.file(
-                    //               file,
-                    //               width: 80,
-                    //               height: 80,
-                    //               fit: BoxFit.cover,
-                    //             ),
-                    //           ),
-                    //           Positioned(
-                    //             top: -6,
-                    //             right: -6,
-                    //             child: IconButton(
-                    //               icon: const Icon(Icons.close,
-                    //                   size: 18, color: Colors.red),
-                    //               onPressed: () => provider.removeImage(file),
-                    //             ),
-                    //           ),
-                    //         ],
-                    //       );
-                    //     }),
-
-                    //     /// 🎥 VIDEO PREVIEW - USING NEW METHOD
-                    //     _buildVideoPreview(provider),
-                    //   ],
-                    // ),
                   ],
 
                   const SizedBox(height: 20),
