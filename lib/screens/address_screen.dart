@@ -59,22 +59,34 @@ class _AddressScreenState extends State<AddressScreen> {
     final addressProvider = Provider.of<AddressProvider>(context);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: true, // default back button
+        backgroundColor: Colors.white,
         elevation: 0,
-        surfaceTintColor: const Color(0xfffdf6ef),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_sharp, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+        surfaceTintColor: Colors.transparent,
+
+        iconTheme: const IconThemeData(
+          color: Color(0xFF050040), // back icon color
         ),
-        title: Text(widget.fromProfile ? 'My Addresses' : 'Select Address'),
-        backgroundColor: const Color(0xFF050040),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: Colors.black.withValues(alpha: 0.06),
+          ),
+        ),
+        title: Text(
+          widget.fromProfile ? 'My Addresses' : 'Select Address',
+          style: const TextStyle(
+            color: Color(0xFF050040), // title color
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
       body: addressProvider.isLoading
           ? const Center(
-              child: CustomLoader(
-                  // size: 40,
-                  // color: Colors.blue,
-                  ),
+              child: CustomLoader(),
             )
           : addressProvider.addresses.isEmpty
               ? _buildEmptyState(addressProvider)

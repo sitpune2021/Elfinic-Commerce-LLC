@@ -156,11 +156,17 @@ class _RefundCancellationPolicyScreenState
               heroTag: "whatsapp",
               mini: true,
               backgroundColor: Colors.green,
-              onPressed: () {
-                launchUrl(
-                  Uri.parse("https://wa.me/1234567890"),
-                  mode: LaunchMode.externalApplication,
-                );
+              onPressed: () async {
+                final Uri whatsappUri = Uri.parse("https://wa.me/917969094545");
+
+                if (await canLaunchUrl(whatsappUri)) {
+                  await launchUrl(
+                    whatsappUri,
+                    mode: LaunchMode.externalApplication,
+                  );
+                } else {
+                  debugPrint("Could not open WhatsApp");
+                }
               },
               child: Lottie.asset("assets/lottie/whatsapp.json", width: 26),
             ),
@@ -169,8 +175,21 @@ class _RefundCancellationPolicyScreenState
               heroTag: "email",
               mini: true,
               backgroundColor: Colors.blue,
-              onPressed: () {
-                launchUrl(Uri.parse("mailto:returns@elfinic.com"));
+              onPressed: () async {
+                final Uri emailUri = Uri(
+                  scheme: 'mailto',
+                  path: 'care@elfinic.com',
+                  queryParameters: {
+                    'subject': 'Support Request',
+                    'body': 'Hello Elfinic Team,',
+                  },
+                );
+
+                if (await canLaunchUrl(emailUri)) {
+                  await launchUrl(emailUri);
+                } else {
+                  debugPrint('Could not launch email');
+                }
               },
               child: Lottie.asset("assets/lottie/email.json", width: 26),
             ),
