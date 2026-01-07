@@ -65,13 +65,7 @@ class LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 10),
-              // Align(
-              //   alignment: Alignment.topLeft,
-              //   child: IconButton(
-              //     icon: const Icon(Icons.arrow_back, color: Colors.indigo),
-              //     onPressed: () {},
-              //   ),
-              // ),
+
               Image.asset(
                 "assets/images/splash_screen_1.png",
                 height: 120,
@@ -240,12 +234,15 @@ class LoginScreenState extends State<LoginScreen> {
                           _passwordController.text.trim(),
                         );
 
+
                         if (authProvider.loginResponse != null &&
                             authProvider.loginResponse!.status.toLowerCase() ==
-                                "success") {
+                                "success" &&
+                            authProvider.loginResponse!.token != null) {
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.setString(
-                              "auth_token", authProvider.loginResponse!.token);
+                              "auth_token", authProvider.loginResponse!.token!);
+
                           if (_rememberMe) {
                             await prefs.setString(
                                 "saved_email", _emailController.text.trim());
@@ -264,7 +261,7 @@ class LoginScreenState extends State<LoginScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                                 content: Text(authProvider.errorMessage ??
-                                    "Login failed")),
+                                    "Login failed!!")),
                           );
                         }
                       },

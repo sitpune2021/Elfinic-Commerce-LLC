@@ -1,37 +1,44 @@
+// ignore_for_file: file_names
+
 import 'dart:convert';
 
-// ----------- Models -------------
+LoginResponse loginResponseFromRawJson(String str) =>
+    LoginResponse.fromJson(json.decode(str));
+
 class LoginResponse {
   final String status;
-  final User user;
-  final String token;
+  final String? message;
+  final User? user;
+  final String? token;
 
   LoginResponse({
     required this.status,
-    required this.user,
-    required this.token,
+    this.message,
+    this.user,
+    this.token,
   });
+
+  /// ✅ ADDED (this was missing)
+  factory LoginResponse.fromRawJson(String str) =>
+      LoginResponse.fromJson(json.decode(str));
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
       status: json['status'] ?? '',
-      user: User.fromJson(json['user'] ?? {}),
-      token: json['token'] ?? '',
+      message: json['message'],
+      token: json['token'],
+      user: json['user'] != null ? User.fromJson(json['user']) : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'status': status,
-      'user': user.toJson(),
+      'message': message,
+      'user': user?.toJson(),
       'token': token,
     };
   }
-
-  factory LoginResponse.fromRawJson(String str) =>
-      LoginResponse.fromJson(json.decode(str));
-
-  String toRawJson() => json.encode(toJson());
 }
 
 class User {

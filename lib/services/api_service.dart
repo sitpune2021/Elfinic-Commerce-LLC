@@ -256,29 +256,34 @@ class ApiService {
     );
 
     // Logging response (optional)
-    print("API Call: POST $url");
-    print("Request body: $body");
-    print("Response: ${response.body}");
+    debugPrint("API Call: POST $url");
+    debugPrint("Request body: $body");
+    debugPrint("Response: ${response.body}");
 
     logApiCall(method: 'POST', url: url, response: response);
 
     if (response.statusCode == 200) {
       final loginRes = LoginResponse.fromRawJson(response.body);
 
-      // ✅ Save token & user details in SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString("auth_token", loginRes.token);
-      await prefs.setString("user_id", loginRes.user.id.toString());
-      await prefs.setString("user_name", loginRes.user.name);
-      await prefs.setString("user_email", loginRes.user.email);
+      if (loginRes.token != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("auth_token", loginRes.token!);
+      }
+      if (loginRes.user != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("user_id", loginRes.user!.id.toString());
+        await prefs.setString("user_name", loginRes.user!.name);
+        await prefs.setString("user_email", loginRes.user!.email);
+      }
 
       // Optional: print for debug
-      print("Saved user_id: ${loginRes.user.id}");
-      print("token user_id: ${loginRes.token}");
+      debugPrint("Saved user_id: ${loginRes.user!.id.toString()}");
+      debugPrint("token user_id: ${loginRes.token}");
 
       return loginRes;
     } else {
-      throw Exception("Login failed: ${response.body}");
+      final errorJson = jsonDecode(response.body);
+      throw Exception(errorJson['message'] ?? 'Login failed');
     }
   }
 
