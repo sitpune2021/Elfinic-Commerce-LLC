@@ -1,5 +1,7 @@
+import 'package:elfinic_commerce_llc/screens/about_us_screen.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart' as dashboard;
 import '../model/cart_models.dart';
@@ -12,9 +14,14 @@ import 'OrdersScreen.dart';
 import 'WishlistScreen.dart';
 import 'login_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _logout(BuildContext context) async {
     final confirmed = await showDialog(
       context: context,
@@ -52,6 +59,21 @@ class ProfileScreen extends StatelessWidget {
       context,
       MaterialPageRoute(builder: (context) => dashboard.DashboardScreen()),
     );
+  }
+
+  String _appVersion = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _appVersion = '${info.version} (${info.buildNumber})';
+    });
   }
 
   @override
@@ -200,8 +222,26 @@ class ProfileScreen extends StatelessWidget {
                       // Navigate to Share Friend / Share App logic
                     }),
                     _buildListTile(Icons.info_outline, "About Us", () {
-                      // Navigate to About Details screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const AboutUsScreen()),
+                      );
                     }),
+                    _buildAppListTile(
+                      Icons.system_update,
+                      "App Version",
+                      null,
+                      showArrow: false,
+                      trailing: Text(
+                        _appVersion,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 30),
                     Center(
                       child: Consumer<LogoutProvider>(
@@ -246,6 +286,65 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  //app version widget
+  Widget _buildAppListTile(
+    IconData icon,
+    String title,
+    VoidCallback? onTap, {
+    Widget? trailing,
+    bool showArrow = true,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade50.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: const Color(0xFF050040).withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: const Color(0xFF050040),
+            size: 20,
+          ),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        trailing: trailing ??
+            (showArrow
+                ? const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.grey,
+                    size: 20,
+                  )
+                : null),
+        onTap: onTap,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );
