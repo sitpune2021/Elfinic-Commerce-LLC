@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:elfinic_commerce_llc/screens/about_us_screen.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart' as dashboard;
+import 'package:share_plus/share_plus.dart';
 import '../model/cart_models.dart';
 import '../providers/LogoutProvider.dart';
 import '../providers/ShippingProvider.dart';
@@ -69,11 +72,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadVersion();
   }
 
+// app version
   Future<void> _loadVersion() async {
     final info = await PackageInfo.fromPlatform();
     setState(() {
       _appVersion = '${info.version} (${info.buildNumber})';
     });
+  }
+
+  // app share
+  void shareApp() {
+    String url;
+
+    if (Platform.isAndroid) {
+      url =
+          'https://play.google.com/store/apps/details?id=com.sit.elfinic_commerce_llc';
+    } else if (Platform.isIOS) {
+      url = 'https://apps.apple.com/app/idYOUR_IOS_APP_ID';
+    } else {
+      url = 'https://www.elfinic.com/';
+    }
+
+    Share.share(
+      'Check out this app 👇\n\n$url',
+      subject: 'Awesome App',
+    );
   }
 
   @override
@@ -217,10 +240,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         fromProfile: true,
                       );
                     }),
-                    _buildListTile(Icons.share_outlined, "Share with Friends",
-                        () {
-                      // Navigate to Share Friend / Share App logic
-                    }),
+                    _buildListTile(
+                      Icons.share_outlined,
+                      "Share with Friends",
+                      () {
+                        shareApp();
+                      },
+                    ),
                     _buildListTile(Icons.info_outline, "About Us", () {
                       Navigator.push(
                         context,
