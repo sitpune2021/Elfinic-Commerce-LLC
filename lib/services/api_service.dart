@@ -356,21 +356,21 @@ class ApiService {
 
     logApiCall(method: 'POST', url: registerUrl, response: response);
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final registerRes = RegisterResponse.fromRawJson(response.body);
+    final registerRes = registerResponseFromRawJson(response.body);
 
-      if (registerRes.status.toLowerCase() == "success") {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("auth_token", registerRes.token);
-        await prefs.setString("user_id", registerRes.data.id.toString());
-        await prefs.setString("user_name", registerRes.data.name);
-        await prefs.setString("user_email", registerRes.data.email);
-      }
-
-      return registerRes;
-    } else {
-      throw Exception("Registration failed: ${response.body}");
+    if ((response.statusCode == 200 || response.statusCode == 201) &&
+        registerRes.status == "success") {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("auth_token", registerRes.token ?? "");
+      await prefs.setString(
+        "user_id",
+        registerRes.data?.id.toString() ?? "",
+      );
+      await prefs.setString("user_name", registerRes.data?.name ?? "");
+      await prefs.setString("user_email", registerRes.data?.email ?? "");
     }
+
+    return registerRes;
   }
 
   /// Fetch Categories from API
@@ -1137,5 +1137,3 @@ void logApiCall({
       '➡️ API [$method] ${url.toString()} | Status: ${response.statusCode}');
   debugPrint('⬅️ Response: ${response.body}');
 }
-
-

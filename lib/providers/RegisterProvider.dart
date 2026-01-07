@@ -1,6 +1,9 @@
-import 'package:flutter/foundation.dart';
+// ignore_for_file: file_names
+
 import '../model/RegisterResponse.dart';
 import '../services/api_service.dart';
+
+import 'package:flutter/material.dart';
 
 class RegisterProvider with ChangeNotifier {
   bool isLoading = false;
@@ -31,15 +34,15 @@ class RegisterProvider with ChangeNotifier {
         passwordConfirmation: passwordConfirmation,
       );
 
-      if (registerResponse!.status.toLowerCase() != "success") {
-        errorMessage = registerResponse!.message;
+      if (registerResponse?.status != "success") {
+        errorMessage = registerResponse?.message;
       }
     } catch (e) {
-      errorMessage = e.toString();
+      debugPrint("REGISTER ERROR: $e");
+      errorMessage = "Network error. Please try again.";
     }
 
     isLoading = false;
     notifyListeners();
   }
 }
-

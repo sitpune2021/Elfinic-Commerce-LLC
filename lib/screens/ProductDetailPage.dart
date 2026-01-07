@@ -2612,47 +2612,104 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: provider.isUploading
-                          ? TextButton(
-                              onPressed: provider.cancelUpload,
-                              child: const Text(
-                                'Cancel',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            )
-                          : ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.kPrimary,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: isTablet ? 36 : 28,
-                                  vertical: 14,
+                        duration: const Duration(milliseconds: 300),
+                        child: provider.isUploading
+                            ? TextButton(
+                                onPressed: provider.cancelUpload,
+                                child: const Text(
+                                  'Cancel',
+                                  style: TextStyle(color: Colors.red),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
+                              )
+                            : ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.kPrimary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
                                 ),
-                              ),
-                              onPressed: () async {
-                                await provider.submitReview(
-                                  productId: getProduct.id,
-                                  title: _titleController.text,
-                                  content: _contentController.text,
-                                );
+                                onPressed: provider.isUploading
+                                    ? null
+                                    : () async {
+                                        final success =
+                                            await provider.submitReview(
+                                          productId: getProduct.id,
+                                          title: _titleController.text,
+                                          content: _contentController.text,
+                                        );
+                                        if (!context.mounted) return;
 
-                                _titleController.clear();
-                                _contentController.clear();
-                              },
-                              child: const Text(
-                                "Publish Review",
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                    ),
+                                        if (success) {
+                                          _titleController.clear();
+                                          _contentController.clear();
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                  "✅ Review submitted successfully"),
+                                              backgroundColor: Colors.green,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        } else if (provider.error.isNotEmpty) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(provider.error),
+                                              backgroundColor: Colors.red,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        }
+                                      },
+                                child: provider.isUploading
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CustomLoader())
+                                    : const Text(
+                                        "Publish Review",
+                                        style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700),
+                                      ),
+                              )
+
+                        // : ElevatedButton(
+                        //     style: ElevatedButton.styleFrom(
+                        //       backgroundColor: AppColors.kPrimary,
+                        //       foregroundColor: Colors.white,
+                        //       elevation: 0,
+                        //       padding: EdgeInsets.symmetric(
+                        //         horizontal: isTablet ? 36 : 28,
+                        //         vertical: 14,
+                        //       ),
+                        //       shape: RoundedRectangleBorder(
+                        //         borderRadius: BorderRadius.circular(30),
+                        //       ),
+                        //     ),
+                        //     onPressed: () async {
+                        //       await provider.submitReview(
+                        //         productId: getProduct.id,
+                        //         title: _titleController.text,
+                        //         content: _contentController.text,
+                        //       );
+
+                        //       _titleController.clear();
+                        //       _contentController.clear();
+                        //     },
+                        //     child: const Text(
+                        //       "Publish Review",
+                        //       style: TextStyle(
+                        //         fontSize: 15,
+                        //         fontWeight: FontWeight.w700,
+                        //       ),
+                        //     ),
+                        //   ),
+                        ),
                   ),
                 ],
               ),

@@ -43,6 +43,8 @@ class ReviewProvider with ChangeNotifier {
   bool _isVideoProcessing = false;
   bool get isVideoProcessing => _isVideoProcessing;
 
+  bool submitSuccess = false;
+
   /// ---------------- RATING ----------------
   void setRating(int value) {
     rating = value;
@@ -166,32 +168,12 @@ class ReviewProvider with ChangeNotifier {
       return false;
     }
 
-    // _isLoading = true;
-    // uploadProgress = 0;
-    // _error = '';
     isUploading = true;
+    submitSuccess = false;
     uploadProgress = 0;
     _error = '';
     notifyListeners();
 
-    // final success = await ReviewService.addReview(
-    //   productId: productId,
-    //   rating: rating,
-    //   title: title,
-    //   content: content,
-    //   images: images,
-    //   videos: videos,
-    // );
-
-    // debugPrint('⬅️ PROVIDER API RESULT: $success');
-
-    // _isLoading = false;
-
-    // if (!success) {
-    //   _error = 'Failed to submit review';
-    // } else {
-    //   resetForm();
-    // }
     _uploadTask = CancelableOperation.fromFuture(
       ReviewService.addReview(
         productId: productId,
@@ -216,9 +198,11 @@ class ReviewProvider with ChangeNotifier {
     uploadProgress = 0;
 
     if (success) {
+      submitSuccess = true;
       debugPrint('✅ UPLOAD SUCCESS');
       resetForm();
     } else {
+      submitSuccess = false;
       debugPrint('❌ UPLOAD FAILED / CANCELED');
       _error = 'Upload failed or canceled';
     }
