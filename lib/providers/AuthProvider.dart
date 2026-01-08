@@ -1,5 +1,7 @@
 // ignore_for_file: file_names
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../model/LoginResponse.dart';
@@ -35,10 +37,18 @@ class AuthProvider with ChangeNotifier {
         _loginResponse = response;
 
         final prefs = await SharedPreferences.getInstance();
+
+        // Save token
         await prefs.setString("auth_token", response.token!);
-        await prefs.setString("user_id", response.user!.id.toString());
-        await prefs.setString("user_name", response.user!.name);
-        await prefs.setString("user_email", response.user!.email);
+        // await prefs.setString("user_id", response.user!.id.toString());
+        // await prefs.setString("user_name", response.user!.name);
+        // await prefs.setString("user_email", response.user!.email);
+
+        // ✅ Save FULL USER JSON
+        await prefs.setString(
+          "user_data",
+          jsonEncode(response.user!.toJson()),
+        );
       } else {
         _loginResponse = null;
         _errorMessage = response.message ?? "Invalid email or password";

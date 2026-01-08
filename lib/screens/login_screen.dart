@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:elfinic_commerce_llc/screens/register_screen.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
@@ -234,14 +236,22 @@ class LoginScreenState extends State<LoginScreen> {
                           _passwordController.text.trim(),
                         );
 
-
                         if (authProvider.loginResponse != null &&
                             authProvider.loginResponse!.status.toLowerCase() ==
                                 "success" &&
                             authProvider.loginResponse!.token != null) {
                           final prefs = await SharedPreferences.getInstance();
+
                           await prefs.setString(
                               "auth_token", authProvider.loginResponse!.token!);
+
+                          if (authProvider.loginResponse!.user != null) {
+                            await prefs.setString(
+                              "user_data",
+                              jsonEncode(
+                                  authProvider.loginResponse!.user!.toJson()),
+                            );
+                          }
 
                           if (_rememberMe) {
                             await prefs.setString(

@@ -15,6 +15,7 @@ import 'package:elfinic_commerce_llc/providers/WishlistProvider.dart';
 import 'package:elfinic_commerce_llc/providers/category_provider.dart';
 import 'package:elfinic_commerce_llc/providers/delivery_provider.dart';
 import 'package:elfinic_commerce_llc/providers/product_provider.dart';
+import 'package:elfinic_commerce_llc/providers/profile_provider.dart';
 import 'package:elfinic_commerce_llc/screens/CartScreen.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart';
 import 'package:elfinic_commerce_llc/screens/splash_screen.dart';
@@ -24,7 +25,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-
 import 'package:elfinic_commerce_llc/screens/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -32,6 +32,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // Screens
 import 'screens/register_screen.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -66,8 +67,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => RecentViewProvider()),
         ChangeNotifierProvider(create: (_) => ArrivalProductProvider()),
         ChangeNotifierProvider(create: (_) => SimilarProductProvider()),
-
-
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
 
         ChangeNotifierProvider(create: (_) => CouponProvider()),
         // ChangeNotifierProvider(create: (_) => ShippingProvider()),
@@ -92,7 +92,7 @@ class MyApp extends StatelessWidget {
             primaryColor: Color(0xFFD39841), // ✅ App primary color
             appBarTheme: const AppBarTheme(
               backgroundColor: Color(0xFFD39841), // ✅ AppBar color
-              foregroundColor: Colors.white,  // ✅ Text/Icon color
+              foregroundColor: Colors.white, // ✅ Text/Icon color
             ),
           ),
           routes: {
@@ -114,8 +114,4 @@ class MyApp extends StatelessWidget {
       },
     );
   }
-  
 }
-
-
-

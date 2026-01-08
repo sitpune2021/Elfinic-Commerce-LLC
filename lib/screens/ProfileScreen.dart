@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:elfinic_commerce_llc/model/LoginResponse.dart';
 import 'package:elfinic_commerce_llc/screens/about_us_screen.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +9,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart' as dashboard;
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../model/cart_models.dart';
 import '../providers/LogoutProvider.dart';
 import '../providers/ShippingProvider.dart';
@@ -65,11 +68,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String _appVersion = '';
+  User? user;
 
   @override
   void initState() {
     super.initState();
     _loadVersion();
+    loadUser();
+  }
+
+  // user data
+  Future<void> loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userJson = prefs.getString("user_data");
+
+    if (userJson != null) {
+      setState(() {
+        user = User.fromJson(jsonDecode(userJson));
+      });
+    }
   }
 
 // app version
@@ -191,9 +208,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(width: 15),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
-                        "Shubham Chavan",
+                        user?.name ?? "Guest User",
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -202,12 +219,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        "Private Member",
+                        user != null ? "Private Member" : "Guest",
                         style: TextStyle(fontSize: 14, color: Colors.white),
                       ),
                       SizedBox(height: 2),
                       Text(
-                        "Joined on August 2025",
+                              user?.email ?? "",
+
                         style: TextStyle(fontSize: 12, color: Colors.white70),
                       ),
                     ],
