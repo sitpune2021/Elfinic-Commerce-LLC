@@ -2,11 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 
-
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'DashboardScreen.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -17,8 +16,6 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
@@ -29,13 +26,7 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(seconds: 2),
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
 
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
-    );
 
     _controller.forward();
 
@@ -43,14 +34,17 @@ class _SplashScreenState extends State<SplashScreen>
     Timer(const Duration(seconds: 6), () async {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString("auth_token");
-
       if (token != null && token.isNotEmpty) {
+        if (!mounted) return;
+
         // ✅ Already logged in → Go to Dashboard
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
         );
       } else {
+        if (!mounted) return;
+
         // ❌ Not logged in → Go to Login
         Navigator.pushReplacement(
           context,
@@ -58,7 +52,6 @@ class _SplashScreenState extends State<SplashScreen>
         );
       }
     });
-
   }
 
   @override
@@ -79,7 +72,6 @@ class _SplashScreenState extends State<SplashScreen>
             fit: BoxFit.cover,
           ),
         ),
-
       ),
     );
   }
@@ -173,8 +165,3 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }*/
-
-
-
-
-

@@ -93,6 +93,7 @@ flutter:
   assets:
     - assets/
     - assets/icons/
+    - assets/icons/social/
     - assets/images/
     - assets/lottie/
     - assets/animations/

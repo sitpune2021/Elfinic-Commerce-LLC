@@ -154,21 +154,21 @@ class ReviewService {
       for (final img in images ?? []) {
         debugPrint('🖼️ IMAGE: ${img.path}');
         request.files.add(
-          await http.MultipartFile.fromPath('images[]', img.path),
+          await http.MultipartFile.fromPath('image[]', img.path),
         );
       }
 
       for (final vid in videos ?? []) {
         debugPrint('🎥 VIDEO: ${vid.path}');
         request.files.add(
-          await http.MultipartFile.fromPath('videos[]', vid.path),
+          await http.MultipartFile.fromPath('video[]', vid.path),
         );
       }
 
       debugPrint('➡️ API URL: ${uri.toString()}');
       debugPrint('➡️ METHOD: POST');
       debugPrint(
-          '➡️ FILE COUNT: images=${images?.length ?? 0}, videos=${videos?.length ?? 0}');
+          '➡️ FILE COUNT: image=${images?.length ?? 0}, video=${videos?.length ?? 0}');
 
       /// SEND REQUEST
       final streamedResponse = await request.send();

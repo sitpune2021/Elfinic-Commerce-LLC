@@ -3,6 +3,7 @@ import 'package:elfinic_commerce_llc/screens/refund_cancellation_policy_screen.d
 import 'package:elfinic_commerce_llc/screens/shipping_delivery_policy_screen.dart';
 import 'package:elfinic_commerce_llc/utils/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter/rendering.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -366,21 +367,51 @@ class _AboutUsScreenState extends State<AboutUsScreen>
                 );
               },
             ),
-            _footerLink(
-              icon: Icons.help_outline,
-              title: "FAQs",
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const RefundCancellationPolicyScreen(),
-                  ),
-                );
-              },
-            ),
           ],
         ),
         const SizedBox(height: 16),
+
+        /// FOLLOW US
+        const Text(
+          "Follow Us",
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 18,
+          children: [
+            socialIcon(
+              asset: "assets/icons/social/instagram.svg",
+              url: "https://www.instagram.com/elfinic_com",
+            ),
+            socialIcon(
+              asset: "assets/icons/social/facebook.svg",
+              url: "https://www.facebook.com/people/Elfiniccom/61564017328118/",
+            ),
+            socialIcon(
+              asset: "assets/icons/social/x.svg",
+              url: "https://x.com/elfinic_com",
+            ),
+            socialIcon(
+              asset: "assets/icons/social/linkedin.svg",
+              url: "https://www.linkedin.com/company/elfinic/",
+            ),
+            socialIcon(
+              asset: "assets/icons/social/youtube.svg",
+              url: "https://www.youtube.com/@efinic",
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+
+        /// COPYRIGHT
+
         const Text(
           "© Elfinic.com | All rights reserved 2022 - 2026",
           style: TextStyle(
@@ -449,6 +480,35 @@ class _AboutUsScreenState extends State<AboutUsScreen>
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget socialIcon({
+    required String asset,
+    required String url,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(30),
+      onTap: () async {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.black.withValues(alpha: 0.2),
+          ),
+        ),
+        child: SvgPicture.asset(
+          asset,
+          width: 25,
+          height: 25,
         ),
       ),
     );
