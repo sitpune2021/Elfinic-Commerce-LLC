@@ -19,10 +19,10 @@ class HomeCategoriesScreen extends StatefulWidget {
   const HomeCategoriesScreen({super.key});
 
   @override
-  _HomeCategoriesScreenState createState() => _HomeCategoriesScreenState();
+  HomeCategoriesScreenState createState() => HomeCategoriesScreenState();
 }
 
-class _HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
+class HomeCategoriesScreenState extends State<HomeCategoriesScreen> {
   int? selectedCategoryId;
 
   final TextEditingController _searchController = TextEditingController();
