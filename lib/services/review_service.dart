@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:elfinic_commerce_llc/model/get_review_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -71,9 +72,7 @@ class ReviewService {
     }
   }
 
-  /// ─────────────────────────────────────────────
   /// ADD REVIEW (Multipart Form Data)
-  /// ─────────────────────────────────────────────
   static Future<bool> addReview({
     required int productId,
     required int rating,
@@ -115,40 +114,11 @@ class ReviewService {
       if (title?.isNotEmpty == true) request.fields['title'] = title!;
       if (content?.isNotEmpty == true) request.fields['content'] = content!;
 
-      /// OPTIONAL FIELDS
-      // if (title != null && title.isNotEmpty) {
-      //   request.fields['title'] = title;
-      // }
-
-      // if (content != null && content.isNotEmpty) {
-      //   request.fields['content'] = content;
-      // }
-
       /// DEBUG FIELDS
       debugPrint('➡️ FORM FIELDS:');
       request.fields.forEach((k, v) {
         debugPrint('   $k : $v');
       });
-
-      // /// IMAGES
-      // if (images != null && images.isNotEmpty) {
-      //   for (final img in images) {
-      //     debugPrint('🖼️ ADD IMAGE: ${img.path}');
-      //     request.files.add(
-      //       await http.MultipartFile.fromPath('images[]', img.path),
-      //     );
-      //   }
-      // }
-
-      // /// VIDEOS
-      // if (videos != null && videos.isNotEmpty) {
-      //   for (final vid in videos) {
-      //     debugPrint('🎥 ADD VIDEO: ${vid.path}');
-      //     request.files.add(
-      //       await http.MultipartFile.fromPath('videos[]', vid.path),
-      //     );
-      //   }
-      // }
 
       /// FILES
       for (final img in images ?? []) {
@@ -195,20 +165,40 @@ class ReviewService {
 
       return streamedResponse.statusCode == 200 ||
           streamedResponse.statusCode == 201;
-
-      // /// SEND REQUEST
-      // final response = await request.send();
-      // final responseBody = await response.stream.bytesToString();
-
-      // debugPrint('⬅️ STATUS CODE: ${response.statusCode}');
-      // debugPrint('⬅️ RESPONSE BODY: $responseBody');
-      // debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-      // return response.statusCode == 200 || response.statusCode == 201;
     } catch (e, st) {
       debugPrint('🔥 ADD REVIEW ERROR: $e');
       debugPrint('📌 STACKTRACE:\n$st');
       return false;
+    }
+  }
+
+  static Future<GetReviewModel?> getReviewsByProduct(int productId) async {
+    try {
+      debugPrint('🟡 GET PRODUCT REVIEWS START');
+
+      final url = ApiService.getProductSubmittedReview(productId);
+
+      debugPrint('➡️ URL: $url');
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Accept': 'application/json',
+        },
+      );
+
+      debugPrint('⬅️ STATUS: ${response.statusCode}');
+      debugPrint('⬅️ BODY: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return getReviewModelFromJson(response.body);
+      }
+
+      return null;
+    } catch (e, st) {
+      debugPrint('🔥 GET REVIEW ERROR: $e');
+      debugPrint('📌 STACKTRACE: $st');
+      return null;
     }
   }
 }

@@ -60,7 +60,8 @@ class ApiService {
   static String get reviewEligibility =>
       '$_baseUrl/api/reviews/check-eligibility';
   static String get addProductReview => '$_baseUrl/api/submitReview';
-  static String get addReview => '$_baseUrl/api/addReview';
+  static String getProductSubmittedReview(int productId) =>
+      '$_baseUrl/api/getReviewByProductId?product_id=$productId';
   static String get productReviews => '$_baseUrl/api/products/productReviews';
   static String get productReviewsById =>
       '$_baseUrl/api/products'; // Base for /{id}/reviews
