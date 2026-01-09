@@ -26,7 +26,6 @@ import 'package:video_compress/video_compress.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
 import '../model/ProductsResponse.dart';
-import '../model/Review.dart' hide Review;
 import '../providers/CartProvider.dart';
 import '../providers/RecentViewProvider.dart';
 import '../providers/ReviewProvider.dart';
