@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:elfinic_commerce_llc/model/LoginResponse.dart';
 import 'package:elfinic_commerce_llc/providers/delete_%20Account/delete_account_provider.dart';
 import 'package:elfinic_commerce_llc/screens/about_us_screen.dart';
+import 'package:elfinic_commerce_llc/screens/update_password_screen.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -289,6 +290,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildListTile(Icons.card_giftcard, "Rewards", () {
                       // Navigate to RewardsScreen
                     }),
+                    _buildListTile(
+                      Icons.security_outlined,
+                      "Update password",
+                      () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const UpdatePasswordScreen(),
+                          ),
+                        );
+                      },
+                    ),
+
                     _buildListTile(Icons.location_on_outlined, "Address", () {
                       NavigationHelper.navigateToAddressScreen(
                         context: context,

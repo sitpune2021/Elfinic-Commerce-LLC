@@ -54,4 +54,23 @@ class ForgotPasswordProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  // update password user
+  Future<bool> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final success = await ForgotPasswordService.updatePassword(
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    );
+
+    _isLoading = false;
+    notifyListeners();
+
+    return success;
+  }
 }

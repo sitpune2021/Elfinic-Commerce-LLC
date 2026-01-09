@@ -40,6 +40,9 @@ class ApiService {
   static String get forgotOtpSend => '$baseUrl/api/forgot-password/send-otp';
   static String get forgotOtpVerify => '$baseUrl/api/forgot-password/reset';
 
+  static String get updateUserPassword =>
+      '$baseUrl/api/user/profile/updatePassword';
+
   /// Products API
   static Uri get getProductsUrl => Uri.parse('$_baseUrl/api/getProductsList');
   // static Uri get getProductsUrl => Uri.parse('$_baseUrl/api/getAllProducts');

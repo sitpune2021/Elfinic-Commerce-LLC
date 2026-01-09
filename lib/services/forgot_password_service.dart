@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:elfinic_commerce_llc/services/api_service.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ForgotPasswordService {
   static Future<Map<String, dynamic>> sendOtp({
@@ -104,6 +105,66 @@ class ForgotPasswordService {
         "success": false,
         "message": "Network error",
       };
+    }
+  }
+
+  // update password
+  static Future<bool> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = int.tryParse(prefs.getString('user_id') ?? '0') ?? 0;
+      final token = prefs.getString('auth_token') ?? '';
+
+      debugPrint('👤 User ID: $userId');
+      debugPrint('🔑 Token present: ${token.isNotEmpty}');
+
+      if (userId == 0 || token.isEmpty) {
+        debugPrint('❌ User not logged in or token missing');
+        return false;
+      }
+
+      final url = Uri.parse(ApiService.updateUserPassword);
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token', // ✅ BEARER TOKEN
+        },
+        body: jsonEncode({
+          "current_password": currentPassword,
+          "new_password": newPassword,
+          "user_id": userId,
+        }),
+      );
+
+      debugPrint('📡 Status Code: ${response.statusCode}');
+      debugPrint('📩 Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // return data['status'] == true || data['success'] == true;
+        debugPrint('✅ Parsed response: $data');
+
+        // Handle all common backend formats safely
+        if (data['status'] == true ||
+            data['status'] == 1 ||
+            data['success'] == true ||
+            data['success'] == 1 ||
+            data['message']?.toString().toLowerCase().contains('success') ==
+                true) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('❌ Update Password Error: $e');
+      return false;
     }
   }
 }
