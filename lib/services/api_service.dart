@@ -36,6 +36,10 @@ class ApiService {
   // delete account api
   static String get deleteUser => '$baseUrl/api/user/delete-account';
 
+  // forgot password all api
+  static String get forgotOtpSend => '$baseUrl/api/forgot-password/send-otp';
+  static String get forgotOtpVerify => '$baseUrl/api/forgot-password/reset';
+
   /// Products API
   static Uri get getProductsUrl => Uri.parse('$_baseUrl/api/getProductsList');
   // static Uri get getProductsUrl => Uri.parse('$_baseUrl/api/getAllProducts');

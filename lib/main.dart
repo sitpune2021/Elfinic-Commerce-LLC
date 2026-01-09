@@ -13,7 +13,9 @@ import 'package:elfinic_commerce_llc/providers/SimilarProductProvider.dart';
 import 'package:elfinic_commerce_llc/providers/SubCategoryProvider.dart';
 import 'package:elfinic_commerce_llc/providers/WishlistProvider.dart';
 import 'package:elfinic_commerce_llc/providers/category_provider.dart';
+import 'package:elfinic_commerce_llc/providers/delete_%20Account/delete_account_provider.dart';
 import 'package:elfinic_commerce_llc/providers/delivery_provider.dart';
+import 'package:elfinic_commerce_llc/providers/forgot%20password/forgot_password_provider.dart';
 import 'package:elfinic_commerce_llc/providers/product_provider.dart';
 import 'package:elfinic_commerce_llc/providers/profile_provider.dart';
 import 'package:elfinic_commerce_llc/screens/CartScreen.dart';
@@ -68,7 +70,8 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ArrivalProductProvider()),
         ChangeNotifierProvider(create: (_) => SimilarProductProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
-
+        ChangeNotifierProvider(create: (_) => DeleteAccountProvider()),
+        ChangeNotifierProvider(create: (_) => ForgotPasswordProvider()),
         ChangeNotifierProvider(create: (_) => CouponProvider()),
         // ChangeNotifierProvider(create: (_) => ShippingProvider()),
       ],
