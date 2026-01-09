@@ -56,6 +56,11 @@ class ApiService {
   static Uri get deleteAddressUrl =>
       Uri.parse('$_baseUrl/api/addresses/deleteAddress');
 
+  // edit profil end point
+  static String get getUserProfileData => '$_baseUrl/api/user/profile';
+  static String get updateUserProfileData =>
+      '$_baseUrl/api/user/profile/update';
+
   // Review endpoints
   static String get reviewEligibility =>
       '$_baseUrl/api/reviews/check-eligibility';
