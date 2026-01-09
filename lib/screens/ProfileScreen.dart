@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:elfinic_commerce_llc/model/LoginResponse.dart';
+import 'package:elfinic_commerce_llc/providers/delete_%20Account/delete_account_provider.dart';
 import 'package:elfinic_commerce_llc/screens/about_us_screen.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
@@ -118,32 +119,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // fuction delete
   Future<void> _deleteAccount(BuildContext context) async {
-    // Show loader
+    debugPrint("🟢 _deleteAccount() started");
+
+    // Loader
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CustomLoader()),
     );
 
-    await Future.delayed(const Duration(seconds: 2)); // API call simulation
+    final provider = Provider.of<DeleteAccountProvider>(context, listen: false);
+
+    final success = await provider.deleteAccount(context);
 
     if (!context.mounted) return;
 
     Navigator.pop(context); // close loader
 
-    // After successful deletion → go to Login
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
+    if (success) {
+      debugPrint("➡️ Navigating to Login");
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Account deleted successfully"),
-        backgroundColor: Colors.redAccent,
-      ),
-    );
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Account deleted successfully"),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   @override
@@ -224,8 +232,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       SizedBox(height: 2),
                       Text(
-                              user?.email ?? "",
-
+                        user?.email ?? "",
                         style: TextStyle(fontSize: 12, color: Colors.white70),
                       ),
                     ],
@@ -463,8 +470,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () async {
+                          debugPrint("⚠️ User confirmed account deletion");
+
                           Navigator.pop(context);
-                          _deleteAccount(context);
+                          debugPrint("📤 Dialog closed");
+
+                          debugPrint("🚀 Calling _deleteAccount()");
+
+                          await _deleteAccount(context);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.redAccent,

@@ -33,6 +33,9 @@ class ApiService {
   static Uri get getCategoriesUrl =>
       Uri.parse('$_baseUrl/api/getAllCategories');
 
+  // delete account api
+  static String get deleteUser => '$baseUrl/api/user/delete-account';
+
   /// Products API
   static Uri get getProductsUrl => Uri.parse('$_baseUrl/api/getProductsList');
   // static Uri get getProductsUrl => Uri.parse('$_baseUrl/api/getAllProducts');
