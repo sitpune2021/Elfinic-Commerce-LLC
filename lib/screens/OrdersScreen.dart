@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 // ------------------- ORDERS SCREEN -------------------
@@ -21,10 +23,22 @@ class _OrdersScreenState extends State<OrdersScreen> {
   List<OrderItem> _allOrders = [];
   List<OrderItem> _filteredOrders = [];
 
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
   @override
   void initState() {
     super.initState();
     _loadOrders();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+
+    super.dispose();
   }
 
   Future<void> _loadOrders() async {
@@ -41,37 +55,120 @@ class _OrdersScreenState extends State<OrdersScreen> {
     });
   }
 
+  //search order
+  // void _searchOrders(String query) {
+  //   if (query.isEmpty) {
+  //     setState(() {
+  //       _filteredOrders = _allOrders;
+  //     });
+  //     return;
+  //   }
+
+  //   final lowerQuery = query.toLowerCase();
+
+  //   setState(() {
+  //     _filteredOrders = _allOrders.where((order) {
+  //       return order.orderId.toString().contains(lowerQuery) ||
+  //           order.productName.toLowerCase().contains(lowerQuery);
+  //     }).toList();
+  //   });
+  // }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      if (query.isEmpty) {
+        setState(() => _filteredOrders = _allOrders);
+        return;
+      }
+
+      final lowerQuery = query.toLowerCase();
+
+      setState(() {
+        _filteredOrders = _allOrders.where((order) {
+          return order.orderId.toString().contains(lowerQuery) ||
+              order.productName.toLowerCase().contains(lowerQuery);
+        }).toList();
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F3F6),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          "My Orders",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        centerTitle: true,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (_isSearching) {
+              setState(() {
+                _isSearching = false;
+                _searchController.clear();
+                _filteredOrders = _allOrders;
+              });
+            } else {
+              Navigator.pop(context);
+            }
+          },
+        ),
+        title: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          transitionBuilder: (child, animation) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: _isSearching ? const Offset(1, 0) : const Offset(-1, 0),
+                end: Offset.zero,
+              ).animate(animation),
+              child: FadeTransition(opacity: animation, child: child),
+            );
+          },
+          child: _isSearching
+              ? _buildAnimatedSearchField()
+              : const Text(
+                  "My Orders",
+                  key: ValueKey("title"),
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.black),
-            onPressed: () {},
-          ),
+          if (!_isSearching)
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.black),
+              onPressed: () {
+                setState(() => _isSearching = true);
+              },
+            ),
         ],
+        // actions: [
+        //   AnimatedSwitcher(
+        //     duration: const Duration(milliseconds: 300),
+        //     child: _isSearching
+        //         ? const SizedBox.shrink()
+        //         : IconButton(
+        //             key: const ValueKey("search"),
+        //             icon: const Icon(Icons.search, color: Colors.black),
+        //             onPressed: () {
+        //               setState(() => _isSearching = true);
+        //             },
+        //           ),
+        //   ),
+        // ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: Colors.black.withValues(alpha: 0.06),
+          ),
+        ),
       ),
       body: _ordersFuture == null
           ? _buildShimmerLoading()
@@ -87,6 +184,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 }
 
                 _allOrders = snapshot.data!;
+                _allOrders.sort((a, b) {
+                  return DateTime.parse(b.paidAt)
+                      .compareTo(DateTime.parse(a.paidAt));
+                });
                 if (_filteredOrders.isEmpty) {
                   _filteredOrders = _allOrders;
                 }
@@ -143,6 +244,58 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
+//search widget
+  Widget _buildAnimatedSearchField() {
+    return TweenAnimationBuilder<Offset>(
+      tween: Tween(
+        begin: const Offset(1.2, 0),
+        end: Offset.zero,
+      ),
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.elasticOut,
+      builder: (context, offset, child) {
+        return Transform.translate(
+          offset: Offset(offset.dx * 250, 0),
+          child: child,
+        );
+      },
+      child: Container(
+        height: 40,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F3F6),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        alignment: Alignment.center,
+        child: TextField(
+          cursorColor: Colors.grey,
+          controller: _searchController,
+          autofocus: true,
+          onChanged: _onSearchChanged,
+          textAlignVertical: TextAlignVertical.center, // 🔥 KEY FIX
+          decoration: InputDecoration(
+            isDense: true, // 🔥 KEY FIX
+            hintText: 'Search Order ID or Product name',
+            hintStyle: const TextStyle(fontSize: 14),
+            border: InputBorder.none,
+
+            prefixIcon: const Icon(Icons.search, size: 20),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                setState(() {
+                  _isSearching = false;
+                  _searchController.clear();
+                  _filteredOrders = _allOrders;
+                });
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildOrdersCount() {
     return Container(
       color: Colors.white,
@@ -158,13 +311,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
             ),
           ),
           const Spacer(),
-          const Text(
-            'Last 30 days',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
-            ),
-          ),
         ],
       ),
     );
@@ -361,23 +507,23 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (item.status.toLowerCase() == 'delivered')
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Rate',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ),
+                  // if (item.status.toLowerCase() == 'delivered')
+                  //   Expanded(
+                  //     child: ElevatedButton(
+                  //       onPressed: () {},
+                  //       style: ElevatedButton.styleFrom(
+                  //         backgroundColor: Colors.orange,
+                  //         foregroundColor: Colors.white,
+                  //         shape: RoundedRectangleBorder(
+                  //           borderRadius: BorderRadius.circular(8),
+                  //         ),
+                  //       ),
+                  //       child: const Text(
+                  //         'Rate',
+                  //         style: TextStyle(fontSize: 12),
+                  //       ),
+                  //     ),
+                  //   ),
                 ],
               ),
             ],
