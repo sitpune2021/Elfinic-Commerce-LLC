@@ -1,8 +1,9 @@
-import 'dart:convert';
+// ignore_for_file: file_names
+
 import 'dart:io';
 
-import 'package:elfinic_commerce_llc/model/LoginResponse.dart';
 import 'package:elfinic_commerce_llc/providers/delete_%20Account/delete_account_provider.dart';
+import 'package:elfinic_commerce_llc/providers/profile_provider.dart';
 import 'package:elfinic_commerce_llc/screens/about_us_screen.dart';
 import 'package:elfinic_commerce_llc/screens/update_password_screen.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
@@ -11,7 +12,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart' as dashboard;
 import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../model/cart_models.dart';
 import '../providers/LogoutProvider.dart';
 import '../providers/ShippingProvider.dart';
@@ -30,65 +30,15 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Future<void> _logout(BuildContext context) async {
-    final confirmed = await showDialog(
-      context: context,
-      builder: (context) => _buildLogoutDialog(context),
-    );
-    if (!context.mounted) return;
-
-    if (confirmed == true) {
-      final logoutProvider =
-          Provider.of<LogoutProvider>(context, listen: false);
-
-      await logoutProvider.logout("admin@gmail.com", "Shubham12");
-      if (!context.mounted) return;
-      if (logoutProvider.logoutResponse?.status == "success") {
-        // ✅ Navigate to login after success
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
-      } else {
-        // ❌ Show error
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(logoutProvider.errorMessage ?? "Logout failed")),
-        );
-      }
-    }
-  }
-
-  void _onPopInvoked(BuildContext context) {
-    Navigator.popUntil(context, (route) => route.isFirst);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => dashboard.DashboardScreen()),
-    );
-  }
-
   String _appVersion = '';
-  User? user;
 
   @override
   void initState() {
     super.initState();
     _loadVersion();
-    loadUser();
-  }
-
-  // user data
-  Future<void> loadUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString("user_data");
-
-    if (userJson != null) {
-      setState(() {
-        user = User.fromJson(jsonDecode(userJson));
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileProvider>().fetchUserProfile();
+    });
   }
 
 // app version
@@ -97,6 +47,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _appVersion = '${info.version} (${info.buildNumber})';
     });
+  }
+
+  void _onPopInvoked(BuildContext context) {
+    Navigator.popUntil(context, (route) => route.isFirst);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => dashboard.DashboardScreen()),
+    );
   }
 
   // app share
@@ -116,6 +74,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'Check out this app 👇\n\n$url',
       subject: 'Awesome App',
     );
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    final confirmed = await showDialog(
+      context: context,
+      builder: (context) => _buildLogoutDialog(context),
+    );
+    if (!context.mounted) return;
+
+    if (confirmed == true) {
+      final logoutProvider =
+          Provider.of<LogoutProvider>(context, listen: false);
+
+      await logoutProvider.logout("admin@gmail.com", "Shubham12");
+      if (!context.mounted) return;
+      if (logoutProvider.logoutResponse?.status == "success") {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(logoutProvider.errorMessage ?? "Logout failed")),
+        );
+      }
+    }
   }
 
   // fuction delete
@@ -187,73 +173,67 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               padding: const EdgeInsets.only(
                   top: 60, left: 20, right: 20, bottom: 30),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Profile image
-                  Stack(
-                    children: [
-                      const CircleAvatar(
-                        radius: 35,
-                        backgroundImage: NetworkImage(
-                          "https://i.pravatar.cc/150?img=3",
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 4,
-                        right: 4,
-                        child: Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
+              child: Consumer<ProfileProvider>(builder: (context, provider, _) {
+                final data = provider.profile?.data;
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 35,
+                      backgroundImage:
+                          (data?.photo != null && data!.photo!.isNotEmpty)
+                              ? NetworkImage(data.photo!)
+                              : null,
+                      child: (data?.photo == null || data!.photo!.isEmpty)
+                          ? const Icon(Icons.person,
+                              color: Colors.white, size: 30)
+                          : null,
+                    ),
+                    const SizedBox(width: 15),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          data?.name ?? "Guest User",
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 15),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user?.name ?? "Guest User",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                        const SizedBox(height: 4),
+                        Text(
+                          data?.mobile ?? "",
+                          style: TextStyle(fontSize: 14, color: Colors.white),
                         ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        user != null ? "Private Member" : "Guest",
-                        style: TextStyle(fontSize: 14, color: Colors.white),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        user?.email ?? "",
-                        style: TextStyle(fontSize: 12, color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const EditProfileScreen()),
-                      );
-                    },
-                    child: CircleAvatar(
-                      backgroundColor: Colors.white.withValues(alpha: 0.9),
-                      child: const Icon(Icons.edit, color: Color(0xFFD39841)),
+                        const SizedBox(height: 2),
+                        Text(
+                          data?.email ?? "",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const EditProfileScreen()),
+                        );
+                      },
+                      child: CircleAvatar(
+                        backgroundColor: Colors.white.withValues(alpha: 0.9),
+                        child: const Icon(Icons.edit, color: Color(0xFFD39841)),
+                      ),
+                    ),
+                  ],
+                );
+              }),
             ),
             // Content Section
             Expanded(

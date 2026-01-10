@@ -60,7 +60,7 @@ class ProfileService {
     }
   }
 
-// update profile data
+  // update profile data
   static Future<Map<String, dynamic>> updateUserProfile({
     required String name,
     required String mobile,
@@ -68,11 +68,17 @@ class ProfileService {
     required Function(double progress) onProgress,
   }) async {
     try {
+      debugPrint("🟡 [UPDATE PROFILE] API CALL STARTED");
+
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('user_id');
       final token = prefs.getString('auth_token') ?? '';
 
+      debugPrint("👤 User ID: $userId");
+      debugPrint("🔐 Token exists: ${token.isNotEmpty}");
+
       if (userId == null || token.isEmpty) {
+        debugPrint("❌ User not authenticated");
         return {
           'success': false,
           'message': 'User not authenticated',
@@ -80,6 +86,8 @@ class ProfileService {
       }
 
       final uri = Uri.parse(ApiService.updateUserProfileData);
+      debugPrint("🌐 API URL: $uri");
+
       final request = http.MultipartRequest('POST', uri);
 
       request.headers.addAll({
@@ -91,36 +99,51 @@ class ProfileService {
       request.fields['name'] = name;
       request.fields['mobile'] = mobile;
 
+      debugPrint("📝 Fields added");
+
       if (photo != null) {
+        debugPrint("🖼 Adding photo: ${photo.path}");
         request.files.add(
           await http.MultipartFile.fromPath('photo', photo.path),
         );
+      } else {
+        debugPrint("ℹ️ No photo selected");
       }
+
+      debugPrint("🚀 Sending request...");
+      onProgress(0.3); // fake progress start
 
       final streamedResponse = await request.send();
 
-      // 🔥 Upload progress (approximation)
-      streamedResponse.stream.listen(
-        (value) {},
-        onDone: () {},
-      );
+      onProgress(0.7); // fake progress mid
 
       final response = await http.Response.fromStream(streamedResponse);
+
+      onProgress(1.0); // fake progress end
+
+      debugPrint("📥 Status Code: ${response.statusCode}");
+      debugPrint("📥 Response Body: ${response.body}");
 
       final body = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        debugPrint("✅ Profile updated successfully");
         return {
           'success': true,
           'message': body['message'] ?? 'Profile updated',
         };
       } else {
+        debugPrint("❌ Update failed");
         return {
           'success': false,
           'message': body['message'] ?? 'Update failed',
         };
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint("🔥 EXCEPTION OCCURRED");
+      debugPrint("Error: $e");
+      debugPrint("StackTrace: $stack");
+
       return {
         'success': false,
         'message': e.toString(),
