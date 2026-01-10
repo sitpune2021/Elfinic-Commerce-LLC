@@ -85,6 +85,10 @@ class ApiService {
     return Uri.parse('$_baseUrl/api/productDetails/$slug');
   }*/
 
+  // order invoice downlad api
+  static String get orderInvoicedownload =>
+      '$_baseUrl/api/DownloadOrderInvoice';
+
   String getProductBySlugUrl(String slug) {
     return 'https://admin.elfinic.com/api/productDetails/${Uri.encodeComponent(slug)}';
   }

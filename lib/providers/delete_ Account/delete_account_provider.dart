@@ -1,4 +1,4 @@
-import 'package:elfinic_commerce_llc/services/deletet_service.dart';
+import 'package:elfinic_commerce_llc/services/delete_service.dart';
 import 'package:flutter/material.dart';
 
 class DeleteAccountProvider extends ChangeNotifier {

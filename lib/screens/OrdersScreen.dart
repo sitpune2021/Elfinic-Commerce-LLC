@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:elfinic_commerce_llc/providers/order/order_invoice_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 // ------------------- ORDERS SCREEN -------------------
 
 import 'package:shimmer/shimmer.dart';
@@ -817,6 +819,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   // Order Information
                   _buildOrderInfoCard(data),
 
+                  // Invoice Download
+                  _buildInvoiceDownloadCard(context),
+
                   // Need Help Section
                   _buildNeedHelpCard(),
 
@@ -955,7 +960,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -971,7 +976,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -1127,7 +1132,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -1245,7 +1250,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -1434,7 +1439,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -1549,7 +1554,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -1644,7 +1649,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -1674,6 +1679,74 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  //
+  Widget _buildInvoiceDownloadCard(BuildContext context) {
+    return Consumer<OrderInvoiceProvider>(
+      builder: (_, provider, __) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                const Icon(Icons.receipt_long, color: Colors.orange, size: 28),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Order Invoice',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 4),
+                      Text('Download & preview invoice',
+                          style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    ],
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: provider.downloading
+                      ? null
+                      : () {
+                          provider.downloadInvoice(
+                            context: context,
+                            orderId: widget.orderId,
+                          );
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: provider.downloading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Download'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1716,7 +1789,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

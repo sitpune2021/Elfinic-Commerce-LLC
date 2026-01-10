@@ -4,8 +4,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
-    <!-- Android 12 and below -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <!-- Android 12 and below
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/> -->
     <!-- Camera (optional) -->
     <uses-permission android:name="android.permission.CAMERA"/>
 
