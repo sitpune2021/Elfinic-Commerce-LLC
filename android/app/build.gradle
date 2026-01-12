@@ -29,7 +29,7 @@ android {
         applicationId = "com.sit.elfinic_commerce_llc"
 
         minSdkVersion = flutter.minSdkVersion
-        targetSdk = 24
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

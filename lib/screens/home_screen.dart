@@ -340,102 +340,100 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return LottieOverlay(
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: SafeArea(
-          child: CustomScrollView(
-            controller: _scrollController,
-            physics: const ClampingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(child: _buildTopBar()),
-              SliverToBoxAdapter(child: _buildCategoriesSection()),
-              SliverToBoxAdapter(child: _buildBannerCarousel()),
-              SliverToBoxAdapter(
-                child: _buildSectionTitle(
-                  "Product",
-                  const HomeCategoriesScreen(),
-                ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: CustomScrollView(
+          controller: _scrollController,
+          physics: const ClampingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _buildTopBar()),
+            SliverToBoxAdapter(child: _buildCategoriesSection()),
+            SliverToBoxAdapter(child: _buildBannerCarousel()),
+            SliverToBoxAdapter(
+              child: _buildSectionTitle(
+                "Product",
+                const HomeCategoriesScreen(),
               ),
-              SliverToBoxAdapter(
-                child: Consumer<ProductProvider>(
-                  builder: (context, productProvider, child) {
-                    return ProductListWidget(
-                      products: productProvider.products,
-                      isLoading: productProvider.isLoading,
-                      onProductTap: _onProductTap,
-                      onLoadMore: () {
-                        productProvider.loadNextPage();
-                      },
-                      scrollDirection: Axis.horizontal,
-                      height: 340,
+            ),
+            SliverToBoxAdapter(
+              child: Consumer<ProductProvider>(
+                builder: (context, productProvider, child) {
+                  return ProductListWidget(
+                    products: productProvider.products,
+                    isLoading: productProvider.isLoading,
+                    onProductTap: _onProductTap,
+                    onLoadMore: () {
+                      productProvider.loadNextPage();
+                    },
+                    scrollDirection: Axis.horizontal,
+                    height: 340,
+                  );
+                },
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: _buildRecentlyViewedSection(),
+            ),
+            SliverToBoxAdapter(
+              child: _buildSectionTitle(
+                "Explore fresh styles",
+                const HomeCategoriesScreen(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Consumer<ArrivalProductProvider>(
+                builder: (context, arrivalProvider, child) {
+                  if (arrivalProvider.isLoading) {
+                    return SizedBox(
+                      height: 250,
+                      child: _buildProductGridShimmer(count: 2),
                     );
-                  },
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: _buildRecentlyViewedSection(),
-              ),
-              SliverToBoxAdapter(
-                child: _buildSectionTitle(
-                  "Explore fresh styles",
-                  const HomeCategoriesScreen(),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Consumer<ArrivalProductProvider>(
-                  builder: (context, arrivalProvider, child) {
-                    if (arrivalProvider.isLoading) {
-                      return SizedBox(
-                        height: 250,
-                        child: _buildProductGridShimmer(count: 2),
-                      );
-                    }
+                  }
 
-                    if (arrivalProvider.arrivalProducts.isEmpty) {
-                      return const SizedBox(
-                        height: 340,
-                        child: Center(child: Text("No new arrivals found")),
-                      );
-                    }
-
-                    return ProductListWidget(
-                      products: arrivalProvider.arrivalProducts,
-                      isLoading: arrivalProvider.isLoadingMore,
-                      onProductTap: _onProductTap,
-                      onLoadMore: () {
-                        arrivalProvider.loadMoreArrivalProducts();
-                      },
-                      scrollDirection: Axis.horizontal,
-                      height: 380,
-                    );
-                  },
-                ),
-              ),
-              SliverToBoxAdapter(child: _buildFlashDealsHeader()),
-              SliverToBoxAdapter(
-                child: Consumer<ProductProvider>(
-                  builder: (context, productProvider, child) {
-                    return ProductListWidget(
-                      products: productProvider.products,
-                      isLoading: productProvider.isLoading,
-                      onProductTap: _onProductTap,
-                      onLoadMore: () {
-                        productProvider.loadNextPage();
-                      },
-                      scrollDirection: Axis.horizontal,
+                  if (arrivalProvider.arrivalProducts.isEmpty) {
+                    return const SizedBox(
                       height: 340,
+                      child: Center(child: Text("No new arrivals found")),
                     );
-                  },
-                ),
+                  }
+
+                  return ProductListWidget(
+                    products: arrivalProvider.arrivalProducts,
+                    isLoading: arrivalProvider.isLoadingMore,
+                    onProductTap: _onProductTap,
+                    onLoadMore: () {
+                      arrivalProvider.loadMoreArrivalProducts();
+                    },
+                    scrollDirection: Axis.horizontal,
+                    height: 380,
+                  );
+                },
               ),
-              SliverToBoxAdapter(child: _buildExploreMore()),
-              SliverToBoxAdapter(child: _buildBottomBanner()),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 20),
+            ),
+            SliverToBoxAdapter(child: _buildFlashDealsHeader()),
+            SliverToBoxAdapter(
+              child: Consumer<ProductProvider>(
+                builder: (context, productProvider, child) {
+                  return ProductListWidget(
+                    products: productProvider.products,
+                    isLoading: productProvider.isLoading,
+                    onProductTap: _onProductTap,
+                    onLoadMore: () {
+                      productProvider.loadNextPage();
+                    },
+                    scrollDirection: Axis.horizontal,
+                    height: 340,
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+            SliverToBoxAdapter(child: _buildExploreMore()),
+            SliverToBoxAdapter(child: _buildBottomBanner()),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 20),
+            ),
+          ],
         ),
       ),
     );
@@ -717,7 +715,7 @@ class _HomeScreenState extends State<HomeScreen>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     blurRadius: 6,
                     spreadRadius: 1,
                     offset: const Offset(4, 4),
@@ -771,12 +769,6 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
             const SizedBox(width: 15),
-            IconButton(
-              icon: const Icon(Icons.share, size: 28, color: Colors.black87),
-              onPressed: () {
-                print("Share clicked");
-              },
-            ),
             IconButton(
               icon: const Icon(Icons.notification_add_outlined,
                   size: 28, color: Colors.black87),

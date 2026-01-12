@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:elfinic_commerce_llc/model/order_history_details_model.dart';
 import 'package:elfinic_commerce_llc/providers/order/order_invoice_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -705,44 +706,15 @@ class OrderHistoryScreen extends StatefulWidget {
 }
 
 class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
-  late Future<Map<String, dynamic>?> _orderHistoryFuture;
-  List<OrderHistoryItem> _historyItems = [];
-  Map<String, dynamic> _orderDetails = {};
-
   @override
   void initState() {
     super.initState();
-    // _loadOrderHistory();
-    _orderHistoryFuture = _loadOrderHistory();
-  }
-
-// Changed return type to Future<Map<String, dynamic>?>
-  Future<Map<String, dynamic>?> _loadOrderHistory() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userIdString = prefs.getString("user_id");
-
-      if (userIdString == null) {
-        debugPrint("User ID not found");
-        return null;
-      }
-
-      final userId = int.tryParse(userIdString);
-
-      if (userId == null) {
-        debugPrint("Invalid user ID");
-        return null;
-      }
-
-      return await ApiService.fetchOrderHistory(
-        userId: userId,
-        orderId: widget.orderId,
-        productId: widget.productId,
-      );
-    } catch (e) {
-      debugPrint("Error loading order history: $e");
-      return null;
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<OrderInvoiceProvider>().loadOrderHistorysDetails(
+            orderId: widget.orderId,
+            productId: widget.productId,
+          );
+    });
   }
 
   @override
@@ -757,73 +729,76 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share_outlined),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: SafeArea(
         bottom: true,
-        child: FutureBuilder<Map<String, dynamic>?>(
-          future: _orderHistoryFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+        // child: FutureBuilder<Map<String, dynamic>?>(
+        //   future: _orderHistoryFuture,
+        //   builder: (context, snapshot) {
+        //     if (snapshot.connectionState == ConnectionState.waiting) {
+        //       return _buildShimmerLoading();
+        //     }
+
+        //     if (snapshot.hasError) {
+        //       debugPrint("FutureBuilder error: ${snapshot.error}");
+        //       return _buildErrorState();
+        //     }
+
+        //     if (!snapshot.hasData || snapshot.data == null) {
+        //       return _buildErrorState();
+        //     }
+
+        //     final response = snapshot.data!;
+
+        //     // Check if status is "success" (string comparison)
+        //     if (response['status'] != "success" ||
+        //         (response['data'] as List).isEmpty) {
+        //       return _buildNoDataState();
+        //     }
+
+        //     final data = response['data'][0];
+        //     _orderDetails = data;
+        //     _historyItems = _parseHistoryItems(data);
+        child: Consumer<OrderInvoiceProvider>(
+          builder: (context, provider, _) {
+            if (provider.isLoading) {
               return _buildShimmerLoading();
             }
 
-            if (snapshot.hasError) {
-              debugPrint("FutureBuilder error: ${snapshot.error}");
-              return _buildErrorState();
-            }
-
-            if (!snapshot.hasData || snapshot.data == null) {
-              return _buildErrorState();
-            }
-
-            final response = snapshot.data!;
-
-            // Check if status is "success" (string comparison)
-            if (response['status'] != "success" ||
-                (response['data'] as List).isEmpty) {
+            final order = provider.order;
+            if (order == null) {
               return _buildNoDataState();
             }
-
-            final data = response['data'][0];
-            _orderDetails = data;
-            _historyItems = _parseHistoryItems(data);
 
             return SingleChildScrollView(
               child: Column(
                 children: [
                   // Order Status Card
-                  _buildOrderStatusCard(data),
+                  // _buildOrderStatusCard(data),
 
-                  // Delivery Address
-                  _buildDeliveryAddressCard(),
+                  // // Delivery Address
+                  // _buildDeliveryAddressCard(context),
 
                   // Product Card
-                  _buildProductCard(),
+                  _buildProductCardFromModel(order),
 
                   // Price Details Card
-                  _buildPriceDetailsCard(data),
+                  _buildPriceDetailsCardFromModel(order),
 
-                  // Order Timeline
-                  _buildOrderTimelineCard(),
+                  // Order Timeline STEPPER
+                  _buildOrderTimelineCard(provider.history),
+
+                  // Delivery Address
+                  _buildDeliveryAddressCard(context),
 
                   // Order Information
-                  _buildOrderInfoCard(data),
+                  _buildOrderInfoCardFromModel(order),
 
                   // Invoice Download
                   _buildInvoiceDownloadCard(context),
 
                   // Need Help Section
-                  _buildNeedHelpCard(),
+                  // _buildNeedHelpCard(),
 
                   const SizedBox(height: 20),
                 ],
@@ -878,33 +853,33 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 
-  Widget _buildErrorState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 60, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          const Text(
-            "Failed to load order details",
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: _loadOrderHistory,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text("Retry"),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildErrorState() {
+  //   return Center(
+  //     child: Column(
+  //       mainAxisAlignment: MainAxisAlignment.center,
+  //       children: [
+  //         Icon(Icons.error_outline, size: 60, color: Colors.grey[400]),
+  //         const SizedBox(height: 16),
+  //         const Text(
+  //           "Failed to load order details",
+  //           style: TextStyle(fontSize: 16, color: Colors.grey),
+  //         ),
+  //         const SizedBox(height: 8),
+  //         ElevatedButton(
+  //           onPressed: _loadOrderHistory,
+  //           style: ElevatedButton.styleFrom(
+  //             backgroundColor: Colors.blue,
+  //             foregroundColor: Colors.white,
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(8),
+  //             ),
+  //           ),
+  //           child: const Text("Retry"),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildNoDataState() {
     return Center(
@@ -1044,6 +1019,21 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             ],
             const SizedBox(height: 12),
             _buildProgressIndicator(status),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () {
+                _showOrderHistoryDialog(context);
+              },
+              child: Text(
+                'See All Updates  >',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.amber,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -1124,7 +1114,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 
-  Widget _buildDeliveryAddressCard() {
+  Widget _buildDeliveryAddressCard(BuildContext context) {
+    final provider = context.watch<OrderInvoiceProvider>();
+    final address = provider.address;
+
+    if (address == null) return const SizedBox();
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -1149,80 +1144,32 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 const SizedBox(width: 8),
                 const Text(
                   'Delivery Address',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            const Text(
-              'John Doe',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+            Text(
+              address.name ?? '',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 4),
-            const Text(
-              '123, Main Street, Apartment 4B',
-              style: TextStyle(fontSize: 13),
+            Text(
+              '${address.addressLine1 ?? ''}, ${address.addressLine2 ?? ''}',
+              style: const TextStyle(fontSize: 13),
             ),
-            const Text(
-              'City, State - 123456',
-              style: TextStyle(fontSize: 13),
+            Text(
+              '${address.city ?? ''}, ${address.state ?? ''}, ${address.country ?? ''} - ${address.postalCode ?? ''}',
+              style: const TextStyle(fontSize: 13),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Phone: +91 9876543210',
-              style: TextStyle(fontSize: 13),
+            Text(
+              'Phone: ${address.phone ?? ''}',
+              style: const TextStyle(fontSize: 13),
             ),
-            const SizedBox(height: 12),
-            Container(
-              height: 1,
-              color: Colors.grey[200],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.phone, size: 18, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Expected Delivery',
-                        style: TextStyle(fontSize: 11, color: Colors.grey),
-                      ),
-                      Text(
-                        '30 Dec 2025',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.orange[50],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Track Package',
-                    style: TextStyle(
-                      color: Colors.orange,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+            Text(
+              address.type ?? '',
+              style: const TextStyle(fontSize: 16),
             ),
           ],
         ),
@@ -1230,14 +1177,90 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 
-  Widget _buildProductCard() {
-    final productName = _orderDetails['product_name']?.toString() ?? 'Product';
-    final productThumb = _orderDetails['product_thumb']?.toString() ?? '';
-    final quantity = _orderDetails['quantity']?.toString() ?? '1';
-    final variant = _orderDetails['variant']?.toString();
-    final price =
-        double.tryParse(_orderDetails['final_price']?.toString() ?? '0') ?? 0;
-    final slug = _orderDetails['slug']?.toString() ?? '';
+  void _showOrderHistoryDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true, // tap outside to close
+      builder: (context) {
+        final width = MediaQuery.of(context).size.width;
+
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: width > 600 ? 100 : 16,
+            vertical: 24,
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 🔝 Header with title & close icon
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Order History',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const Divider(),
+
+                // 📜 History list
+                SizedBox(
+                  height: width > 600 ? 400 : 300,
+                  child: _buildOrderHistory(context),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOrderHistory(BuildContext context) {
+    final history = context.watch<OrderInvoiceProvider>().history;
+
+    if (history.isEmpty) return const SizedBox();
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: history.length,
+      separatorBuilder: (_, __) => Divider(color: Colors.grey[300]),
+      itemBuilder: (context, index) {
+        final item = history[index];
+        return ListTile(
+          leading: const Icon(Icons.check_circle, color: Colors.green),
+          title: Text(item.historyStatus ?? ''),
+          subtitle: Text(item.historyMessage ?? ''),
+          trailing: Text(
+            item.createdAt ?? '',
+            style: const TextStyle(fontSize: 11),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProductCardFromModel(Datum order) {
+    final productName = order.productName ?? 'Product';
+    final productThumb = order.productThumb ?? '';
+    final quantity = order.quantity?.toString() ?? '1';
+    final variant = order.variantName;
+    final price = double.tryParse(order.finalPrice ?? '0') ?? 0.0;
+    final slug = order.slug ?? '';
 
     return GestureDetector(
       onTap: slug.isNotEmpty
@@ -1269,9 +1292,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  /// Product Image
                   Container(
                     width: 80,
                     height: 80,
@@ -1283,13 +1308,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       borderRadius: BorderRadius.circular(8),
                       child: productThumb.isNotEmpty
                           ? CachedNetworkImage(
-                              imageUrl:
-                                  "${ApiService.productImagePath}$productThumb",
+                              imageUrl: buildProductImageUrl(productThumb),
                               fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
+                              placeholder: (_, __) => Container(
                                 color: Colors.grey[200],
                               ),
-                              errorWidget: (context, url, error) => Icon(
+                              errorWidget: (_, __, ___) => Icon(
                                 Icons.shopping_bag,
                                 color: Colors.grey[400],
                               ),
@@ -1301,7 +1325,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                             ),
                     ),
                   ),
+
                   const SizedBox(width: 12),
+
+                  /// Product Info
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1320,14 +1347,18 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                           Text(
                             'Variant: $variant',
                             style: const TextStyle(
-                                fontSize: 12, color: Colors.grey),
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
                           ),
                         ],
                         const SizedBox(height: 4),
                         Text(
                           'Qty: $quantity',
-                          style:
-                              const TextStyle(fontSize: 12, color: Colors.grey),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -1343,13 +1374,15 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                             const Spacer(),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.green[50],
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                '₹${_calculateSavedAmount().toStringAsFixed(2)} saved',
+                                '₹${_calculateSavedAmountFromModel(order).toStringAsFixed(2)} saved',
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
@@ -1364,7 +1397,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 12),
+
+              /// Buttons
               Row(
                 children: [
                   Expanded(
@@ -1412,25 +1448,31 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 
-  double _calculateSavedAmount() {
-    final totalAmount =
-        double.tryParse(_orderDetails['total_amount']?.toString() ?? '0') ?? 0;
-    final finalPrice =
-        double.tryParse(_orderDetails['final_price']?.toString() ?? '0') ?? 0;
+  String buildProductImageUrl(String path) {
+    if (path.isEmpty) return '';
+
+    final cleanPath = path.trim().replaceFirst(RegExp(r'^/+'), '');
+
+    if (cleanPath.startsWith('http')) {
+      return cleanPath;
+    }
+
+    return 'https://admin.elfinic.com/$cleanPath';
+  }
+
+  double _calculateSavedAmountFromModel(Datum order) {
+    final totalAmount = double.tryParse(order.totalAmount ?? '0') ?? 0.0;
+    final finalPrice = double.tryParse(order.finalPrice ?? '0') ?? 0.0;
     return totalAmount - finalPrice;
   }
 
-  Widget _buildPriceDetailsCard(Map<String, dynamic> data) {
-    final totalAmount =
-        double.tryParse(data['total_amount']?.toString() ?? '0') ?? 0;
-    final discount = double.tryParse(data['discount']?.toString() ?? '0') ?? 0;
-    final finalPrice =
-        double.tryParse(data['final_price']?.toString() ?? '0') ?? 0;
-    final coinsUsed =
-        double.tryParse(data['coins_used']?.toString() ?? '0') ?? 0;
-    final discountAmount =
-        double.tryParse(data['discount_amount']?.toString() ?? '0') ?? 0;
-    final couponCode = data['coupon_code']?.toString();
+  Widget _buildPriceDetailsCardFromModel(Datum order) {
+    final totalAmount = double.tryParse(order.totalAmount ?? '0') ?? 0.0;
+    final discount = double.tryParse(order.discount ?? '0') ?? 0.0;
+    final finalPrice = double.tryParse(order.finalPrice ?? '0') ?? 0.0;
+    final coinsUsed = double.tryParse(order.coinsUsed ?? '0') ?? 0.0;
+    final discountAmount = double.tryParse(order.discountAmount ?? '0') ?? 0.0;
+    final couponCode = order.couponCode;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -1459,22 +1501,34 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             ),
             const SizedBox(height: 12),
             _buildPriceDetailRow(
-                'Total MRP', '₹${totalAmount.toStringAsFixed(2)}'),
+              'Total MRP',
+              '₹${totalAmount.toStringAsFixed(2)}',
+            ),
             if (discount > 0)
               _buildPriceDetailRow(
-                  'Product Discount', '- ₹${discount.toStringAsFixed(2)}',
-                  isDiscount: true),
+                'Product Discount',
+                '- ₹${discount.toStringAsFixed(2)}',
+                isDiscount: true,
+              ),
             if (discountAmount > 0)
-              _buildPriceDetailRow('Additional Discount',
-                  '- ₹${discountAmount.toStringAsFixed(2)}',
-                  isDiscount: true),
+              _buildPriceDetailRow(
+                'Additional Discount',
+                '- ₹${discountAmount.toStringAsFixed(2)}',
+                isDiscount: true,
+              ),
             if (coinsUsed > 0)
               _buildPriceDetailRow(
-                  'Coins Used', '- ₹${coinsUsed.toStringAsFixed(2)}',
-                  isDiscount: true),
-            if (couponCode != null)
+                'Coins Used',
+                '- ₹${coinsUsed.toStringAsFixed(2)}',
+                isDiscount: true,
+              ),
+            if (couponCode != null && couponCode.isNotEmpty)
               _buildPriceDetailRow('Coupon Applied', couponCode),
-            _buildPriceDetailRow('Delivery Charges', 'FREE', isDiscount: true),
+            _buildPriceDetailRow(
+              'Delivery Charges',
+              'FREE',
+              isDiscount: true,
+            ),
             Container(
               height: 1,
               color: Colors.grey[300],
@@ -1500,17 +1554,18 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 ),
               ],
             ),
-            if (finalPrice < totalAmount) ...[
-              const SizedBox(height: 8),
-              Text(
-                'You saved ₹${(totalAmount - finalPrice).toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.green[700],
-                  fontWeight: FontWeight.w500,
+            if (finalPrice < totalAmount)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'You saved ₹${(totalAmount - finalPrice).toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.green[700],
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-            ],
           ],
         ),
       ),
@@ -1544,11 +1599,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 
-  Widget _buildOrderTimelineCard() {
-    if (_historyItems.isEmpty) return const SizedBox();
+  Widget _buildOrderTimelineCard(List<History> historyItems) {
+    if (historyItems.isEmpty) return const SizedBox();
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1560,78 +1616,83 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Order Timeline',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ..._historyItems.asMap().entries.map((entry) {
-              final index = entry.key;
-              final item = entry.value;
-              final isLast = index == _historyItems.length - 1;
-              return _buildTimelineStep(item, isLast);
-            }),
-          ],
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Order Timeline',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          ...historyItems.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+            final isLast = index == historyItems.length - 1;
+            return _buildTimelineStep(item, isLast);
+          }),
+        ],
       ),
     );
   }
 
-  Widget _buildTimelineStep(OrderHistoryItem item, bool isLast) {
+  Widget _buildTimelineStep(History item, bool isLast) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        /// Left step indicator
         Column(
           children: [
             Container(
               width: 20,
               height: 20,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.green,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check, size: 12, color: Colors.white),
+              child: const Icon(
+                Icons.check,
+                size: 12,
+                color: Colors.white,
+              ),
             ),
             if (!isLast)
               Container(
                 width: 2,
-                height: 60,
-                color: Colors.grey[300],
+                height: 50,
+                color: Colors.grey.shade300,
               ),
           ],
         ),
+
         const SizedBox(width: 12),
+
+        /// Right content
         Expanded(
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 20),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _formatStatusText(item.status),
+                  _formatStatusText(item.historyStatus ?? ''),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
+                    fontSize: 13,
                     color: Colors.green,
-                    fontSize: 12,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  item.message,
+                  convertAsciiEmoji(cleanMessage(item.historyMessage ?? '')),
                   style: const TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _formatDateTime(item.time),
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  _formatDateTime(item.createdAt ?? ''),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
                 ),
               ],
             ),
@@ -1641,7 +1702,20 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 
-  Widget _buildOrderInfoCard(Map<String, dynamic> data) {
+  String convertAsciiEmoji(String text) {
+    return text
+        .replaceAll(':-)', '😊')
+        .replaceAll(':)', '😊')
+        .replaceAll(':-(', '😞')
+        .replaceAll(':(', '😞');
+  }
+
+  String cleanMessage(String? text) {
+    if (text == null) return '';
+    return text.replaceAll(RegExp(r'[\r\n]+'), ' ').trim();
+  }
+
+  Widget _buildOrderInfoCardFromModel(Datum order) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -1649,7 +1723,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -1668,14 +1742,24 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            _buildInfoItem('Order ID', '${widget.orderId}'),
-            _buildInfoItem('Product ID', '${widget.productId}'),
-            if (data['slug'] != null)
-              _buildInfoItem('Product Slug', data['slug'].toString()),
-            _buildInfoItem('Payment Status',
-                data['status']?.toString().toUpperCase() ?? 'PAID'),
-            _buildInfoItem('Payment Date',
-                _formatDateTime(data['paid_at']?.toString() ?? '')),
+            _buildInfoItem('Order ID', order.orderId?.toString() ?? ''),
+            _buildInfoItem('Order Number', order.orderNumber ?? ''),
+            _buildInfoItem('Product ID', order.productId?.toString() ?? ''),
+            if (order.vendorName != null && order.vendorName!.trim().isNotEmpty)
+              _buildInfoItem('Vendor', order.vendorName!),
+            _buildInfoItem(
+              'Payment Status',
+              (order.paymentStatus ?? 'paid').toUpperCase(),
+            ),
+            if (order.paidAt != null)
+              _buildInfoItem(
+                'Payment Date',
+                _formatDateTime(order.paidAt!.toIso8601String()),
+              ),
+            if (order.quantity != null)
+              _buildInfoItem('Quantity', order.quantity.toString()),
+            if (order.variantName != null && order.variantName!.isNotEmpty)
+              _buildInfoItem('Variant', order.variantName!),
           ],
         ),
       ),

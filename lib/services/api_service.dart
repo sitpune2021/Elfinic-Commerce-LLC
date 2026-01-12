@@ -89,11 +89,14 @@ class ApiService {
   static String get orderInvoicedownload =>
       '$_baseUrl/api/DownloadOrderInvoice';
 
+  static String get orderHistoryDetails => '$_baseUrl/api/OrdersHistoryDetails';
+
   String getProductBySlugUrl(String slug) {
     return 'https://admin.elfinic.com/api/productDetails/${Uri.encodeComponent(slug)}';
   }
 
   static String get productImagePath => '$baseUrl/assets/img/products-thumbs/';
+  
 
   static Future<List<OrderItem>> fetchOrders(int userId) async {
     final prefs = await SharedPreferences.getInstance();

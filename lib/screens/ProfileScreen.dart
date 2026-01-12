@@ -174,6 +174,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.only(
                   top: 60, left: 20, right: 20, bottom: 30),
               child: Consumer<ProfileProvider>(builder: (context, provider, _) {
+                // ⏳ LOADING
+                if (provider.isLoading) {
+                  return const SizedBox(
+                    height: 70,
+                    child: Center(
+                      child: CustomLoader(),
+                    ),
+                  );
+                }
+
+                // ❌ NO DATA
+                if (provider.profile == null) {
+                  return const Text(
+                    "Profile not available",
+                    style: TextStyle(color: Colors.white),
+                  );
+                }
+
                 final data = provider.profile?.data;
 
                 return Row(

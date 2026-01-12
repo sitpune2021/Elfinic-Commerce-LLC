@@ -1058,10 +1058,15 @@ class _AllCouponsScreenState extends State<AllCouponsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Image.asset(
-                      'assets/images/no_coupons.png',
-                      width: 280,
-                      fit: BoxFit.contain,
+                    // Image.asset(
+                    //   'assets/images/no_coupons.png',
+                    //   width: 280,
+                    //   fit: BoxFit.contain,
+                    // ),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      size: 120,
+                      color: Colors.amber,
                     ),
                     const SizedBox(height: 12),
                     const Text(

@@ -301,6 +301,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? selectedColor;
   String? selectedVariantName; // varient name
 
+  bool _isAdding = false;
+  bool _isAdded = false;
   final TextEditingController _reviewController = TextEditingController();
   AddToCartButtonStateId _addToCartState = AddToCartButtonStateId.idle;
 
@@ -1685,140 +1687,236 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ],
                     ),
                     const Spacer(),
+                    // SizedBox(
+                    //   height: 50,
+                    //   width: 140,
+                    //   child: AddToCartButton(
+                    //     trolley: const Icon(Icons.shopping_cart,
+                    //         color: Colors.white, size: 22),
+                    //     text: const Text(
+                    //       'Add to Cart',
+                    //       textAlign: TextAlign.center,
+                    //       style: TextStyle(fontSize: 14, color: Colors.white),
+                    //       maxLines: 1,
+                    //       overflow: TextOverflow.fade,
+                    //     ),
+                    //     check: const Icon(Icons.check,
+                    //         color: Colors.white, size: 40),
+                    //     borderRadius: BorderRadius.circular(12),
+                    //     backgroundColor: Colors.blue.shade900,
+                    //     stateId: _addToCartState,
+                    //     onPressed: (stateId) async {
+                    //       if (stateId == AddToCartButtonStateId.idle) {
+                    //         setState(() => _addToCartState =
+                    //             AddToCartButtonStateId.loading);
+
+                    //         final product = getProduct;
+                    //         int? variantId;
+
+                    //         // 🔥 LOGIC TO GET VARIANT ID
+                    //         // 1. Check if we have a selected variant from options
+                    //         if (_selectedVariant != null) {
+                    //           variantId = _selectedVariant!.id;
+                    //           debugPrint('✅ Selected variant ID: $variantId');
+                    //           debugPrint(
+                    //               '✅ Selected variant name: ${_selectedVariant!.variant}');
+                    //           debugPrint('✅ Selected color: $selectedColor');
+                    //           debugPrint('✅ Selected size: $selectedSize');
+                    //         }
+                    //         // 2. If no variant selected but product has variants, use the first one
+                    //         else if (product.variants.isNotEmpty) {
+                    //           variantId = product.variants.first.id;
+                    //           debugPrint(
+                    //               '✅ Using first variant ID: $variantId');
+                    //           debugPrint(
+                    //               '⚠️ WARNING: No variant explicitly selected, using first available');
+                    //         }
+                    //         // 3. If product has no variants, variantId remains null
+                    //         else {
+                    //           debugPrint(
+                    //               'ℹ️ Product has no variants, adding without variant_id');
+                    //         }
+
+                    //         // Debug output
+                    //         debugPrint('🛒 Adding to Cart:');
+                    //         debugPrint('   Product ID: ${product.id}');
+                    //         debugPrint('   Product Name: ${product.name}');
+                    //         debugPrint('   Variant ID: $variantId');
+                    //         debugPrint(
+                    //             '   Selected Variant Object: $_selectedVariant');
+                    //         try {
+                    //           await cartProvider.addToCart(
+                    //             product,
+                    //             1,
+                    //             variantId:
+                    //                 variantId, // 🔥 PASS VARIANT ID (could be null)
+                    //           );
+
+                    //           setState(() => _addToCartState =
+                    //               AddToCartButtonStateId.done);
+                    //           if (!context.mounted) return;
+                    //           ScaffoldMessenger.of(context).showSnackBar(
+                    //             SnackBar(
+                    //               content: Text(variantId != null
+                    //                   ? "Item added"
+                    //                   // ? "Item added to cart (Variant: ${_selectedVariant?.variant ?? variantId})"
+                    //                   : "Item added to cart!"),
+                    //               action: SnackBarAction(
+                    //                 label: "View Cart",
+                    //                 onPressed: () {
+                    //                   Navigator.push(
+                    //                     context,
+                    //                     MaterialPageRoute(
+                    //                         builder: (_) => const CartScreen()),
+                    //                   );
+                    //                 },
+                    //               ),
+                    //             ),
+                    //           );
+
+                    //           await Future.delayed(const Duration(seconds: 2));
+                    //           if (mounted) {
+                    //             setState(() => _addToCartState =
+                    //                 AddToCartButtonStateId.idle);
+                    //           }
+                    //         } catch (e) {
+                    //           if (!context.mounted) return;
+                    //           debugPrint('❌ Error adding to cart: $e');
+                    //           ScaffoldMessenger.of(context).showSnackBar(
+                    //             SnackBar(
+                    //                 content: Text('Failed to add to cart: $e')),
+                    //           );
+                    //           setState(() => _addToCartState =
+                    //               AddToCartButtonStateId.idle);
+                    //         }
+                    //       } else if (stateId == AddToCartButtonStateId.done) {
+                    //         Navigator.push(
+                    //           context,
+                    //           MaterialPageRoute(
+                    //               builder: (_) => const CartScreen()),
+                    //         );
+                    //       }
+                    //     },
+                    //   ),
+                    // ),
                     SizedBox(
                       height: 50,
                       width: 140,
-                      child: AddToCartButton(
-                        trolley: const Icon(Icons.shopping_cart,
-                            color: Colors.white, size: 22),
-                        text: const Text(
-                          'Add to Cart',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14, color: Colors.white),
-                          maxLines: 1,
-                          overflow: TextOverflow.fade,
-                        ),
-                        check: const Icon(Icons.check,
-                            color: Colors.white, size: 40),
-                        borderRadius: BorderRadius.circular(12),
-                        backgroundColor: Colors.blue.shade900,
-                        stateId: _addToCartState,
-                        onPressed: (stateId) async {
-                          if (stateId == AddToCartButtonStateId.idle) {
-                            setState(() => _addToCartState =
-                                AddToCartButtonStateId.loading);
-
-                            final product = getProduct;
-                            int? variantId;
-
-                            // 🔥 LOGIC TO GET VARIANT ID
-                            // 1. Check if we have a selected variant from options
-                            if (_selectedVariant != null) {
-                              variantId = _selectedVariant!.id;
-                              debugPrint('✅ Selected variant ID: $variantId');
-                              debugPrint(
-                                  '✅ Selected variant name: ${_selectedVariant!.variant}');
-                              debugPrint('✅ Selected color: $selectedColor');
-                              debugPrint('✅ Selected size: $selectedSize');
-                            }
-                            // 2. If no variant selected but product has variants, use the first one
-                            else if (product.variants.isNotEmpty) {
-                              variantId = product.variants.first.id;
-                              debugPrint(
-                                  '✅ Using first variant ID: $variantId');
-                              debugPrint(
-                                  '⚠️ WARNING: No variant explicitly selected, using first available');
-                            }
-                            // 3. If product has no variants, variantId remains null
-                            else {
-                              debugPrint(
-                                  'ℹ️ Product has no variants, adding without variant_id');
-                            }
-
-                            // Debug output
-                            debugPrint('🛒 Adding to Cart:');
-                            debugPrint('   Product ID: ${product.id}');
-                            debugPrint('   Product Name: ${product.name}');
-                            debugPrint('   Variant ID: $variantId');
-                            debugPrint(
-                                '   Selected Variant Object: $_selectedVariant');
-                            try {
-                              await cartProvider.addToCart(
-                                product,
-                                1,
-                                variantId:
-                                    variantId, // 🔥 PASS VARIANT ID (could be null)
-                              );
-
-                              setState(() => _addToCartState =
-                                  AddToCartButtonStateId.done);
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(variantId != null
-                                      ? "Item added"
-                                      // ? "Item added to cart (Variant: ${_selectedVariant?.variant ?? variantId})"
-                                      : "Item added to cart!"),
-                                  action: SnackBarAction(
-                                    label: "View Cart",
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (_) => const CartScreen()),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              );
-
-                              await Future.delayed(const Duration(seconds: 2));
-                              if (mounted) {
-                                setState(() => _addToCartState =
-                                    AddToCartButtonStateId.idle);
-                              }
-                            } catch (e) {
-                              if (!context.mounted) return;
-                              debugPrint('❌ Error adding to cart: $e');
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text('Failed to add to cart: $e')),
-                              );
-                              setState(() => _addToCartState =
-                                  AddToCartButtonStateId.idle);
-                            }
-                          } else if (stateId == AddToCartButtonStateId.done) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const CartScreen()),
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    SizedBox(
-                      height: 50,
-                      width: 140,
-                      child: ElevatedButton.icon(
-                        onPressed: _buyNow,
+                      child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD39841),
+                          backgroundColor: Colors.blue.shade900,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          elevation: 0,
                         ),
-                        icon: const Icon(Icons.flash_on,
-                            color: Colors.white, size: 20),
-                        label: const Text(
-                          "BUY NOW",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
+                        onPressed: _isAdding
+                            ? null
+                            : () async {
+                                setState(() {
+                                  _isAdding = true;
+                                });
+
+                                final product = getProduct;
+                                int? variantId;
+
+                                // 🔥 VARIANT LOGIC (UNCHANGED)
+                                if (_selectedVariant != null) {
+                                  variantId = _selectedVariant!.id;
+                                } else if (product.variants.isNotEmpty) {
+                                  variantId = product.variants.first.id;
+                                }
+
+                                try {
+                                  await cartProvider.addToCart(
+                                    product,
+                                    1,
+                                    variantId: variantId,
+                                  );
+
+                                  setState(() {
+                                    _isAdded = true;
+                                    _isAdding = false;
+                                  });
+
+                                  if (!context.mounted) return;
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text("Item added to cart"),
+                                      action: SnackBarAction(
+                                        label: "View Cart",
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const CartScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  );
+
+                                  // Optional: reset text after delay
+                                  await Future.delayed(
+                                      const Duration(seconds: 2));
+                                  if (mounted) {
+                                    setState(() {
+                                      _isAdded = false;
+                                    });
+                                  }
+                                } catch (e) {
+                                  if (!context.mounted) return;
+
+                                  setState(() {
+                                    _isAdding = false;
+                                  });
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content:
+                                          Text('Failed to add to cart: $e'),
+                                    ),
+                                  );
+                                }
+                              },
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          child: _isAdded
+                              ? const Text(
+                                  "Added",
+                                  key: ValueKey("added"),
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.white),
+                                )
+                              : _isAdding
+                                  ? const SizedBox(
+                                      key: ValueKey("loading"),
+                                      height: 18,
+                                      width: 18,
+                                      child: CustomLoader(),
+                                    )
+                                  : const Row(
+                                      key: ValueKey("idle"),
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.shopping_cart,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          "Add to Cart",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                         ),
                       ),
                     ),
@@ -3006,39 +3104,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void dispose() {
     _reviewController.dispose();
     super.dispose();
-  }
-
-  Future<void> _buyNow() async {
-    final cartProvider = Provider.of<CartProvider>(context, listen: false);
-
-    final product = _convertToProduct(getProduct);
-
-    // 1️⃣ Add to cart if not already present
-    final qty = cartProvider.getQuantityForProduct(product.id);
-    if (qty == 0) {
-      await cartProvider.addToCart(product, 1);
-    }
-
-    // 2️⃣ Build checkout cart list (ONLY this product)
-    cartProvider.cartItems.firstWhere(
-      (e) => e.product.id == product.id,
-    );
-
-// or _calculateFinalPrice()
-
-    /*// 3️⃣ Open Address Screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AddressScreen(
-          fromProfile: false,
-          subtotalAmount: subtotal,
-          cartItems: [selectedCartItem],
-          appliedCoupon: null,
-          couponDiscount: 0,
-        ),
-      ),
-    );*/
   }
 }
 

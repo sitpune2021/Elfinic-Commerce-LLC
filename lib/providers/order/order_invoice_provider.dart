@@ -1,55 +1,6 @@
-// import 'dart:io';
-// import 'package:elfinic_commerce_llc/services/order_service.dart';
-// import 'package:elfinic_commerce_llc/widget/pdf_preview_widget.dart';
-// import 'package:flutter/material.dart';
-
-// class OrderInvoiceProvider extends ChangeNotifier {
-//   bool _downloading = false;
-
-//   bool get downloading => _downloading;
-
-//   Future<void> downloadInvoice({
-//     required BuildContext context,
-//     required int orderId,
-//   }) async {
-//     if (_downloading) return;
-
-//     _downloading = true;
-//     notifyListeners();
-
-//     final File? file = await OrderService.downloadInvoice(
-//       orderId: orderId,
-//     );
-
-//     _downloading = false;
-//     notifyListeners();
-//     if (!context.mounted) return;
-
-//     if (file == null) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text('Invoice download failed')),
-//       );
-//       return;
-//     }
-
-//     // 3️⃣ SUCCESS MESSAGE
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       const SnackBar(content: Text('Invoice downloaded successfully')),
-//     );
-
-//     // ✅ Navigate to PDF preview
-//     Navigator.push(
-//       context,
-//       MaterialPageRoute(
-//         builder: (_) => PdfPreviewScreen(filePath: file.path),
-//       ),
-//     );
-
-//   }
-// }
-
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:elfinic_commerce_llc/model/order_history_details_model.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:elfinic_commerce_llc/services/order_service.dart';
@@ -89,6 +40,9 @@ class OrderInvoiceProvider extends ChangeNotifier {
     if (folderPath == null) {
       _downloading = false;
       notifyListeners();
+
+      if (!context.mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Folder not selected')),
       );
@@ -98,6 +52,8 @@ class OrderInvoiceProvider extends ChangeNotifier {
     // 3️⃣ Save file
     final file = File('$folderPath/invoice_order_$orderId.pdf');
     await file.writeAsBytes(bytes, flush: true);
+
+    if (!context.mounted) return;
 
     _downloading = false;
     notifyListeners();
@@ -114,4 +70,36 @@ class OrderInvoiceProvider extends ChangeNotifier {
       ),
     );
   }
+
+  //
+  bool isLoading = false;
+  OrderHistoryDetailsModel? orderDetails;
+
+  Future<void> loadOrderHistorysDetails({
+    required int orderId,
+    required int productId,
+  }) async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      orderDetails = await OrderService.fetchOrderHistoryDetails(
+        orderId: orderId,
+        productId: productId,
+      );
+    } catch (e) {
+      debugPrint('❌ Error: $e');
+    }
+
+    isLoading = false;
+    notifyListeners();
+  }
+
+  /// convenience getters
+  Datum? get order =>
+      orderDetails?.data.isNotEmpty == true ? orderDetails!.data.first : null;
+
+  Address? get address => order?.address;
+
+  List<History> get history => order?.history ?? [];
 }

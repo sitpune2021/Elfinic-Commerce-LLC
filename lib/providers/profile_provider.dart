@@ -1,11 +1,9 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:elfinic_commerce_llc/model/LoginResponse.dart';
 import 'package:elfinic_commerce_llc/model/UserProfileModel.dart';
 import 'package:elfinic_commerce_llc/services/profile_service.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileProvider with ChangeNotifier {
   // 🔹 Logged-in user (from prefs)
@@ -29,20 +27,6 @@ class ProfileProvider with ChangeNotifier {
   double get uploadProgress => _uploadProgress;
   String? get errorMessage => _errorMessage;
 
-  Future<void> loadUser() async {
-    _isLoading = true;
-    notifyListeners();
-
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString("user_data");
-
-    if (userJson != null) {
-      _user = User.fromJson(jsonDecode(userJson));
-    }
-
-    _isLoading = false;
-    notifyListeners();
-  }
 
   // get profile data
   Future<void> fetchUserProfile() async {

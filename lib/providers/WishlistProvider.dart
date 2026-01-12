@@ -89,7 +89,8 @@ class WishlistProvider with ChangeNotifier {
       return false;
     }
 
-    final url = Uri.parse('${ApiService.baseUrl}/api/getProductByType?user_id=$userId&type=Wishlist');
+    final url = Uri.parse(
+        '${ApiService.baseUrl}/api/getProductByType?user_id=$userId&type=Wishlist');
     print('📥 Fetch Wishlist URL: $url');
 
     try {
@@ -97,15 +98,14 @@ class WishlistProvider with ChangeNotifier {
         if (token != null) 'Authorization': 'Bearer $token',
       });
 
-      print('✅ Fetch Wishlist Response [${response.statusCode}]: ${response.body}');
+      print(
+          '✅ Fetch Wishlist Response [${response.statusCode}]: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['status'] == 'success' && data['data'] is List) {
-          final List<int> serverList = (data['data'] as List)
-              .map<int>((item) => item['id'])
-              .toList();
-
+          final List<int> serverList =
+              (data['data'] as List).map<int>((item) => item['id']).toList();
 
           _wishlistItems = serverList;
           await _saveWishlistToStorage();
@@ -142,7 +142,8 @@ class WishlistProvider with ChangeNotifier {
         body: jsonEncode({"user_id": userId, "product_id": productId}),
       );
 
-      print('✅ Wishlist Add Response [${response.statusCode}]: ${response.body}');
+      print(
+          '✅ Wishlist Add Response [${response.statusCode}]: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -171,7 +172,7 @@ class WishlistProvider with ChangeNotifier {
       return false;
     }
 
-    final url = Uri.parse('${ApiService.baseUrl}/api/wishlist/remove');
+    final url = Uri.parse('${ApiService.baseUrl}/api/removeFromWishlist');
     print('📤 Wishlist Remove URL: $url');
 
     try {
@@ -184,7 +185,8 @@ class WishlistProvider with ChangeNotifier {
         body: jsonEncode({"user_id": userId, "product_id": productId}),
       );
 
-      print('✅ Wishlist Remove Response [${response.statusCode}]: ${response.body}');
+      print(
+          '✅ Wishlist Remove Response [${response.statusCode}]: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -257,10 +259,7 @@ class WishlistProvider with ChangeNotifier {
       _wishlistItems.add(productId);
     }
   }
-
 }
-
-
 
 class WishlistService {
   static const String baseUrl = 'https://admin.elfinic.com/api/wishlist';
@@ -383,4 +382,3 @@ class WishlistItem {
     );
   }
 }
-
