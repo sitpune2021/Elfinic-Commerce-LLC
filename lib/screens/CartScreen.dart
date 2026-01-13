@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:elfinic_commerce_llc/screens/empty_coupon_screen.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -1053,30 +1054,11 @@ class _AllCouponsScreenState extends State<AllCouponsScreen> {
             return Container(
               width: double.infinity,
               height: double.infinity,
-              color: Colors.white, // 👈 force white background
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    // Image.asset(
-                    //   'assets/images/no_coupons.png',
-                    //   width: 280,
-                    //   fit: BoxFit.contain,
-                    // ),
-                    Icon(
-                      Icons.warning_amber_rounded,
-                      size: 120,
-                      color: Colors.amber,
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "No coupons available right now",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
+              color: Colors.grey[100],
+              child: SafeArea(
+                child: Align(
+                  alignment: Alignment.bottomCenter, // 👈 TOP CENTER
+                  child: EmptyCouponCard(),
                 ),
               ),
             );

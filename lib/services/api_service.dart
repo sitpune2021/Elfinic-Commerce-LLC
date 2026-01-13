@@ -96,7 +96,6 @@ class ApiService {
   }
 
   static String get productImagePath => '$baseUrl/assets/img/products-thumbs/';
-  
 
   static Future<List<OrderItem>> fetchOrders(int userId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -224,7 +223,7 @@ class ApiService {
       final encodedSlug = Uri.encodeComponent(slug);
       final url = 'https://admin.elfinic.com/api/productDetails/$encodedSlug';
 
-      print('🔄 Calling API: $url');
+      debugPrint('🔄 Calling API: $url');
 
       final response = await http.get(
         Uri.parse(url),
@@ -234,30 +233,30 @@ class ApiService {
         },
       );
 
-      print('📥 getProductBySlug Response Status: ${response.statusCode}');
+      debugPrint('📥 getProductBySlug Response Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        print('✅ API Success for slug: $slug');
+        debugPrint('✅ API Success for slug: $slug');
 
-        // Print variant information from the raw response
+        // debugPrint variant information from the raw response
         if (data['data'] != null && data['data']['variants'] != null) {
-          print('📋 Variants found in response:');
+          debugPrint('📋 Variants found in response:');
           List<dynamic> variants = data['data']['variants'];
           for (var variant in variants) {
-            print(
+            debugPrint(
                 '   Variant ID: ${variant['id']}, Variant: ${variant['variant']}');
           }
         }
 
         return ProductDetailResponse.fromJson(data);
       } else {
-        print('❌ API Error - Status Code: ${response.statusCode}');
+        debugPrint('❌ API Error - Status Code: ${response.statusCode}');
         throw Exception(
             'Failed to load product. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      print('🔥 API Error (getProductBySlug for $slug): $e');
+      debugPrint('🔥 API Error (getProductBySlug for $slug): $e');
       rethrow;
     }
   }

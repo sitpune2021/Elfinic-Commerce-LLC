@@ -1,6 +1,7 @@
 import 'package:elfinic_commerce_llc/screens/ProductDetailPage.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../model/ProductsResponse.dart';
 import '../providers/WishlistProvider.dart';
@@ -92,9 +93,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   Future<void> _toggleWishlist(int productId) async {
+    // 📳 Haptic feedback
+    HapticFeedback.lightImpact();
     final provider = Provider.of<WishlistProvider>(context, listen: false);
     final success = await provider.toggleWishlist(productId);
-
+    
+    if (!mounted) return;
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -125,8 +129,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
   }
 
   double _getDiscountAmount(Product product) {
-    // Return the actual discount amount (₹10 in your example)
-    // This depends on how your Product model stores discount information
     return product.discountPrice;
   }
 
@@ -295,28 +297,51 @@ class _WishlistScreenState extends State<WishlistScreen> {
                   child: Consumer<WishlistProvider>(
                     builder: (context, provider, child) {
                       return GestureDetector(
-                        onTap: () => _toggleWishlist(product.id),
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 3,
-                                  offset: Offset(0, 2)),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(6),
-                          child: Icon(
-                            Icons.favorite,
-                            color: provider.isInWishlist(product.id)
-                                ? Colors.red
-                                : Colors.grey,
-                            size: 20,
-                          ),
-                        ),
-                      );
+                          onTap: () => _toggleWishlist(product.id),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 3,
+                                    offset: Offset(0, 2)),
+                              ],
+                            ),
+                            padding: const EdgeInsets.all(6),
+                            //   child: Icon(
+                            //     Icons.favorite,
+                            //     color: provider.isInWishlist(product.id)
+                            //         ? Colors.red
+                            //         : Colors.grey,
+                            //     size: 20,
+                            //   ),
+                            // ),
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 250),
+                              transitionBuilder: (child, animation) {
+                                return ScaleTransition(
+                                  scale: animation,
+                                  child: FadeTransition(
+                                    opacity: animation,
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: Icon(
+                                provider.isInWishlist(product.id)
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                key:
+                                    ValueKey(provider.isInWishlist(product.id)),
+                                color: provider.isInWishlist(product.id)
+                                    ? Colors.red
+                                    : Colors.grey,
+                                size: 20,
+                              ),
+                            ),
+                          ));
                     },
                   ),
                 ),

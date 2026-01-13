@@ -294,7 +294,8 @@ class ProductDetailScreen extends StatefulWidget {
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
 
-class _ProductDetailScreenState extends State<ProductDetailScreen> {
+class _ProductDetailScreenState extends State<ProductDetailScreen>
+    with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   int activeIndex = 0;
   String? selectedSize;
@@ -303,6 +304,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   bool _isAdding = false;
   bool _isAdded = false;
+
+  late AnimationController _heartController;
+  late Animation<double> _scaleAnim;
+
   final TextEditingController _reviewController = TextEditingController();
   AddToCartButtonStateId _addToCartState = AddToCartButtonStateId.idle;
 
@@ -622,6 +627,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void initState() {
     super.initState();
     _loadProductDetails();
+
+    _heartController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _scaleAnim = Tween<double>(begin: 1.0, end: 1.3).animate(CurvedAnimation(
+      parent: _heartController,
+      curve: Curves.easeOut,
+    ));
 
     // WidgetsBinding.instance.addPostFrameCallback((_) {
     //   context.read<ReviewProvider>().loadProductReviews(product.id);
@@ -1033,6 +1048,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   @override
+  void dispose() {
+    _heartController.dispose();
+    _reviewController.dispose();
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return _buildLoadingScreen();
@@ -1271,23 +1294,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.share, color: Colors.black),
-                        onPressed: () {},
-                      ),
                       Consumer<WishlistProvider>(
                         builder: (context, wishlistProvider, _) {
                           final isWishlisted =
                               wishlistProvider.isInWishlist(product.id);
 
                           return IconButton(
-                            icon: Icon(
-                              isWishlisted
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              color: isWishlisted ? Colors.red : Colors.black,
+                            icon: ScaleTransition(
+                              scale: _scaleAnim,
+                              child: Icon(
+                                isWishlisted
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: isWishlisted ? Colors.red : Colors.black,
+                              ),
                             ),
                             onPressed: () async {
+                              // 🔥 Trigger heart animation
+                              _heartController
+                                  .forward()
+                                  .then((_) => _heartController.reverse());
+
                               final prefs =
                                   await SharedPreferences.getInstance();
                               final userIdString = prefs.getString('user_id');
@@ -3098,12 +3125,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         );
       },
     );
-  }
-
-  @override
-  void dispose() {
-    _reviewController.dispose();
-    super.dispose();
   }
 }
 

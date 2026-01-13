@@ -17,6 +17,7 @@ import 'package:elfinic_commerce_llc/providers/delete_%20Account/delete_account_
 import 'package:elfinic_commerce_llc/providers/delivery_provider.dart';
 import 'package:elfinic_commerce_llc/providers/forgot%20password/forgot_password_provider.dart';
 import 'package:elfinic_commerce_llc/providers/order/order_invoice_provider.dart';
+import 'package:elfinic_commerce_llc/providers/product/product_search_provider.dart';
 import 'package:elfinic_commerce_llc/providers/product_provider.dart';
 import 'package:elfinic_commerce_llc/providers/profile_provider.dart';
 import 'package:elfinic_commerce_llc/screens/CartScreen.dart';
@@ -76,6 +77,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => CouponProvider()),
         // ChangeNotifierProvider(create: (_) => ShippingProvider()),
         ChangeNotifierProvider(create: (_) => OrderInvoiceProvider()),
+        ChangeNotifierProvider(create: (_) => ProductSearchProvider()),
       ],
       child: const MyApp(),
     ),
