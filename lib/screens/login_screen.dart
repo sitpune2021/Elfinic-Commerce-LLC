@@ -1238,7 +1238,6 @@
 //   }
 // }
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:elfinic_commerce_llc/screens/register_screen.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
@@ -1277,13 +1276,8 @@ class LoginScreenState extends State<LoginScreen>
   bool _isPasswordVisible = false;
   bool _rememberMe = false;
 
-  bool _isLengthValid = false;
-  bool _hasUppercaseAndNumber = false;
-  bool _hasSpecialChar = false;
-
   /// ================= OTP STATE =================
   bool _otpSent = false;
-  bool _otpVerified = false;
   int _secondsRemaining = 60;
   Timer? _timer;
 
@@ -1311,12 +1305,7 @@ class LoginScreenState extends State<LoginScreen>
     }
   }
 
-  void _validatePassword(String value) {
-    _isLengthValid = value.length >= 6;
-    _hasUppercaseAndNumber =
-        value.contains(RegExp(r'[A-Z]')) && value.contains(RegExp(r'[0-9]'));
-    _hasSpecialChar = value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-  }
+  void _validatePassword(String value) {}
 
   /// ================= OTP TIMER =================
   void _startOtpTimer() {
@@ -1324,7 +1313,6 @@ class LoginScreenState extends State<LoginScreen>
 
     setState(() {
       _otpSent = true;
-      _otpVerified = false;
       _secondsRemaining = 60;
       _otpController.clear();
     });
@@ -1342,22 +1330,6 @@ class LoginScreenState extends State<LoginScreen>
       if (!mounted) return;
       FocusScope.of(context).requestFocus(_otpFocusNode);
     });
-  }
-
-  /// ================= VERIFY OTP (AUTO LOGIN) =================
-  void _verifyOtpAndLogin() async {
-    if (_otpController.text.length < 4) return;
-
-    setState(() => _otpVerified = true);
-
-    // 🔐 AUTO LOGIN (UI ONLY)
-    if (!context.mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const DashboardScreen(),
-      ),
-    );
   }
 
   /// ================= UI HELPERS =================
@@ -1622,93 +1594,7 @@ class LoginScreenState extends State<LoginScreen>
   }
 
   /// ================= MOBILE OTP =================
-  // Widget _mobileOtpUI() {
-  //   return Column(
-  //     children: [
-  //       /// MOBILE NUMBER
-  //       Align(
-  //         alignment: Alignment.centerLeft,
-  //         child: Text(
-  //           "Mobile Number",
-  //           style: TextStyle(
-  //             fontWeight: FontWeight.bold,
-  //             color: Colors.indigo,
-  //           ),
-  //         ),
-  //       ),
-  //       const SizedBox(height: 5),
-  //       IntlPhoneField(
-  //         controller: _mobileController,
-  //         decoration: InputDecoration(
-  //           hintText: "Mobile Number",
-  //           filled: true,
-  //           counterText: "",
-  //           fillColor: Colors.blue.shade50,
-  //           border: OutlineInputBorder(
-  //             borderRadius: BorderRadius.circular(30),
-  //             borderSide: BorderSide.none,
-  //           ),
-  //           contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-  //         ),
-  //         initialCountryCode: 'IN',
-  //       ),
 
-  //       const SizedBox(height: 20),
-
-  //       /// OTP FIELD (SHOW ONLY AFTER OTP SENT)
-  //       if (_otpSent) ...[
-  //         Align(
-  //           alignment: Alignment.centerLeft,
-  //           child: Text(
-  //             "OTP",
-  //             style: TextStyle(
-  //               fontWeight: FontWeight.bold,
-  //               color: Colors.indigo,
-  //             ),
-  //           ),
-  //         ),
-  //         const SizedBox(height: 5),
-  //         TextFormField(
-  //           controller: _otpController,
-  //           focusNode: _otpFocusNode,
-  //           keyboardType: TextInputType.number,
-  //           decoration: _decoration("Enter OTP"),
-  //           onChanged: (_) => setState(() {}),
-  //         ),
-  //         const SizedBox(height: 10),
-  //         Text(
-  //           _secondsRemaining > 0
-  //               ? "Resend OTP in $_secondsRemaining sec"
-  //               : "Didn’t receive OTP?",
-  //           style: const TextStyle(color: Colors.grey),
-  //         ),
-  //         TextButton(
-  //           onPressed: _secondsRemaining > 0 ? null : _startOtpTimer,
-  //           child: const Text("Resend OTP"),
-  //         ),
-  //         const SizedBox(height: 20),
-  //       ],
-
-  //       /// SINGLE BUTTON (SEND OTP / VERIFY & LOGIN)
-  //       ElevatedButton(
-  //         style: _buttonStyle(),
-  //         onPressed: () {
-  //           if (!_otpSent) {
-  //             if (_mobileFormKey.currentState!.validate()) {
-  //               _startOtpTimer();
-  //             }
-  //           } else {
-  //             _verifyOtpAndLogin();
-  //           }
-  //         },
-  //         child: Text(
-  //           _otpSent ? "VERIFY & LOGIN" : "SEND OTP",
-  //           style: const TextStyle(color: Colors.white),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
   Widget _mobileOtpUI() {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
