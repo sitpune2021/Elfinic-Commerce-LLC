@@ -40,22 +40,19 @@ class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
       appBar: AppBar(
         elevation: 0,
         automaticallyImplyLeading: false,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [
-                Color(0xFFD39841), // golden-orange
-                Color(0xFFA9D4E7), // sky-blue
-              ],
-            ),
-          ),
-        ),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: Colors.black.withValues(alpha: 0.06),
+          ),
         ),
         title: Text(
           widget.categoryName,
@@ -114,8 +111,8 @@ class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
                 ),
                 itemBuilder: (context, index) {
                   final item = filtered[index];
-                  final imageUrl = ApiService.getFullImageUrl(item.image, "sub-category-images");
-
+                  final imageUrl = ApiService.getFullImageUrl(
+                      item.image, "sub-category-images");
 
                   return InkWell(
                     onTap: () {
@@ -123,13 +120,13 @@ class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => ProductListScreen(
-                            categoryName: widget.categoryName, // ✅ already available
-                            subcategoryName: item.name,        // ✅ slug / name
+                            categoryName:
+                                widget.categoryName, // ✅ already available
+                            subcategoryName: item.name, // ✅ slug / name
                           ),
                         ),
                       );
                     },
-
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -149,27 +146,27 @@ class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
                           // 🖼️ Subcategory Image
                           Expanded(
                             child: ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(16)),
-                              child: imageUrl.startsWith("http")
-                                  ? CachedNetworkImage(
-                                imageUrl: imageUrl,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                placeholder: (context, url) => const ShimmerCategoryCard(),
-                                errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/no_product_img2.png",
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                ),
-                              )
-                                  : Image.asset(
-                                imageUrl,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                              )
-
-                            ),
+                                borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(16)),
+                                child: imageUrl.startsWith("http")
+                                    ? CachedNetworkImage(
+                                        imageUrl: imageUrl,
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                        placeholder: (context, url) =>
+                                            const ShimmerCategoryCard(),
+                                        errorWidget: (context, url, error) =>
+                                            Image.asset(
+                                          "assets/images/no_product_img2.png",
+                                          fit: BoxFit.cover,
+                                          width: double.infinity,
+                                        ),
+                                      )
+                                    : Image.asset(
+                                        imageUrl,
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                      )),
                           ),
 
                           // 🏷️ Category Name
@@ -202,4 +199,3 @@ class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
     );
   }
 }
-

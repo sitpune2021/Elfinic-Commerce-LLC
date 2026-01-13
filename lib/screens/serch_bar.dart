@@ -59,54 +59,84 @@ class _SerchBarScreenState extends State<SerchBarScreen> {
                 horizontal: width * 0.04,
                 vertical: 12,
               ),
-              child: Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 6,
+              child: Row(
+                children: [
+                  // // 👈 BACK BUTTON
+                  // IconButton(
+                  //   icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                  //   onPressed: () {
+                  //     Navigator.of(context).pop();
+                  //   },
+                  // ),
+                  // const SizedBox(width: 8),
+                  Expanded(
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        textAlignVertical: TextAlignVertical.center,
+                        cursorColor: Colors.grey, // 🎯 cursor color
+                        onChanged: (value) {
+                          debugPrint("SEARCH INPUT : $value");
+                          context
+                              .read<ProductSearchProvider>()
+                              .loadInitial(value);
+                          setState(() {});
+                        },
+                        decoration: InputDecoration(
+                          hintText: "     Search products by Product name",
+                          prefixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.arrow_back,
+                                    color: Colors.black87),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              const Icon(Icons.search, color: Colors.black54),
+                            ],
+                          ),
+                          // prefixIcon:
+                          //     const Icon(Icons.search, color: Colors.black54),
+                          isDense: true, // 🔑 fixes vertical misalignment
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14, // 🔑 centers text vertically
+                            horizontal: 0,
+                          ),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(
+                                    Icons.close,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    debugPrint("SEARCH CLEARED");
+                                    _searchController.clear();
+                                    context
+                                        .read<ProductSearchProvider>()
+                                        .loadInitial('');
+                                    setState(() {});
+                                  },
+                                )
+                              : null,
+                          border: InputBorder.none,
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  textAlignVertical: TextAlignVertical.center,
-                  cursorColor: Colors.grey, // 🎯 cursor color
-                  onChanged: (value) {
-                    debugPrint("SEARCH INPUT : $value");
-                    context.read<ProductSearchProvider>().loadInitial(value);
-                    setState(() {});
-                  },
-                  decoration: InputDecoration(
-                    hintText: "Search products",
-                    prefixIcon: const Icon(Icons.search, color: Colors.black54),
-                    isDense: true, // 🔑 fixes vertical misalignment
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 14, // 🔑 centers text vertically
-                      horizontal: 0,
-                    ),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.grey,
-                            ),
-                            onPressed: () {
-                              debugPrint("SEARCH CLEARED");
-                              _searchController.clear();
-                              context
-                                  .read<ProductSearchProvider>()
-                                  .loadInitial('');
-                              setState(() {});
-                            },
-                          )
-                        : null,
-                    border: InputBorder.none,
                   ),
-                ),
+                ],
               ),
             ),
 

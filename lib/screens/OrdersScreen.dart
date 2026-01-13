@@ -58,25 +58,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
     });
   }
 
-  //search order
-  // void _searchOrders(String query) {
-  //   if (query.isEmpty) {
-  //     setState(() {
-  //       _filteredOrders = _allOrders;
-  //     });
-  //     return;
-  //   }
-
-  //   final lowerQuery = query.toLowerCase();
-
-  //   setState(() {
-  //     _filteredOrders = _allOrders.where((order) {
-  //       return order.orderId.toString().contains(lowerQuery) ||
-  //           order.productName.toLowerCase().contains(lowerQuery);
-  //     }).toList();
-  //   });
-  // }
-
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
@@ -99,130 +80,134 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF1F3F6),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            if (_isSearching) {
-              setState(() {
-                _isSearching = false;
-                _searchController.clear();
-                _filteredOrders = _allOrders;
-              });
-            } else {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        title: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          transitionBuilder: (child, animation) {
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: _isSearching ? const Offset(1, 0) : const Offset(-1, 0),
-                end: Offset.zero,
-              ).animate(animation),
-              child: FadeTransition(opacity: animation, child: child),
-            );
-          },
-          child: _isSearching
-              ? _buildAnimatedSearchField()
-              : const Text(
-                  "My Orders",
-                  key: ValueKey("title"),
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF1F3F6),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () {
+              if (_isSearching) {
+                setState(() {
+                  _isSearching = false;
+                  _searchController.clear();
+                  _filteredOrders = _allOrders;
+                });
+              } else {
+                Navigator.pop(context, "dash");
+              }
+            },
+          ),
+          title: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            transitionBuilder: (child, animation) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin:
+                      _isSearching ? const Offset(1, 0) : const Offset(-1, 0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: FadeTransition(opacity: animation, child: child),
+              );
+            },
+            child: _isSearching
+                ? _buildAnimatedSearchField()
+                : const Text(
+                    "My Orders",
+                    key: ValueKey("title"),
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
-                ),
-        ),
-        actions: [
-          if (!_isSearching)
-            IconButton(
-              icon: const Icon(Icons.search, color: Colors.black),
-              onPressed: () {
-                setState(() => _isSearching = true);
-              },
+          ),
+          actions: [
+            if (!_isSearching)
+              IconButton(
+                icon: const Icon(Icons.search, color: Colors.black),
+                onPressed: () {
+                  setState(() => _isSearching = true);
+                },
+              ),
+          ],
+          // actions: [
+          //   AnimatedSwitcher(
+          //     duration: const Duration(milliseconds: 300),
+          //     child: _isSearching
+          //         ? const SizedBox.shrink()
+          //         : IconButton(
+          //             key: const ValueKey("search"),
+          //             icon: const Icon(Icons.search, color: Colors.black),
+          //             onPressed: () {
+          //               setState(() => _isSearching = true);
+          //             },
+          //           ),
+          //   ),
+          // ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(
+              height: 1,
+              color: Colors.black.withValues(alpha: 0.06),
             ),
-        ],
-        // actions: [
-        //   AnimatedSwitcher(
-        //     duration: const Duration(milliseconds: 300),
-        //     child: _isSearching
-        //         ? const SizedBox.shrink()
-        //         : IconButton(
-        //             key: const ValueKey("search"),
-        //             icon: const Icon(Icons.search, color: Colors.black),
-        //             onPressed: () {
-        //               setState(() => _isSearching = true);
-        //             },
-        //           ),
-        //   ),
-        // ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            height: 1,
-            color: Colors.black.withValues(alpha: 0.06),
           ),
         ),
-      ),
-      body: _ordersFuture == null
-          ? _buildShimmerLoading()
-          : FutureBuilder<List<OrderItem>>(
-              future: _ordersFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return _buildShimmerLoading();
-                }
+        body: _ordersFuture == null
+            ? _buildShimmerLoading()
+            : FutureBuilder<List<OrderItem>>(
+                future: _ordersFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return _buildShimmerLoading();
+                  }
 
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return _emptyOrders();
-                }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return _emptyOrders();
+                  }
 
-                _allOrders = snapshot.data!;
-                _allOrders.sort((a, b) {
-                  return DateTime.parse(b.paidAt)
-                      .compareTo(DateTime.parse(a.paidAt));
-                });
-                if (_filteredOrders.isEmpty) {
-                  _filteredOrders = _allOrders;
-                }
+                  _allOrders = snapshot.data!;
+                  _allOrders.sort((a, b) {
+                    return DateTime.parse(b.paidAt)
+                        .compareTo(DateTime.parse(a.paidAt));
+                  });
+                  if (_filteredOrders.isEmpty) {
+                    _filteredOrders = _allOrders;
+                  }
 
-                return Column(
-                  children: [
-                    // Filter Chips
-                    // _buildFilterChips(),
+                  return Column(
+                    children: [
+                      // Filter Chips
+                      // _buildFilterChips(),
 
-                    // Orders Count
-                    _buildOrdersCount(),
+                      // Orders Count
+                      _buildOrdersCount(),
 
-                    // Orders List
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: _loadOrders,
-                        child: ListView.separated(
-                          padding: const EdgeInsets.all(12),
-                          itemCount: _filteredOrders.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final item = _filteredOrders[index];
-                            return _orderCard(item);
-                          },
+                      // Orders List
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: _loadOrders,
+                          child: ListView.separated(
+                            padding: const EdgeInsets.all(12),
+                            itemCount: _filteredOrders.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 8),
+                            itemBuilder: (context, index) {
+                              final item = _filteredOrders[index];
+                              return _orderCard(item);
+                            },
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                    ],
+                  );
+                },
+              ),
+      ),
     );
   }
 
@@ -566,7 +551,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 48),
           child: ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(context, "dash");
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,

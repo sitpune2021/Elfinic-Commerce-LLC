@@ -612,8 +612,28 @@ class _ProductListScreenState extends State<ProductListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(widget.subcategoryName),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: Colors.black.withValues(alpha: 0.06),
+          ),
+        ),
+        title: Text(
+          widget.subcategoryName,
+          style: TextStyle(color: Colors.black),
+        ),
       ),
       body: Consumer<ProductProvider>(
         builder: (context, provider, _) {
@@ -622,7 +642,26 @@ class _ProductListScreenState extends State<ProductListScreen> {
           }
 
           if (provider.products.isEmpty) {
-            return const Center(child: Text("No products found"));
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/images/image.png',
+                    height: 140,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "No products found",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
           return GridView.builder(

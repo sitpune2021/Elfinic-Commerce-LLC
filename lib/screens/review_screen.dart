@@ -1,4 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:elfinic_commerce_llc/screens/OrdersScreen.dart';
+import 'package:elfinic_commerce_llc/screens/home_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
@@ -16,7 +18,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'DashboardScreen.dart';
-
 
 class ReviewScreen extends StatefulWidget {
   final Address selectedAddress;
@@ -1437,29 +1438,29 @@ class OrderSuccessDialog extends StatelessWidget {
             Row(
               children: [
                 // Explore More Button
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      side: const BorderSide(color: Colors.black87, width: 1.5),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _navigateToHome(context);
-                    },
-                    child: const Text(
-                      "EXPLORE MORE",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                ),
+                // Expanded(
+                //   child: OutlinedButton(
+                //     style: OutlinedButton.styleFrom(
+                //       padding: const EdgeInsets.symmetric(vertical: 16),
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(30),
+                //       ),
+                //       side: const BorderSide(color: Colors.black87, width: 1.5),
+                //     ),
+                //     onPressed: () {
+                //       Navigator.pop(context);
+                //       _navigateToHome(context);
+                //     },
+                //     child: const Text(
+                //       "EXPLORE MORE",
+                //       style: TextStyle(
+                //         fontSize: 14,
+                //         fontWeight: FontWeight.w600,
+                //         color: Colors.black87,
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 const SizedBox(width: 12),
 
                 // View Order Button
@@ -1472,10 +1473,28 @@ class OrderSuccessDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _navigateToOrderDetails(context);
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OrdersScreen(),
+                        ),
+                      );
+
+                      if (result == "dash") {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DashboardScreen(),
+                          ),
+                        );
+                      }
                     },
+
+                    // onPressed: () {
+                    //   Navigator.pop(context);
+                    //   _navigateToOrderDetails(context);
+                    // },
                     child: const Text(
                       "VIEW ORDER",
                       style: TextStyle(
@@ -1505,7 +1524,7 @@ class OrderSuccessDialog extends StatelessWidget {
                   );
                 },
                 child: const Text(
-                  "Continue Shopping",
+                  "Continue",
                   style: TextStyle(
                     color: Colors.blue,
                     fontWeight: FontWeight.w500,

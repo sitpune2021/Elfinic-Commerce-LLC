@@ -1141,6 +1141,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
             icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () => Navigator.pop(context),
           ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(
+              height: 1,
+              color: Colors.black.withValues(alpha: 0.06),
+            ),
+          ),
           actions: [
             Consumer<CartProvider>(
               builder: (context, cartProvider, _) {

@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,43 +33,31 @@ class CartProvider with ChangeNotifier {
         return sum + (price * item.quantity);
       });
 
-  // Initialize the flag from SharedPreferences
-  CartProvider() {
-    _loadCartClearedFlag();
-  }
+  // // cart quentity
+  // int getCartQuantityForProduct({
+  //   required int productId,
+  //   int? variantId,
+  // }) {
+  //   return _cartItems
+  //       .where((item) =>
+  //           item.productId == productId &&
+  //           item.product.selectedVariantId == variantId)
+  //       .fold(0, (sum, item) => sum + item.quantity);
+  // }
 
-  // Load the flag from persistent storage
-  Future<void> _loadCartClearedFlag() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      // _cartClearedByPayment = prefs.getBool('cart_cleared_by_payment') ?? false;
-      //
-      // if (kDebugMode) {
-      //   print('🛒 Cart cleared flag loaded: $_cartClearedByPayment');
-      // }
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error loading cart cleared flag: $e');
-      }
-    }
-  }
+  // bool canAddQuantity({
+  //   required int productId,
+  //   required int availableQty,
+  //   int addQty = 1,
+  //   int? variantId,
+  // }) {
+  //   final cartQty = getCartQuantityForProduct(
+  //     productId: productId,
+  //     variantId: variantId,
+  //   );
 
-  // Save the flag to persistent storage
-  /*Future<void> _saveCartClearedFlag(bool value) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('cart_cleared_by_payment', value);
-      // _cartClearedByPayment = value;
-
-      if (kDebugMode) {
-        print('🛒 Cart cleared flag saved: $value');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error saving cart cleared flag: $e');
-      }
-    }
-  }*/
+  //   return (cartQty + addQty) <= availableQty;
+  // }
 
   // UPDATED: Local-only cart clearance with persistent flag
   Future<void> clearCart() async {

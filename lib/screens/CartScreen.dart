@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -1331,7 +1333,7 @@ class CouponGridScreen extends StatelessWidget {
   }
 }
 
-class CartItemWidget extends StatelessWidget {
+class CartItemWidget extends StatefulWidget {
   final UserCartItem item;
   final VoidCallback? onQuantityChanged;
 
@@ -1341,26 +1343,97 @@ class CartItemWidget extends StatelessWidget {
     this.onQuantityChanged,
   });
 
-  Future<void> _updateQuantity(BuildContext context, int newQuantity) async {
+  @override
+  State<CartItemWidget> createState() => _CartItemWidgetState();
+}
+
+class _CartItemWidgetState extends State<CartItemWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  late Animation<double> _scaleAnimation;
+  bool _isUpdating = false;
+  int _displayQuantity = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _displayQuantity = widget.item.quantity;
+
+    _animController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  //
+  Future<void> _updateQuantity(int newQuantity) async {
+    if (_isUpdating || newQuantity < 1) return;
+
+    setState(() {
+      _isUpdating = true;
+      _displayQuantity = newQuantity;
+    });
+
+    // Trigger animation
+    _animController.forward().then((_) => _animController.reverse());
+
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
 
     try {
-      await cartProvider.updateQuantity(item, newQuantity);
+      await cartProvider.updateQuantity(widget.item, newQuantity);
 
-      if (onQuantityChanged != null) {
-        onQuantityChanged!();
+      if (widget.onQuantityChanged != null) {
+        widget.onQuantityChanged!();
       }
     } catch (e) {
-      if (!context.mounted) return;
+      // Revert on error
+      setState(() => _displayQuantity = widget.item.quantity);
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to update quantity: $e'),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isUpdating = false);
+      }
     }
   }
+  // Future<void> _updateQuantity(BuildContext context, int newQuantity) async {
+  //   final cartProvider = Provider.of<CartProvider>(context, listen: false);
+
+  //   try {
+  //     await cartProvider.updateQuantity(widget.item, newQuantity);
+
+  //     if (widget.onQuantityChanged != null) {
+  //       widget.onQuantityChanged!();
+  //     }
+  //   } catch (e) {
+  //     if (!context.mounted) return;
+
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text('Failed to update quantity: $e'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   }
+  // }
 
   double _getUnitPrice(UserCartProduct product) {
     try {
@@ -1400,9 +1473,9 @@ class CartItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<CartProvider>(
       builder: (context, cartProvider, _) {
-        final product = item.product;
+        final product = widget.item.product;
         final unitPrice = _getUnitPrice(product);
-        final totalPrice = item.quantity * unitPrice;
+        final totalPrice = widget.item.quantity * unitPrice;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -1420,8 +1493,8 @@ class CartItemWidget extends StatelessWidget {
               Row(
                 children: [
                   Checkbox(
-                    value: cartProvider.isSelected(item),
-                    onChanged: (_) => cartProvider.toggleSelection(item),
+                    value: cartProvider.isSelected(widget.item),
+                    onChanged: (_) => cartProvider.toggleSelection(widget.item),
                     activeColor: Colors.orange,
                   ),
                   GestureDetector(
@@ -1465,7 +1538,7 @@ class CartItemWidget extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            "Qty: ${item.quantity}",
+                            "Qty: ${widget.item.quantity}",
                             style: const TextStyle(
                               fontSize: 12,
                               color: Colors.grey,
@@ -1486,13 +1559,13 @@ class CartItemWidget extends StatelessWidget {
                     icon: const Icon(Icons.delete_outline, color: Colors.red),
                     onPressed: () => _showDeleteBottomSheet(
                       context,
-                      item,
+                      widget.item,
                       (cartId) async {
                         await Provider.of<CartProvider>(context, listen: false)
-                            .removeFromCart(item, context);
+                            .removeFromCart(widget.item, context);
 
-                        if (onQuantityChanged != null) {
-                          onQuantityChanged!();
+                        if (widget.onQuantityChanged != null) {
+                          widget.onQuantityChanged!();
                         }
                       },
                     ),
@@ -1504,50 +1577,160 @@ class CartItemWidget extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Container(
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.blueAccent),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _isUpdating ? Colors.orange : Colors.green,
+                        width: 1.5,
+                      ),
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: (_isUpdating ? Colors.orange : Colors.green)
+                              .withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove, size: 18),
-                          onPressed: () =>
-                              _updateQuantity(context, item.quantity - 1),
+                        _buildQuantityButton(
+                          icon: Icons.remove,
+                          onPressed: _displayQuantity > 1
+                              ? () => _updateQuantity(_displayQuantity - 1)
+                              : null,
+                          isEnabled: _displayQuantity > 1 && !_isUpdating,
                         ),
-                        Text(
-                          item.quantity.toString(),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          transitionBuilder: (child, animation) {
+                            return ScaleTransition(
+                              scale: animation,
+                              child: FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: Container(
+                            key: ValueKey<int>(_displayQuantity),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              _displayQuantity.toString(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
+                            ),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.add, size: 18),
-                          onPressed: () =>
-                              _updateQuantity(context, item.quantity + 1),
+                        _buildQuantityButton(
+                          icon: Icons.add,
+                          onPressed: !_isUpdating
+                              ? () => _updateQuantity(_displayQuantity + 1)
+                              : null,
+                          isEnabled: !_isUpdating,
                         ),
                       ],
                     ),
                   ),
+
                   const SizedBox(width: 12),
-                  Text(
-                    "₹${formatPrice(totalPrice)}",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.green,
+
+                  ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: _isUpdating ? Colors.orange : Colors.green,
+                      ),
+                      child: Text("₹${formatPrice(totalPrice)}"),
                     ),
                   ),
+
+                  // Container(
+                  //   padding:
+                  //       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  //   decoration: BoxDecoration(
+                  //     borderRadius: BorderRadius.circular(10),
+                  //     border: Border.all(color: Colors.blueAccent),
+                  //   ),
+                  //   child: Row(
+                  //     children: [
+                  //       IconButton(
+                  //         icon: const Icon(Icons.remove, size: 18),
+                  //         onPressed: () => _updateQuantity(
+                  //             context, widget.item.quantity - 1),
+                  //       ),
+                  //       Text(
+                  //         widget.item.quantity.toString(),
+                  //         style: const TextStyle(
+                  //           fontWeight: FontWeight.bold,
+                  //           fontSize: 16,
+                  //         ),
+                  //       ),
+                  //       IconButton(
+                  //         icon: const Icon(Icons.add, size: 18),
+                  //         onPressed: () => _updateQuantity(
+                  //             context, widget.item.quantity + 1),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
+                  // const SizedBox(width: 12),
+                  // Text(
+                  //   "₹${formatPrice(totalPrice)}",
+                  //   style: const TextStyle(
+                  //     fontWeight: FontWeight.bold,
+                  //     fontSize: 16,
+                  //     color: Colors.green,
+                  //   ),
+                  // ),
                 ],
               ),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildQuantityButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required bool isEnabled,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isEnabled
+                ? Colors.green.withValues(alpha: 0.1)
+                : Colors.grey.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: isEnabled ? Colors.green : Colors.grey,
+          ),
+        ),
+      ),
     );
   }
 

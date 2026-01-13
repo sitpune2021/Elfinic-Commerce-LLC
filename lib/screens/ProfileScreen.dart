@@ -285,9 +285,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             builder: (_) => const WishlistScreen()),
                       );
                     }),
-                    _buildListTile(Icons.card_giftcard, "Rewards", () {
-                      // Navigate to RewardsScreen
-                    }),
+                    // _buildListTile(Icons.card_giftcard, "Rewards", () {
+                    //   // Navigate to RewardsScreen
+                    // }),
                     _buildListTile(
                       Icons.security_outlined,
                       "Update password",
