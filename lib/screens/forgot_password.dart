@@ -59,6 +59,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 controller: mobileController,
                 decoration: InputDecoration(
                   hintText: "Mobile Number",
+                  counterText: "", 
                   filled: true,
                   fillColor: Colors.blue.shade50,
                   border: OutlineInputBorder(

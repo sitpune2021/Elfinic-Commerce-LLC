@@ -261,7 +261,7 @@ class ApiService {
     }
   }
 
-  /// ✅ Login API
+  /// ✅ Email Login  API
   Future<LoginResponse> login(String email, String password) async {
     final url = Uri.parse("$baseUrl/api/login");
 
@@ -306,6 +306,86 @@ class ApiService {
     } else {
       final errorJson = jsonDecode(response.body);
       throw Exception(errorJson['message'] ?? 'Login failed');
+    }
+  }
+
+  /// ================= SEND OTP =================
+  Future<Map<String, dynamic>> sendOtp(String mobile) async {
+    final url = Uri.parse(
+      "$baseUrl/api/customer/login/send-otp",
+    );
+
+    final body = jsonEncode({
+      "mobile": mobile,
+    });
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: body,
+    );
+
+    debugPrint("SEND OTP URL: $url");
+    debugPrint("BODY: $body");
+    debugPrint("RESPONSE: ${response.body}");
+
+    logApiCall(method: 'POST', url: url, response: response);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? "Failed to send OTP");
+    }
+  }
+
+  /// ================= VERIFY OTP =================
+  Future<LoginResponse> verifyOtp(String mobile, String otp) async {
+    final url = Uri.parse(
+      "$baseUrl/api/customer/login/verify-otp",
+    );
+
+    final body = jsonEncode({
+      "mobile": mobile,
+      "otp": otp,
+    });
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: body,
+    );
+
+    debugPrint("VERIFY OTP URL: $url");
+    debugPrint("BODY: $body");
+    debugPrint("RESPONSE: ${response.body}");
+
+    logApiCall(method: 'POST', url: url, response: response);
+
+    if (response.statusCode == 200) {
+      final loginRes = LoginResponse.fromRawJson(response.body);
+
+      // Save token & user (same as email login)
+      if (loginRes.token != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("auth_token", loginRes.token!);
+      }
+
+      if (loginRes.user != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString("user_id", loginRes.user!.id.toString());
+        await prefs.setString("user_name", loginRes.user!.name);
+        await prefs.setString("user_email", loginRes.user!.email);
+      }
+
+      // Optional: print for debug
+      debugPrint("Saved user_id: ${loginRes.user!.id.toString()}");
+      debugPrint("token user_id: ${loginRes.token}");
+
+      return loginRes;
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? "OTP verification failed");
     }
   }
 
