@@ -26,7 +26,6 @@ class WishlistScreen extends StatefulWidget {
 class _WishlistScreenState extends State<WishlistScreen> {
   List<Product> _wishlistProducts = [];
   bool _isLoading = false;
-  String _errorMessage = '';
 
   @override
   void initState() {
@@ -37,7 +36,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
   Future<void> _loadWishlist() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = '';
     });
 
     try {
@@ -46,7 +44,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
       final token = prefs.getString('auth_token');
 
       if (userId == null || token == null) {
-        setState(() => _errorMessage = 'User not logged in');
         return;
       }
 
@@ -71,46 +68,49 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
           setState(() {
             _wishlistProducts = products;
-            if (_wishlistProducts.isEmpty) {
-              _errorMessage = "Your wishlist is empty!";
-            }
+            if (_wishlistProducts.isEmpty) {}
           });
+          if (!mounted) return;
 
           // 🔥 Sync Provider with backend
-          final wishlistProvider =
-              Provider.of<WishlistProvider>(context, listen: false);
-        } else {
-          setState(() => _errorMessage = jsonData['message']);
-        }
-      } else {
-        setState(() => _errorMessage = "Server error ${response.statusCode}");
-      }
-    } catch (e) {
-      setState(() => _errorMessage = "Error: $e");
+          Provider.of<WishlistProvider>(context, listen: false);
+        } else {}
+      } else {}
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
+  /// 🔥 Smooth remove from wishlist
   Future<void> _toggleWishlist(int productId) async {
     // 📳 Haptic feedback
     HapticFeedback.lightImpact();
+
     final provider = Provider.of<WishlistProvider>(context, listen: false);
+
+    // ✅ Optimistic UI removal
+    setState(() {
+      _wishlistProducts.removeWhere((p) => p.id == productId);
+    });
+
     final success = await provider.toggleWishlist(productId);
-    
+
     if (!mounted) return;
+
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.isInWishlist(productId)
-              ? "Added to wishlist ❤️"
-              : "Removed from wishlist 💔"),
-          backgroundColor: provider.isInWishlist(productId)
-              ? Colors.green
-              : Colors.redAccent,
-        ),
-      );
-      _loadWishlist();
+      // rollback if failed
+      await _loadWishlist();
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(provider.isInWishlist(productId)
+      //         ? "Added to wishlist ❤️"
+      //         : "Removed from wishlist 💔"),
+      //     backgroundColor: provider.isInWishlist(productId)
+      //         ? Colors.green
+      //         : Colors.redAccent,
+      //   ),
+      // );
+      // _loadWishlist();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -139,17 +139,69 @@ class _WishlistScreenState extends State<WishlistScreen> {
         return Scaffold(
           appBar: AppBar(
             surfaceTintColor: Colors.transparent,
-            title: const Text('My Wishlist'),
-            backgroundColor: const Color(0xffc98a35),
-            foregroundColor: Colors.white,
+            elevation: 0,
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            iconTheme: const IconThemeData(color: Colors.black),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(
+                height: 1,
+                color: Colors.black.withValues(alpha: 0.06),
+              ),
+            ),
+            title: const Text(
+              'My Wishlist',
+              style: TextStyle(
+                color: Colors.black,
+              ),
+            ),
             actions: [
               Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Center(
-                  child: Text(
-                    'total:${wishlistProvider.wishlistCount}',
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                padding: const EdgeInsets.only(right: 12),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xffc98a35), Color(0xffe6b566)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.favorite, size: 18, color: Colors.white),
+                      const SizedBox(width: 6),
+
+                      /// 🔥 Animated Count
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        transitionBuilder: (child, animation) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 0.5),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: FadeTransition(
+                                opacity: animation, child: child),
+                          );
+                        },
+                        child: Text(
+                          '${wishlistProvider.wishlistCount}',
+                          key: ValueKey(wishlistProvider.wishlistCount),
+                          style: const TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -160,45 +212,71 @@ class _WishlistScreenState extends State<WishlistScreen> {
               ? const Center(child: CustomLoader())
               : _wishlistProducts.isEmpty
                   ? _buildEmptyWishlist()
-                  : LayoutBuilder(
-                      builder: (context, constraints) {
-                        // Responsive grid settings
-                        int crossAxisCount = 2;
-                        double childAspectRatio = 0.7;
+                  : GridView.builder(
+                      padding: const EdgeInsets.all(10),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: 0.7,
+                      ),
+                      itemCount: _wishlistProducts.length,
+                      itemBuilder: (context, index) {
+                        final product = _wishlistProducts[index];
 
-                        if (constraints.maxWidth > 1200) {
-                          crossAxisCount = 5;
-                          childAspectRatio = 0.8;
-                        } else if (constraints.maxWidth > 900) {
-                          crossAxisCount = 4;
-                        } else if (constraints.maxWidth > 600) {
-                          crossAxisCount = 3;
-                        }
-
-                        return RefreshIndicator(
-                          onRefresh: _loadWishlist,
-                          color: const Color(0xffc98a35),
-                          child: GridView.builder(
-                            padding: const EdgeInsets.all(10),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 10,
-                              childAspectRatio: childAspectRatio,
-                            ),
-                            itemCount: _wishlistProducts.length,
-                            itemBuilder: (context, index) {
-                              final product = _wishlistProducts[index];
-                              if (!wishlistProvider.isInWishlist(product.id)) {
-                                return const SizedBox.shrink();
-                              }
-                              return _buildWishlistCard(product);
-                            },
-                          ),
+                        return AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          transitionBuilder: (child, animation) {
+                            return ScaleTransition(
+                              scale: animation,
+                              child: FadeTransition(
+                                  opacity: animation, child: child),
+                            );
+                          },
+                          child: _buildWishlistCard(product),
                         );
                       },
                     ),
+          // : LayoutBuilder(
+          //     builder: (context, constraints) {
+          //       // Responsive grid settings
+          //       int crossAxisCount = 2;
+          //       double childAspectRatio = 0.7;
+
+          //       if (constraints.maxWidth > 1200) {
+          //         crossAxisCount = 5;
+          //         childAspectRatio = 0.8;
+          //       } else if (constraints.maxWidth > 900) {
+          //         crossAxisCount = 4;
+          //       } else if (constraints.maxWidth > 600) {
+          //         crossAxisCount = 3;
+          //       }
+
+          //       return RefreshIndicator(
+          //         onRefresh: _loadWishlist,
+          //         color: const Color(0xffc98a35),
+          //         child: GridView.builder(
+          //           padding: const EdgeInsets.all(10),
+          //           gridDelegate:
+          //               SliverGridDelegateWithFixedCrossAxisCount(
+          //             crossAxisCount: crossAxisCount,
+          //             crossAxisSpacing: 10,
+          //             mainAxisSpacing: 10,
+          //             childAspectRatio: childAspectRatio,
+          //           ),
+          //           itemCount: _wishlistProducts.length,
+          //           itemBuilder: (context, index) {
+          //             final product = _wishlistProducts[index];
+          //             if (!wishlistProvider.isInWishlist(product.id)) {
+          //               return const SizedBox.shrink();
+          //             }
+          //             return _buildWishlistCard(product);
+          //           },
+          //         ),
+          //       );
+          //     },
+          //   ),
         );
       },
     );
@@ -310,14 +388,6 @@ class _WishlistScreenState extends State<WishlistScreen> {
                               ],
                             ),
                             padding: const EdgeInsets.all(6),
-                            //   child: Icon(
-                            //     Icons.favorite,
-                            //     color: provider.isInWishlist(product.id)
-                            //         ? Colors.red
-                            //         : Colors.grey,
-                            //     size: 20,
-                            //   ),
-                            // ),
                             child: AnimatedSwitcher(
                               duration: const Duration(milliseconds: 250),
                               transitionBuilder: (child, animation) {
