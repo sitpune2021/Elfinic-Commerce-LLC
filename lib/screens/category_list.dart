@@ -1,7 +1,9 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:elfinic_commerce_llc/providers/WishlistProvider.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import '../model/SubcategoriesResponse.dart';
 
@@ -610,6 +612,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -669,7 +677,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
             padding: const EdgeInsets.all(12),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.65,
+              childAspectRatio: 0.70, // 🔥 taller card
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
@@ -681,97 +689,153 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
               final product = provider.products[index];
 
-              String imageUrl;
-              if (product.images.isNotEmpty) {
-                imageUrl = "${product.imagePath}${product.images.first}";
-              } else {
-                imageUrl = "${product.imagePath}${product.productThumb}";
-              }
-
               return InkWell(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(6),
                 onTap: () {
                   Navigator.push(
                     context,
                     PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          ProductDetailScreen(
-                        product: product, // ✅ full product
-                        slug: product.slug!, // ✅ slug
+                      pageBuilder: (_, __, ___) => ProductDetailScreen(
+                        product: product,
+                        slug: product.slug!,
                       ),
-                      transitionsBuilder:
-                          (context, animation, secondaryAnimation, child) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        );
-                      },
+                      transitionsBuilder: (_, animation, __, child) =>
+                          FadeTransition(opacity: animation, child: child),
                       transitionDuration: const Duration(milliseconds: 300),
                     ),
                   );
                 },
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black12, blurRadius: 4),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
+                      /// 🖼 IMAGE
+                      AspectRatio(
+                        aspectRatio: 1 / 1,
                         child: ClipRRect(
                           borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12),
+                            top: Radius.circular(6),
                           ),
-                          child: CachedNetworkImage(
-                            imageUrl: imageUrl,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-
-                            // 🔥 CACHE OPTIMIZATION (VERY IMPORTANT)
-                            memCacheWidth: 400, // Grid image width
-                            memCacheHeight: 550, // Grid image height
-                            maxWidthDiskCache: 400,
-                            maxHeightDiskCache: 550,
-
-                            // 🔥 FADE IN ANIMATION
-                            fadeInDuration: const Duration(milliseconds: 300),
-                            fadeOutDuration: const Duration(milliseconds: 200),
-
-                            // 🔥 SHIMMER PLACEHOLDER
-                            placeholder: (context, url) => const ImageShimmer(),
-
-                            // 🔥 ERROR STATE
-                            errorWidget: (context, url, error) => Container(
-                              color: Colors.grey.shade200,
-                              child: const Icon(
-                                Icons.image_not_supported,
-                                size: 40,
-                                color: Colors.grey,
+                          child: Stack(
+                            children: [
+                              CachedNetworkImage(
+                                imageUrl:
+                                    "${product.imagePath}${product.images.isNotEmpty ? product.images.first : product.productThumb}",
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                                memCacheWidth: 300,
+                                memCacheHeight: 200,
+                                maxWidthDiskCache: 300,
+                                maxHeightDiskCache: 200,
+                                placeholder: (_, __) => const ImageShimmer(),
+                                errorWidget: (_, __, ___) => Container(
+                                  color: Colors.grey.shade200,
+                                  child: const Icon(Icons.image_not_supported),
+                                ),
                               ),
+
+                              /// ❤️ Wishlist
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Consumer<WishlistProvider>(
+                                  builder: (_, wishlistProvider, __) {
+                                    final isWishlisted = wishlistProvider
+                                        .isInWishlist(product.id);
+
+                                    return GestureDetector(
+                                      onTap: () async {
+                                        final prefs = await SharedPreferences
+                                            .getInstance();
+                                        final userId = int.tryParse(
+                                                prefs.getString('user_id') ??
+                                                    '0') ??
+                                            0;
+                                        if (userId == 0) return;
+                                        await wishlistProvider
+                                            .toggleWishlist(product.id);
+                                      },
+                                      child: CircleAvatar(
+                                        radius: 16,
+                                        backgroundColor: Colors.white,
+                                        child: Icon(
+                                          isWishlisted
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          color: isWishlisted
+                                              ? Colors.red
+                                              : Colors.grey,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      /// 📄 DETAILS (FIXED)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              product.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 12),
                             ),
-                          ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.star,
+                                    size: 14, color: Colors.orange),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "${product.averageRating} (${product.ratingCount})",
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                              ],
+                            ),
+                            // const Spacer(),
+                            Row(
+                              children: [
+                                if (product.price != product.totalPrice)
+                                  Text(
+                                    "₹${product.price}",
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey,
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "₹${product.totalPrice}",
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Text(
-                          product.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(
-                          "₹${product.totalPrice}",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
                     ],
                   ),
                 ),
