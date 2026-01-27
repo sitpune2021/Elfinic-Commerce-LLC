@@ -1601,13 +1601,33 @@ class _CartItemWidgetState extends State<CartItemWidget>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildQuantityButton(
+                       /* _buildQuantityButton(
                           icon: Icons.remove,
                           onPressed: _displayQuantity > 1
                               ? () => _updateQuantity(_displayQuantity - 1)
                               : null,
                           isEnabled: _displayQuantity > 1 && !_isUpdating,
+                        ),*/
+                        _buildQuantityButton(
+                          icon: Icons.remove,
+                          onPressed: !_isUpdating
+                              ? () {
+                            if (_displayQuantity > 1) {
+                              _updateQuantity(_displayQuantity - 1);
+                            } else {
+                              // Remove item when quantity is 1
+                              Provider.of<CartProvider>(context, listen: false)
+                                  .removeFromCart(widget.item, context);
+
+                              if (widget.onQuantityChanged != null) {
+                                widget.onQuantityChanged!();
+                              }
+                            }
+                          }
+                              : null,
+                          isEnabled: !_isUpdating,
                         ),
+
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),
                           transitionBuilder: (child, animation) {

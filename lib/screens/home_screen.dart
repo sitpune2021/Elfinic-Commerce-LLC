@@ -490,25 +490,41 @@ class _HomeScreenState extends State<HomeScreen>
 
         if (recentViewProvider.error != null) {
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
+            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
             child: Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Icon(
+                    Icons.visibility_off_outlined,
+                    size: 80,
+                    color: Colors.grey.shade400,
+                  ),
+                  const SizedBox(height: 20),
                   Text(
-                    'Error loading recent views',
-                    style: TextStyle(color: Colors.red),
+                    'No recent views yet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      recentViewProvider.getRecentViews();
-                    },
-                    child: const Text('Retry'),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Start exploring products and they will appear here.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade500,
+                    ),
                   ),
+                  // const SizedBox(height: 20),
+
                 ],
               ),
             ),
           );
+
         }
 
         if (recentViewProvider.recentViews.isEmpty) {

@@ -13,8 +13,8 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.sit.elfinic_commerce_llc"
-    compileSdk = 36
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 35
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -26,10 +26,10 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.sit.elfinic_commerce_llc"
+        applicationId = "com.sit.elfinic_commerce_llc.test"
 
         minSdkVersion = flutter.minSdkVersion
-        targetSdk = 34
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -48,7 +48,7 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"

@@ -952,12 +952,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     final product = getProduct;
     final price =
         double.tryParse(product.price?.replaceAll(',', '') ?? '0') ?? 0;
-    final discountPrice = double.tryParse(product.discountPrice ?? '0') ?? 0;
+    final discount = double.tryParse(product.discountPrice ?? '0') ?? 0;
 
-    if (discountPrice > 0 && price > 0) {
-      final double calculatedPercentage = (discountPrice / price) * 100;
-      final int roundedPercentage = calculatedPercentage.round();
-      return "$roundedPercentage% Off";
+    if (price > 0 && discount > 0) {
+      final percent = (discount / price) * 100;
+      return "${percent.round()}% OFF";
     }
 
     return "";
@@ -967,9 +966,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     final product = getProduct;
     final price =
         double.tryParse(product.price?.replaceAll(',', '') ?? '0') ?? 0;
-    final discountPrice = double.tryParse(product.discountPrice ?? '0') ?? 0;
+    final discount = double.tryParse(product.discountPrice ?? '0') ?? 0;
 
-    return discountPrice > 0 ? discountPrice : price;
+    if (discount > 0 && discount < price) {
+      return price - discount;
+    }
+
+    return price;
   }
 
   double _calculateDiscountAmount() {
@@ -1153,56 +1156,73 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
               builder: (context, cartProvider, _) {
                 final uniqueItemCount = cartProvider.cartItems.length;
 
-                return Stack(
-                  alignment: Alignment.topRight,
-                  children: [
-                    IconButton(
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  const CartScreen(fromProductDetail: true)),
-                        );
-                        if (!context.mounted) return;
-                        final cartProvider =
-                            Provider.of<CartProvider>(context, listen: false);
-                        cartProvider.fetchCartItems();
-                      },
-                      icon: SvgPicture.asset(
-                        'assets/icons/shopping-cart.svg',
-                        width: 26,
-                        height: 26,
-                        colorFilter: const ColorFilter.mode(
-                            Colors.black, BlendMode.srcIn),
+                return InkWell(
+                  borderRadius: BorderRadius.circular(50),
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const CartScreen(fromProductDetail: true),
                       ),
-                    ),
-                    if (uniqueItemCount > 0)
-                      Positioned(
-                        right: 6,
-                        top: 6,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 18,
-                            minHeight: 18,
-                          ),
-                          child: Text(
-                            '$uniqueItemCount',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                    );
+
+                    if (!context.mounted) return;
+                    final cartProvider =
+                        Provider.of<CartProvider>(context, listen: false);
+                    cartProvider.fetchCartItems();
+                  },
+                  child: Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      IconButton(
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const CartScreen(fromProductDetail: true)),
+                          );
+                          if (!context.mounted) return;
+                          final cartProvider =
+                              Provider.of<CartProvider>(context, listen: false);
+                          cartProvider.fetchCartItems();
+                        },
+                        icon: SvgPicture.asset(
+                          'assets/icons/shopping-cart.svg',
+                          width: 26,
+                          height: 26,
+                          colorFilter: const ColorFilter.mode(
+                              Colors.black, BlendMode.srcIn),
                         ),
                       ),
-                  ],
+                      if (uniqueItemCount > 0)
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 18,
+                              minHeight: 18,
+                            ),
+                            child: Text(
+                              '$uniqueItemCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -1931,25 +1951,28 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                       width: 18,
                                       child: CustomLoader(),
                                     )
-                                  : const Row(
-                                      key: ValueKey("idle"),
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.shopping_cart,
-                                          size: 18,
-                                          color: Colors.white,
-                                        ),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          "Add to Cart",
-                                          style: TextStyle(
-                                            fontSize: 14,
+                                  : const FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Row(
+                                        key: ValueKey("idle"),
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.shopping_cart,
+                                            size: 18,
                                             color: Colors.white,
                                           ),
-                                        ),
-                                      ],
+                                          SizedBox(width: 6),
+                                          Text(
+                                            "Add to Cart",
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                         ),
                       ),
@@ -2227,26 +2250,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Recently Viewed",
-                    style: GoogleFonts.roboto(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
+              child: Text(
+                "Recently Viewed",
+                style: GoogleFonts.roboto(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
             ),
-            _buildRecentViewList(recentViewProvider.recentViews),
+
+            /// 🔥 HERE – USING EXACT SAME DESIGN AS SIMILAR PRODUCTS
+            ProductListWidget(
+              products: recentViewProvider.recentViews,
+              isLoading: false,
+              onProductTap: _onRecentViewProductTap,
+              scrollDirection: Axis.horizontal,
+              height: 344,   // same height as similar products
+            ),
           ],
         );
       },
     );
   }
+
 
   Widget _buildRecentViewList(List<Product> recentViews) {
     return SizedBox(
@@ -3548,7 +3575,8 @@ class _VideoThumbnailTileState extends State<VideoThumbnailTile> {
       final tempDir = await getTemporaryDirectory();
 
       final thumbPath = await VideoThumbnail.thumbnailFile(
-        video: widget.videoUrl, // ✅ NETWORK URL
+        video: widget.videoUrl,
+        // ✅ NETWORK URL
         thumbnailPath: tempDir.path,
         imageFormat: ImageFormat.JPEG,
         maxHeight: 200,

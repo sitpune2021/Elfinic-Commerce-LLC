@@ -677,7 +677,250 @@ class _ProductListScreenState extends State<ProductListScreen> {
             padding: const EdgeInsets.all(12),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.70, // 🔥 taller card
+              childAspectRatio: 0.60,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount: provider.products.length + (provider.hasMore ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index >= provider.products.length) {
+                return const Center(child: CustomLoader());
+              }
+
+              final product = provider.products[index];
+
+              String? imageUrl;
+
+              if (product.images.isNotEmpty) {
+                imageUrl =
+                "${product.imagePath}${product.images.first}";
+              } else if (product.productThumb != null &&
+                  product.productThumb!.isNotEmpty) {
+                imageUrl =
+                "${product.imagePath}${product.productThumb}";
+              }
+
+              return InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (_, __, ___) => ProductDetailScreen(
+                        product: product,
+                        slug: product.slug!,
+                      ),
+                      transitionsBuilder: (_, animation, __, child) =>
+                          FadeTransition(opacity: animation, child: child),
+                      transitionDuration: const Duration(milliseconds: 300),
+                    ),
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black12),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Stack(
+                          children: [
+                            AspectRatio(
+                              aspectRatio: 1 / 1.25,
+                              child: Container(
+                                padding: const EdgeInsets.all(1),
+                                child: imageUrl != null
+                                    ? CachedNetworkImage(
+                                  imageUrl: imageUrl,
+                                  fit: BoxFit.contain,
+                                  placeholder: (_, __) =>
+                                  const ImageShimmer(),
+                                  errorWidget: (_, __, ___) =>
+                                  const Icon(Icons.image_not_supported),
+                                )
+                                    : const Icon(Icons.image_not_supported),
+                              ),
+                            ),
+
+                            /// DISCOUNT LABEL
+                            if (product.price != product.totalPrice)
+                              Positioned(
+                                top: 5,
+                                left: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    "${(((product.price - product.totalPrice) / product.price) * 100).round()}% OFF",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            /// WISHLIST ICON
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Consumer<WishlistProvider>(
+                                builder: (_, wishlistProvider, __) {
+                                  final isWishlisted =
+                                  wishlistProvider.isInWishlist(product.id);
+
+                                  return GestureDetector(
+                                    onTap: () async {
+                                      final prefs =
+                                      await SharedPreferences.getInstance();
+                                      final userId = int.tryParse(
+                                          prefs.getString('user_id') ?? '0') ??
+                                          0;
+                                      if (userId == 0) return;
+
+                                      await wishlistProvider
+                                          .toggleWishlist(product.id);
+                                    },
+                                    child: CircleAvatar(
+                                      radius: 16,
+                                      backgroundColor: Colors.white,
+                                      child: Icon(
+                                        isWishlisted
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: isWishlisted
+                                            ? Colors.red
+                                            : Colors.grey,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                product.name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+
+                              /// PRICE ROW
+                              Row(
+                                children: [
+                                  if (product.price != product.totalPrice) ...[
+                                    Text(
+                                      "₹${product.price}",
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                  ],
+                                  Text(
+                                    "₹${product.totalPrice}",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              /// RATING ROW
+                              Row(
+                                children: [
+                                  const Icon(Icons.star,
+                                      size: 14, color: Colors.orange),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    product.averageRating.toStringAsFixed(1),
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    "(${product.ratingCount})",
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+
+      /*Consumer<ProductProvider>(
+        builder: (context, provider, _) {
+          if (provider.isLoading && provider.products.isEmpty) {
+            return const Center(child: CustomLoader());
+          }
+
+          if (provider.products.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/images/image.png',
+                    height: 140,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "No products found",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return GridView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(12),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.65, // 🔥 taller card
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
@@ -713,7 +956,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       BoxShadow(color: Colors.black12, blurRadius: 4),
                     ],
                   ),
-                  child: Column(
+                  child:
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       /// 🖼 IMAGE
@@ -727,7 +971,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             children: [
                               CachedNetworkImage(
                                 imageUrl:
-                                    "${product.imagePath}${product.images.isNotEmpty ? product.images.first : product.productThumb}",
+                                "${product.imagePath}${product.images.isNotEmpty ? product.images.first : product.productThumb}",
                                 fit: BoxFit.cover,
                                 width: double.infinity,
                                 height: double.infinity,
@@ -756,8 +1000,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                         final prefs = await SharedPreferences
                                             .getInstance();
                                         final userId = int.tryParse(
-                                                prefs.getString('user_id') ??
-                                                    '0') ??
+                                            prefs.getString('user_id') ??
+                                                '0') ??
                                             0;
                                         if (userId == 0) return;
                                         await wishlistProvider
@@ -843,7 +1087,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
             },
           );
         },
-      ),
+      ),*/
     );
   }
 }

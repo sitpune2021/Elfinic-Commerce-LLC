@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 
 class OrderService {
+
   static Future<Uint8List?> downloadInvoiceBytes({
     required int orderId,
   }) async {
@@ -22,6 +23,10 @@ class OrderService {
         },
       );
 
+      // 🔍 Print URL
+      debugPrint("📌 Invoice Download URL: $uri");
+
+
       final response = await http.get(
         uri,
         headers: {
@@ -30,7 +35,24 @@ class OrderService {
         },
       );
 
-      if (response.statusCode != 200) return null;
+
+
+      // 🔍 Print status code
+      debugPrint("📌 Status Code: ${response.statusCode}");
+
+      // 🔍 Print headers
+      debugPrint("📌 Response Headers: ${response.headers}");
+
+      // 🔍 Print body length (PDF binary, so don't print full body)
+      debugPrint("📌 Response Bytes Length: ${response.bodyBytes.length}");
+
+
+      // if (response.statusCode != 200) return null;
+
+      if (response.statusCode != 200) {
+        debugPrint("❌ Error Response: ${response.body}");
+        return null;
+      }
 
       return response.bodyBytes;
     } catch (e) {

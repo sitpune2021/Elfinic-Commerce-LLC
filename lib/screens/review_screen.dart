@@ -1,7 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:elfinic_commerce_llc/screens/OrdersScreen.dart';
 import 'package:elfinic_commerce_llc/screens/home_screen.dart';
+import 'package:elfinic_commerce_llc/screens/privacy_policy_screen.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shimmer/shimmer.dart';
@@ -805,7 +807,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     ),
                     const SizedBox(height: 20),*/
 
-                    // Terms and Conditions
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -817,38 +818,79 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         children: [
                           CheckboxListTile(
                             value: _agreeToTerms,
-                            onChanged: (v) =>
-                                setState(() => _agreeToTerms = v ?? false),
-                            title: const Text.rich(
+                            onChanged: (v) => setState(() => _agreeToTerms = v ?? false),
+                            title: Text.rich(
                               TextSpan(
                                 children: [
-                                  TextSpan(text: "I agree to the "),
+                                  const TextSpan(text: "I agree to the "),
+
                                   TextSpan(
-                                      text:
-                                          "Terms & Conditions, Privacy Policy, Return Policy",
-                                      style: TextStyle(color: Colors.blue)),
-                                  TextSpan(text: " and "),
+                                    text: "Terms & Conditions",
+                                    style: const TextStyle(color: Colors.blue),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+                                        // _openWebPage("https://yourwebsite.com/terms");
+                                      },
+                                  ),
+
+                                  const TextSpan(text: ", "),
+
                                   TextSpan(
-                                      text: "Contact Seller",
-                                      style: TextStyle(color: Colors.blue)),
+                                    text: "Privacy Policy",
+                                    style: const TextStyle(color: Colors.blue),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const PrivacyPolicyScreen(),
+                                          ),
+                                        );
+                                      },
+                                  ),
+
+                                  const TextSpan(text: ", "),
+
+                                  TextSpan(
+                                    text: "Return Policy",
+                                    style: const TextStyle(color: Colors.blue),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+
+                                      },
+                                  ),
+
+                                  const TextSpan(text: " and "),
+
+                                  TextSpan(
+                                    text: "Contact Seller",
+                                    style: const TextStyle(color: Colors.blue),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+
+                                      },
+                                  ),
                                 ],
                               ),
                             ),
                             controlAffinity: ListTileControlAffinity.leading,
                             contentPadding: EdgeInsets.zero,
                           ),
+
                           CheckboxListTile(
                             value: _agreeToMarketing,
                             onChanged: (v) =>
                                 setState(() => _agreeToMarketing = v ?? false),
                             title: const Text(
-                                "Send me marketing communications via email and SMS"),
+                              "Send me marketing communications via email and SMS",
+                            ),
                             controlAffinity: ListTileControlAffinity.leading,
                             contentPadding: EdgeInsets.zero,
                           ),
                         ],
                       ),
                     ),
+
 
                     const SizedBox(height: 20),
 

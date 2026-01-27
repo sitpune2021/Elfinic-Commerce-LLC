@@ -525,10 +525,17 @@ class _OrdersScreenState extends State<OrdersScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Image.asset(
-          'assets/images/empty_orders.png',
+        SizedBox(
           height: 200,
-          width: 200,
+          child: Image.asset(
+            'assets/images/GirlholdingEmptyShoppingCart.jpeg',
+            height: 200,
+            width: 200,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(Icons.image_not_supported, size: 100, color: Colors.grey);
+            },
+          )
+
         ),
         const SizedBox(height: 24),
         const Text(
