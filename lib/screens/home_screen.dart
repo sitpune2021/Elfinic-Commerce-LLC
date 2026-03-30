@@ -490,35 +490,35 @@ class _HomeScreenState extends State<HomeScreen>
 
         if (recentViewProvider.error != null) {
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.visibility_off_outlined,
-                    size: 80,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'No recent views yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Start exploring products and they will appear here.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
+                  // Icon(
+                  //   Icons.visibility_off_outlined,
+                  //   size: 80,
+                  //   color: Colors.grey.shade400,
+                  // ),
                   // const SizedBox(height: 20),
+                  // Text(
+                  //   'No recent views yet',
+                  //   style: TextStyle(
+                  //     fontSize: 18,
+                  //     fontWeight: FontWeight.w600,
+                  //     color: Colors.grey.shade700,
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 8),
+                  // Text(
+                  //   'Start exploring products and they will appear here.',
+                  //   textAlign: TextAlign.center,
+                  //   style: TextStyle(
+                  //     fontSize: 14,
+                  //     color: Colors.grey.shade500,
+                  //   ),
+                  // ),
+                  // // const SizedBox(height: 20),
 
                 ],
               ),
@@ -1019,7 +1019,120 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
+  Widget _buildBannerCarousel() {
+    return Consumer<BannerProvider>(
+      builder: (context, bannerProvider, child) {
+        if (bannerProvider.isLoading) {
+          return SizedBox(
+            height: 180,
+            child: Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 15),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          );
+        }
 
+        if (bannerProvider.error != null) {
+          return Center(child: Text(bannerProvider.error!));
+        }
+
+        if (bannerProvider.banners.isEmpty) {
+          return const SizedBox(
+            height: 180,
+            child: Center(child: Text("No banners available")),
+          );
+        }
+
+        /// ✅ FLATTEN ALL IMAGES FROM ALL BANNERS
+        final List<String> images = bannerProvider.banners
+            .expand((banner) => banner.images)
+            .toList();
+
+        if (images.isEmpty) {
+          return const SizedBox(
+            height: 180,
+            child: Center(child: Text("No banner images found")),
+          );
+        }
+
+        return SizedBox(
+          height: 180,
+          child: Stack(
+            children: [
+              CarouselSlider(
+                options: CarouselOptions(
+                  height: MediaQuery.of(context).size.width * 0.45,
+                  autoPlay: true,
+                  enlargeCenterPage: true,
+                  viewportFraction: 0.9,
+                  autoPlayInterval: const Duration(seconds: 4),
+                  onPageChanged: (index, reason) {
+                    setState(() {
+                      _currentBannerIndex = index;
+                    });
+                  },
+                ),
+                items: images.map((img) {
+                  final imageUrl =
+                      "https://admin.elfinic.com/assets/img/banners/$img";
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.fill,
+                        width: double.infinity,
+                        placeholder: (context, url) => Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Container(color: Colors.white),
+                        ),
+                        errorWidget: (context, url, error) =>
+                        const Icon(Icons.broken_image, size: 40),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+
+              /// ✅ DOT INDICATOR (SYNCED WITH IMAGE COUNT)
+              Positioned(
+                bottom: 10,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: images.asMap().entries.map((entry) {
+                    return Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _currentBannerIndex == entry.key
+                            ? Colors.white
+                            : Colors.grey,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+/*
   Widget _buildBannerCarousel() {
     return Consumer<BannerProvider>(
       builder: (context, bannerProvider, child) {
@@ -1126,6 +1239,7 @@ class _HomeScreenState extends State<HomeScreen>
       },
     );
   }
+*/
 
   Widget _buildSectionTitle(String title, Widget navigateTo) {
     return Padding(

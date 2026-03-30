@@ -173,6 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final provider = Provider.of<RegisterProvider>(context);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),

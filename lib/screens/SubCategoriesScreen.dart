@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -36,7 +37,7 @@ class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -143,8 +144,57 @@ class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+
+
+                          /// 🖼️ Subcategory Image
+                          AspectRatio(
+                            aspectRatio: 1, // 👈 keeps all images same width & height (square)
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(16),
+                              ),
+                              child: imageUrl.startsWith("http")
+                                  ? CachedNetworkImage(
+                                imageUrl: imageUrl,
+                                fit: BoxFit.cover, // 👈 fills image properly
+                                width: double.infinity,
+                                placeholder: (context, url) =>
+                                const ShimmerCategoryCard(),
+                                errorWidget: (context, url, error) =>
+                                    Image.asset(
+                                      "assets/images/no_product_img2.png",
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                    ),
+                              )
+                                  : Image.asset(
+                                imageUrl,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                              ),
+                            ),
+                          ),
+
+                          /// 🏷️ Category Name
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                            child: AutoSizeText(
+                              item.name,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              minFontSize: 10,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+
                           // 🖼️ Subcategory Image
-                          Expanded(
+                         /* Expanded(
                             child: ClipRRect(
                                 borderRadius: const BorderRadius.vertical(
                                     top: Radius.circular(16)),
@@ -185,7 +235,7 @@ class _SubCategoriesScreenState extends State<SubCategoriesScreen> {
                                 height: 1.2,
                               ),
                             ),
-                          ),
+                          ),*/
                         ],
                       ),
                     ),

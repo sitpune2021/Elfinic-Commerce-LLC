@@ -274,6 +274,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
     final provider = context.watch<ForgotPasswordProvider>();
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),

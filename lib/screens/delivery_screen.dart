@@ -84,7 +84,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
       },
       child: BaseScreen(
         child: Scaffold(
-          backgroundColor: const Color(0xfffdf6ef),
+          backgroundColor:  Colors.white,
           appBar: AppBar(
             backgroundColor: const Color(0xfffdf6ef),
             elevation: 0,

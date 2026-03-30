@@ -37,6 +37,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 // Screens
 import 'screens/register_screen.dart';
 
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -87,6 +90,9 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+
+
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ConnectivityProvider>(
@@ -94,6 +100,8 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Elfinic Commerce LLC',
+
+          navigatorObservers: [routeObserver], // 🔥 ADD THIS LINE
           theme: ThemeData(
             primaryTextTheme: GoogleFonts.robotoTextTheme(),
             primaryColor: Color(0xFFD39841), // ✅ App primary color

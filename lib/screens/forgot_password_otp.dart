@@ -58,6 +58,7 @@ class _ForgotPasswordOTPScreenState extends State<ForgotPasswordOTPScreen> {
     final provider = context.watch<ForgotPasswordProvider>();
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),

@@ -49,7 +49,7 @@ class _SerchBarScreenState extends State<SerchBarScreen> {
     final width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: const Color(0xfffdf8f2),
+      backgroundColor:  Colors.white,
       body: SafeArea(
         child: Column(
           children: [

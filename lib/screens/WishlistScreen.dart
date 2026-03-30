@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import '../main.dart'; // to access routeObserver
 
 // your WishlistItem model
 class WishlistScreen extends StatefulWidget {
@@ -23,7 +24,31 @@ class WishlistScreen extends StatefulWidget {
   State<WishlistScreen> createState() => _WishlistScreenState();
 }
 
-class _WishlistScreenState extends State<WishlistScreen> {
+class _WishlistScreenState extends State<WishlistScreen>  with RouteAware {
+
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)! as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() async {
+    await Provider.of<WishlistProvider>(
+      context,
+      listen: false,
+    ).syncWishlistWithServer();
+
+    await _loadWishlist();
+  }
+
   List<Product> _wishlistProducts = [];
   bool _isLoading = false;
 

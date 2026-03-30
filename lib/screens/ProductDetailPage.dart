@@ -38,6 +38,7 @@ import 'CartScreen.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 import 'package:html/parser.dart' as html_parser;
+import 'package:share_plus/share_plus.dart';
 
 // ===============================
 // PRODUCT DETAIL MODELS
@@ -1099,6 +1100,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   Widget _buildErrorScreen() {
     return BaseScreen(
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -1133,6 +1135,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     final product = getProduct;
     final int stock = int.tryParse(product.stock ?? '0') ?? 0;
 
+
+
+
+
     return BaseScreen(
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -1152,6 +1158,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
             ),
           ),
           actions: [
+
+            /// 🔥 SHARE ICON
+            IconButton(
+              icon: const Icon(Icons.share, color: Colors.black),
+              // onPressed: _shareProduct,
+              onPressed: () {
+
+              },
+            ),
+
             Consumer<CartProvider>(
               builder: (context, cartProvider, _) {
                 final uniqueItemCount = cartProvider.cartItems.length;
@@ -1337,6 +1353,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                               ),
                             ),
                             onPressed: () async {
+
+
+
+
                               // 🔥 Trigger heart animation
                               _heartController
                                   .forward()
@@ -1350,9 +1370,24 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
 
                               if (!context.mounted) return;
 
+
+
+
+                              /// 🔥 NOT LOGGED IN
                               if (userId == 0) {
-                                _showLoginRequiredDialog(context);
-                                return;
+                                final goToLogin = await _showLoginRequiredDialog(context);
+
+                                /// If user clicks Login
+                                if (goToLogin == true) {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const LoginScreen(),
+                                    ),
+                                  );
+                                }
+
+                                return; // 🚫 stop here
                               }
 
                               final success = await wishlistProvider
@@ -1696,6 +1731,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
             final product = getProduct;
             cartProvider.getQuantityForProduct(product.id);
 
+            final quantity = cartProvider.getQuantityForProduct(getProduct.id);
+
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
@@ -1853,7 +1890,185 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                     //     },
                     //   ),
                     // ),
-                    SizedBox(
+
+                    /// add
+                SizedBox(
+                  height: 50,
+                  width: 150,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: quantity > 0
+                          ? const Color(0xFFD39841) // ✅ when added
+                          : Colors.blue.shade900,   // ✅ default
+                      disabledBackgroundColor: quantity > 0
+                          ? const Color(0xFFD39841) // ✅ FIX: keep same color when disabled
+                          : Colors.blue.shade900,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+
+                  /*  onPressed: quantity == 0
+                        ? () async {
+                      final product = getProduct;
+                      int? variantId;
+
+                      if (_selectedVariant != null) {
+                        variantId = _selectedVariant!.id;
+                      } else if (product.variants.isNotEmpty) {
+                        variantId = product.variants.first.id;
+                      }
+
+                      await cartProvider.addToCart(
+                        product,
+                        1,
+                        variantId: variantId,
+                      );
+                    }
+                        : null, // still disabled but color won't change now ✅*/
+
+
+
+
+                    onPressed: quantity == 0
+                        ? () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      final userId = prefs.getString('user_id');
+
+                      /// 🔥 NOT LOGGED IN → SHOW DIALOG FIRST
+                      if (userId == null || userId.isEmpty || userId == "0") {
+                        final goToLogin = await _showLoginRequiredDialog(context);
+
+                        /// If user clicks "Login"
+                        if (goToLogin == true) {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(
+                                fromAddToCart: true,
+                              ),
+                            ),
+                          );
+                        }
+
+                        /// 👇 STOP HERE (NO AUTO ADD)
+                        return;
+                      }
+
+                      /// ✅ NORMAL ADD TO CART
+                      final product = getProduct;
+                      int? variantId;
+
+                      if (_selectedVariant != null) {
+                        variantId = _selectedVariant!.id;
+                      } else if (product.variants.isNotEmpty) {
+                        variantId = product.variants.first.id;
+                      }
+
+                      await cartProvider.addToCart(
+                        product,
+                        1,
+                        variantId: variantId,
+                      );
+                    }
+                        : null,
+
+
+
+                    // onPressed: quantity == 0
+                    //     ? () async {
+                    //   final prefs = await SharedPreferences.getInstance();
+                    //   final userId = prefs.getString('user_id');
+                    //
+                    //   /// 🔥 CHECK LOGIN
+                    //   if (userId == null || userId.isEmpty || userId == "0") {
+                    //     _showLoginRequiredDialog(context);
+                    //     return;
+                    //   }
+                    //
+                    //   final product = getProduct;
+                    //   int? variantId;
+                    //
+                    //   if (_selectedVariant != null) {
+                    //     variantId = _selectedVariant!.id;
+                    //   } else if (product.variants.isNotEmpty) {
+                    //     variantId = product.variants.first.id;
+                    //   }
+                    //
+                    //   await cartProvider.addToCart(
+                    //     product,
+                    //     1,
+                    //     variantId: variantId,
+                    //   );
+                    // }
+                    //     : null,
+
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: quantity > 0
+                          ? Row(
+                        key: const ValueKey("qty"),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildQuantityButton(
+                            icon: Icons.remove,
+                            isEnabled: true,
+                            onPressed: () async {
+                              final item = cartProvider
+                                  .getCartItemForProduct(getProduct.id);
+
+                              if (item != null) {
+                                if (item.quantity > 1) {
+                                  await cartProvider.updateQuantity(
+                                      item, item.quantity - 1);
+                                } else {
+                                  await cartProvider.removeFromCart(item, context);
+                                }
+                              }
+                            },
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            quantity.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          _buildQuantityButton(
+                            icon: Icons.add,
+                            isEnabled: true,
+                            onPressed: () async {
+                              final item = cartProvider
+                                  .getCartItemForProduct(getProduct.id);
+
+                              if (item != null) {
+                                await cartProvider.updateQuantity(
+                                    item, item.quantity + 1);
+                              }
+                            },
+                          ),
+                        ],
+                      )
+                          : const Row(
+                        key: ValueKey("idle"),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.shopping_cart,
+                              color: Colors.white, size: 18),
+                          SizedBox(width: 6),
+                          Text(
+                            "Add to Cart",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                    /*SizedBox(
                       height: 50,
                       width: 140,
                       child: ElevatedButton(
@@ -1976,7 +2191,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                     ),
                         ),
                       ),
-                    ),
+                    ),*/
                   ],
                 ),
               ),
@@ -3135,7 +3350,37 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     );
   }
 
-  void _showLoginRequiredDialog(BuildContext context) {
+  Future<bool?> _showLoginRequiredDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Text("Login Required"),
+          content: const Text(
+            "Please login to add items to your cart.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD39841),
+              ),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("Login"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /*void _showLoginRequiredDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -3159,6 +3404,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
         );
       },
     );
+  }*/
+
+  void _shareProduct() {
+    final product = getProduct;
+
+    final productUrl = "${ApiService.baseUrl}/product/${product.slug}";
+
+    final shareText = '''
+🛍️ ${product.name}
+
+💰 Price: ₹${_calculateFinalPrice().toStringAsFixed(2)}
+
+⭐ Rating: ${product.averageRating}
+
+🔗 View Product:
+$productUrl
+''';
+
+    Share.share(shareText);
   }
 }
 
@@ -3676,4 +3940,33 @@ class _BottomInfo extends StatelessWidget {
       ],
     );
   }
+}
+
+Widget _buildQuantityButton({
+  required IconData icon,
+  required VoidCallback? onPressed,
+  required bool isEnabled,
+}) {
+  return Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isEnabled
+              ? Colors.green.withValues(alpha: 0.4)
+              : Colors.grey.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: isEnabled ? Colors.white : Colors.green,
+        ),
+      ),
+    ),
+  );
 }

@@ -18,7 +18,7 @@ class _LottieOverlayState extends State<LottieOverlay> with SingleTickerProvider
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3), // Exactly 2 seconds
+      duration: const Duration(milliseconds: 1500), // Exactly 2 seconds
     );
 
     // Start animation and hide after 2 seconds

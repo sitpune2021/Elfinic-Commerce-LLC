@@ -72,7 +72,7 @@ class _ShippingDeliveryPolicyScreenState
     final isTablet = MediaQuery.of(context).size.width > 600;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor:  Colors.white,
 
       /// WHITE APP BAR WITH SEPARATOR
       appBar: AppBar(

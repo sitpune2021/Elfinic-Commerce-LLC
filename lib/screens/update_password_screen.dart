@@ -57,6 +57,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
     final isLoading = context.watch<ForgotPasswordProvider>().isLoading;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Update Password'),
         centerTitle: true,

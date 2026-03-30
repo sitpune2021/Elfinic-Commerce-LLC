@@ -247,28 +247,26 @@ class _CartScreenState extends State<CartScreen> {
                 }
               },
               child: BaseScreen(
-                child: LottieOverlay(
-                  child: Scaffold(
-                    backgroundColor: const Color(0xffffffff),
-                    body: isLoading && cartItems.isEmpty
-                        ? const Center(child: CustomLoader())
-                        : cartItems.isEmpty
-                            ? _buildEmptyCart()
-                            : _buildCartWithItems(
-                                cartProvider,
-                                couponProvider,
-                                cartItems,
-                                allSelected,
-                                subtotal,
-                              ),
-                    bottomNavigationBar: cartItems.isEmpty
-                        ? null
-                        : _buildBottomNavigationBar(
-                            cartProvider,
-                            couponProvider,
-                            subtotal,
-                          ),
-                  ),
+                child: Scaffold(
+                  backgroundColor:  Colors.white,
+                  body: isLoading && cartItems.isEmpty
+                      ? const Center(child: CustomLoader())
+                      : cartItems.isEmpty
+                          ? _buildEmptyCart()
+                          : _buildCartWithItems(
+                              cartProvider,
+                              couponProvider,
+                              cartItems,
+                              allSelected,
+                              subtotal,
+                            ),
+                  bottomNavigationBar: cartItems.isEmpty
+                      ? null
+                      : _buildBottomNavigationBar(
+                          cartProvider,
+                          couponProvider,
+                          subtotal,
+                        ),
                 ),
               ),
             );
@@ -286,7 +284,7 @@ class _CartScreenState extends State<CartScreen> {
     double subtotal,
   ) {
     return Scaffold(
-      backgroundColor: const Color(0xffffffff),
+      backgroundColor:  Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
@@ -1220,6 +1218,7 @@ class CouponGridScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(title),
         centerTitle: true,
@@ -1608,15 +1607,15 @@ class _CartItemWidgetState extends State<CartItemWidget>
                               : null,
                           isEnabled: _displayQuantity > 1 && !_isUpdating,
                         ),*/
+
                         _buildQuantityButton(
                           icon: Icons.remove,
                           onPressed: !_isUpdating
-                              ? () {
-                            if (_displayQuantity > 1) {
-                              _updateQuantity(_displayQuantity - 1);
+                              ? () async {
+                            if (widget.item.quantity > 1) {
+                              _updateQuantity(widget.item.quantity - 1);
                             } else {
-                              // Remove item when quantity is 1
-                              Provider.of<CartProvider>(context, listen: false)
+                              await Provider.of<CartProvider>(context, listen: false)
                                   .removeFromCart(widget.item, context);
 
                               if (widget.onQuantityChanged != null) {
@@ -1627,6 +1626,25 @@ class _CartItemWidgetState extends State<CartItemWidget>
                               : null,
                           isEnabled: !_isUpdating,
                         ),
+                        // _buildQuantityButton(
+                        //   icon: Icons.remove,
+                        //   onPressed: !_isUpdating
+                        //       ? () {
+                        //     if (_displayQuantity > 1) {
+                        //       _updateQuantity(_displayQuantity - 1);
+                        //     } else {
+                        //       // Remove item when quantity is 1
+                        //       Provider.of<CartProvider>(context, listen: false)
+                        //           .removeFromCart(widget.item, context);
+                        //
+                        //       if (widget.onQuantityChanged != null) {
+                        //         widget.onQuantityChanged!();
+                        //       }
+                        //     }
+                        //   }
+                        //       : null,
+                        //   isEnabled: !_isUpdating,
+                        // ),
 
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),

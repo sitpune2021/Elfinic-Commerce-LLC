@@ -1406,13 +1406,20 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!mounted) return;
 
-    Navigator.pushReplacement(
+  /*  Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) =>
         token != null && token.isNotEmpty
             ? const DashboardScreen()
             : const LoginScreen(),
+      ),
+    );*/
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const DashboardScreen(),
       ),
     );
   }
@@ -1481,6 +1488,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SizedBox.expand(
         child: Image.asset(
           "assets/images/splash_screen.gif",
@@ -1526,26 +1534,54 @@ class StoreVersion {
 
 
 
+// class VersionApiService {
+//   static const String baseUrl = "https://admin.elfinic.com/api";
+//
+//   static Future<StoreVersion?> getVersion(String platform) async {
+//     final response = await http.post(
+//       Uri.parse("$baseUrl/getVersions"),
+//       headers: {"Content-Type": "application/json"},
+//       body: json.encode({"platform": platform}),
+//     );
+//
+//     if (response.statusCode == 200) {
+//       final jsonData = json.decode(response.body);
+//
+//       if (jsonData['status'] == 'success' &&
+//           jsonData['data'] != null &&
+//           jsonData['data'].isNotEmpty) {
+//         return StoreVersion.fromJson(jsonData['data'][0]);
+//       }
+//     }
+//     return null;
+//   }
+// }
 class VersionApiService {
   static const String baseUrl = "https://admin.elfinic.com/api";
 
   static Future<StoreVersion?> getVersion(String platform) async {
-    final response = await http.post(
-      Uri.parse("$baseUrl/getVersions"),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode({"platform": platform}),
-    );
+    try {
+      final response = await http
+          .post(
+        Uri.parse("$baseUrl/getVersions"),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"platform": platform}),
+      )
+          .timeout(const Duration(seconds: 10));
 
-    if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body);
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
 
-      if (jsonData['status'] == 'success' &&
-          jsonData['data'] != null &&
-          jsonData['data'].isNotEmpty) {
-        return StoreVersion.fromJson(jsonData['data'][0]);
+        if (jsonData['status'] == 'success' &&
+            jsonData['data'] != null &&
+            jsonData['data'].isNotEmpty) {
+          return StoreVersion.fromJson(jsonData['data'][0]);
+        }
       }
+    } catch (e) {
+      debugPrint("Version API error: $e");
     }
-    return null;
+    return null; // allow app to continue
   }
 }
 

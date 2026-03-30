@@ -83,7 +83,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF1F3F6),
+        backgroundColor:  Colors.white,
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
@@ -712,7 +712,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F3F6),
+      backgroundColor:  Colors.white,
       appBar: AppBar(
         title: const Text("Order Details"),
         backgroundColor: Colors.white,

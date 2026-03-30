@@ -93,33 +93,35 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      id: json['id'],
-      name: json['name'],
-      slug: json['slug'],
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      slug: json['slug'] ?? '',
       brand: json['brand'],
-      category: json['category'],
+      category: json['category'] ?? '',
       subcategory:
-          (json['subcategory'] as List).map((e) => e.toString()).toList(),
-      price: json['price'],
-      discountPrice: json['discount_price'],
-      totalPrice: json['total_price'],
-      stock: json['stock'],
+      (json['subcategory'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      price: json['price']?.toString() ?? '0',
+      discountPrice: json['discount_price']?.toString() ?? '0',
+      totalPrice: json['total_price']?.toString() ?? '0',
+      stock: json['stock']?.toString() ?? '0',
       vendor: json['vendor'],
-      vendorId: json['vendorId'],
+      vendorId: json['vendorId']?.toString() ?? '',
       userId: json['user_id'],
-      sku: json['sku'],
+      sku: json['sku'] ?? '',
       barcode: json['barcode'],
       gst: json['gst'],
-      quantity: json['quantity'],
-      status: json['status'],
-      showSection: json['show_section'],
-      ratingCount: json['ratingCount'],
-      averageRating: json['averageRating'],
-      images: (json['images'] as List).map((e) => e.toString()).toList(),
-      productThumb: json['product_thumb'],
-      imagePath: json['image_path'],
+      quantity: json['quantity'] ?? 0,
+      status: json['status'] ?? '',
+      showSection: json['show_section'] ?? '',
+      ratingCount: json['ratingCount'] ?? 0,
+      averageRating: json['averageRating'] ?? 0,
+      images:
+      (json['images'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      productThumb: json['product_thumb']?.toString() ?? '',
+      imagePath: json['image_path']?.toString() ?? '',
     );
   }
+
 
   Map<String, dynamic> toJson() => {
         'id': id,

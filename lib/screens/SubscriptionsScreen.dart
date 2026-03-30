@@ -20,7 +20,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFCF8F2),
+      backgroundColor:  Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFFFCF8F2),
         elevation: 0,

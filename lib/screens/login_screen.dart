@@ -13,7 +13,11 @@ import 'DashboardScreen.dart';
 import 'forgot_password.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+
+  final bool fromAddToCart; // 👈 ADD THIS
+  const LoginScreen({super.key,
+  this.fromAddToCart = false, // 👈 DEFAULT VALUE
+  });
 
   @override
   LoginScreenState createState() => LoginScreenState();
@@ -123,6 +127,7 @@ class LoginScreenState extends State<LoginScreen>
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
         child: Column(
@@ -335,13 +340,23 @@ class LoginScreenState extends State<LoginScreen>
                     await prefs.setString(
                         "auth_token", authProvider.loginResponse!.token!);
 
-                    if (!mounted) return;
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const DashboardScreen(),
-                      ),
-                    );
+                    // if (!mounted) return;
+                    // Navigator.pushReplacement(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (_) => const DashboardScreen(),
+                    //   ),
+                    // );
+                    if (widget.fromAddToCart) {
+                      Navigator.pop(context); // 🔥 go back to product page
+                    } else {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DashboardScreen(),
+                        ),
+                      );
+                    }
                   }
                 },
           child: authProvider.isLoading
@@ -501,13 +516,24 @@ class LoginScreenState extends State<LoginScreen>
 
                         if (authProvider.loginResponse?.status.toLowerCase() ==
                             "success") {
-                          if (!context.mounted) return;
+
+                          if (widget.fromAddToCart) {
+                            Navigator.pop(context);
+                          } else {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const DashboardScreen(),
+                              ),
+                            );
+                          }
+                         /* if (!context.mounted) return;
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (_) => const DashboardScreen(),
                             ),
-                          );
+                          );*/
                         }
                       }
                     },

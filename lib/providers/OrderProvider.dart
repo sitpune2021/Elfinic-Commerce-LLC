@@ -75,6 +75,10 @@ class OrderProvider with ChangeNotifier {
 
     final url = Uri.parse("${ApiService.baseUrl}/api/product-order/place");
 
+    _printDebugInfo("🌐 CREATE ORDER URL", {
+      "url": url.toString(),
+    });
+
     _logPaymentFlow('Sending order request', extra: {
       'url': url.toString(),
       'request': request.toJson(),
@@ -167,6 +171,10 @@ class OrderProvider with ChangeNotifier {
     notifyListeners();
 
     final url = Uri.parse("${ApiService.baseUrl}/api/product-order/verify-payment");
+
+    _printDebugInfo("🌐 VERIFY PAYMENT URL", {
+      "url": url.toString(),
+    });
 
     final request = VerifyPaymentRequest(
       orderId: razorpayOrderId,

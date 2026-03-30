@@ -13,7 +13,7 @@
 
 
     <application
-        android:label="Elfinic Commerce LLc"
+        android:label="Elfinic"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

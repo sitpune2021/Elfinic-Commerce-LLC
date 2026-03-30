@@ -176,7 +176,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return BaseScreen(
       child: Scaffold(
-        backgroundColor: const Color(0xFFFCF8F3),
+        backgroundColor:  Colors.white,
         appBar: AppBar(
           elevation: 0,
           backgroundColor: const Color(0xFFFCF8F3),

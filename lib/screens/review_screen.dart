@@ -589,7 +589,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       },
       child: BaseScreen(
         child: Scaffold(
-          backgroundColor: const Color(0xfffdf6ef),
+          backgroundColor:  Colors.white,
           appBar: AppBar(
             surfaceTintColor: const Color(0xfffdf6ef),
             backgroundColor: const Color(0xfffdf6ef),
