@@ -35,6 +35,7 @@ import '../services/api_service.dart';
 import '../utils/BaseScreen.dart';
 
 import 'CartScreen.dart';
+import 'VendorDetailScreen.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 import 'package:html/parser.dart' as html_parser;
@@ -1254,7 +1255,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                 child: Stack(
                   children: [
                     AspectRatio(
-                      aspectRatio: 3 / 4.5,
+                      aspectRatio: 3 / 3.5,
                       child: PageView.builder(
                         controller: _pageController,
                         itemCount: product.images.isNotEmpty
@@ -1572,6 +1573,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
               ),
 
               // Vendor Section
+              // Vendor Section
               if (product.vendor != null && product.vendor!.isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1588,42 +1590,69 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                         ),
                       ),
                     ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[200]!),
-                      ),
-                      child: ReadMoreText(
-                        parseHtmlString(product.vendor!),
-                        trimLines: 2,
-                        colorClickableText: Colors.blue,
-                        trimMode: TrimMode.Line,
-                        trimCollapsedText: ' Read more',
-                        trimExpandedText: ' Read less',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.black87,
-                          height: 1.4,
+                    InkWell(
+                      onTap: () {
+                        // ✅ FIX: Convert String? to int
+                        final vendorId = product.vendorId != null
+                            ? int.tryParse(product.vendorId!)
+                            : null;
+
+                        // ✅ Only navigate if vendorId is valid
+                        if (vendorId != null && vendorId > 0) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => VendorDetailScreen(
+                                vendorId: vendorId, // Now it's int
+                              ),
+                            ),
+                          );
+                        } else {
+                          // Optional: Show error if vendor ID is invalid
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Vendor information not available"),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey[200]!),
                         ),
-                        moreStyle: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.blue,
-                        ),
-                        lessStyle: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.blue,
+                        child: ReadMoreText(
+                          parseHtmlString(product.vendor!),
+                          trimLines: 2,
+                          colorClickableText: Colors.blue,
+                          trimMode: TrimMode.Line,
+                          trimCollapsedText: ' Read more',
+                          trimExpandedText: ' Read less',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                            height: 1.4,
+                          ),
+                          moreStyle: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.blue,
+                          ),
+                          lessStyle: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.blue,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 10),
                   ],
                 ),
-
               // Reviews
               Padding(
                 padding: const EdgeInsets.all(12),

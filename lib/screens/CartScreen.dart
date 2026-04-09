@@ -507,8 +507,8 @@ class _CartScreenState extends State<CartScreen> {
           ],
         ),
 
-        // Available coupons dropdown
-        if (couponProvider.coupons.isNotEmpty)
+        /// Available coupons dropdown
+        /*if (couponProvider.coupons.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: Column(
@@ -555,7 +555,7 @@ class _CartScreenState extends State<CartScreen> {
                 ),
               ],
             ),
-          ),
+          ),*/
       ],
     );
   }

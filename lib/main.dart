@@ -22,7 +22,9 @@ import 'package:elfinic_commerce_llc/providers/product_provider.dart';
 import 'package:elfinic_commerce_llc/providers/profile_provider.dart';
 import 'package:elfinic_commerce_llc/screens/CartScreen.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart';
+import 'package:elfinic_commerce_llc/screens/VendorDetailScreen.dart';
 import 'package:elfinic_commerce_llc/screens/splash_screen.dart';
+import 'package:elfinic_commerce_llc/screens/vendor_screen.dart';
 import 'package:elfinic_commerce_llc/utils/NoInternetOverlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -81,6 +83,8 @@ Future<void> main() async {
         // ChangeNotifierProvider(create: (_) => ShippingProvider()),
         ChangeNotifierProvider(create: (_) => OrderInvoiceProvider()),
         ChangeNotifierProvider(create: (_) => ProductSearchProvider()),
+        ChangeNotifierProvider(create: (_) => VendorProvider()),
+        ChangeNotifierProvider(create: (_) => VendorDetailProvider()),
       ],
       child: const MyApp(),
     ),

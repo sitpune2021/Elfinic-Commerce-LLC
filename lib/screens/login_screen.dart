@@ -1,8 +1,10 @@
 
 import 'dart:async';
 
+import 'package:elfinic_commerce_llc/screens/privacy_policy_screen.dart';
 import 'package:elfinic_commerce_llc/screens/register_screen.dart';
 import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:provider/provider.dart';
@@ -38,7 +40,7 @@ class LoginScreenState extends State<LoginScreen>
   final FocusNode _otpFocusNode = FocusNode();
 
   late TabController _tabController;
-
+  bool _agreeToTerms = false;
   bool _isPasswordVisible = false;
   bool _rememberMe = false;
 
@@ -126,6 +128,7 @@ class LoginScreenState extends State<LoginScreen>
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
+    bool _agreeToMarketing = false;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -170,7 +173,7 @@ class LoginScreenState extends State<LoginScreen>
 
             const SizedBox(height: 20),
             SizedBox(
-              height: 400,
+              height: 320,
               child: TabBarView(
                 controller: _tabController,
                 children: [
@@ -204,7 +207,85 @@ class LoginScreenState extends State<LoginScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Column(
+                children: [
+                  CheckboxListTile(
+                    value: _agreeToTerms,
+
+                    activeColor: Colors.indigo,
+                    onChanged: (v) => setState(() => _agreeToTerms = v ?? false),
+                    title: Text.rich(
+                      TextSpan(
+                        style: AppTextStyles.normal,
+                        children: [
+                          const TextSpan(text: "I agree to the "),
+
+                          TextSpan(
+                            text: "Terms & Conditions",
+                            style: AppTextStyles.link,
+                            recognizer: TapGestureRecognizer()..onTap = () {},
+                          ),
+
+                          const TextSpan(text: ", "),
+
+                          TextSpan(
+                            text: "Privacy Policy",
+                            style: AppTextStyles.link,
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const PrivacyPolicyScreen(),
+                                  ),
+                                );
+                              },
+                          ),
+
+                          const TextSpan(text: ", "),
+
+                          TextSpan(
+                            text: "Return Policy",
+                            style: AppTextStyles.link,
+                            recognizer: TapGestureRecognizer()..onTap = () {},
+                          ),
+
+                          const TextSpan(text: " and "),
+
+                          TextSpan(
+                            text: "Contact Seller",
+                            style: AppTextStyles.link,
+                            recognizer: TapGestureRecognizer()..onTap = () {},
+                          ),
+                        ],
+                      ),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+
+               /*   CheckboxListTile(
+                    value: _agreeToMarketing,
+                    onChanged: (v) =>
+                        setState(() => _agreeToMarketing = v ?? false),
+                    title: const Text(
+                      "Send me marketing communications via email and SMS",
+                      style: AppTextStyles.checkboxText,
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),*/
+                ],
+              ),
+            ),
             Row(
               children: const [
                 Expanded(child: Divider()),
@@ -217,17 +298,17 @@ class LoginScreenState extends State<LoginScreen>
             ),
             const SizedBox(height: 20),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(15),
-                    backgroundColor: Colors.blue,
-                  ),
-                  child: const Icon(Icons.facebook, color: Colors.white),
-                ),
+                // ElevatedButton(
+                //   onPressed: () {},
+                //   style: ElevatedButton.styleFrom(
+                //     shape: const CircleBorder(),
+                //     padding: const EdgeInsets.all(15),
+                //     backgroundColor: Colors.blue,
+                //   ),
+                //   child: const Icon(Icons.facebook, color: Colors.white),
+                // ),
                 ElevatedButton(
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
@@ -327,7 +408,21 @@ class LoginScreenState extends State<LoginScreen>
           onPressed: authProvider.isLoading
               ? null
               : () async {
-                  if (!_emailFormKey.currentState!.validate()) return;
+
+
+            /// ✅ CHECK TERMS FIRST
+            if (!_agreeToTerms) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Please accept Terms & Conditions"),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
+
+            if (!_emailFormKey.currentState!.validate()) return;
 
                   await authProvider.login(
                     _emailController.text.trim(),
@@ -479,7 +574,19 @@ class LoginScreenState extends State<LoginScreen>
               onPressed: authProvider.isLoading
                   ? null
                   : () async {
-                      final mobile = _mobileController.text.trim();
+
+                /// ✅ CHECK TERMS FIRST
+                if (!_agreeToTerms) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Please accept Terms & Conditions"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                final mobile = _mobileController.text.trim();
 
                       /// ---------- SEND OTP ----------
                       if (!_otpSent) {
@@ -549,4 +656,24 @@ class LoginScreenState extends State<LoginScreen>
       },
     );
   }
+}
+
+class AppTextStyles {
+  static const TextStyle normal = TextStyle(
+    fontSize: 13,
+    color: Colors.black87,
+    height: 1.4,
+  );
+
+  static const TextStyle link = TextStyle(
+    fontSize: 13,
+    color: Colors.indigo,
+    fontWeight: FontWeight.w500,
+    decoration: TextDecoration.underline,
+  );
+
+  static const TextStyle checkboxText = TextStyle(
+    fontSize: 13,
+    color: Colors.black87,
+  );
 }

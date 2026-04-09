@@ -24,12 +24,25 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-  @override
+
+ /* @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<CategoryProvider>(context, listen: false);
       provider.fetchCategories();
+    });
+  }*/
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      final provider = context.read<CategoryProvider>();
+
+      if (provider.categories.isEmpty) {
+        provider.fetchCategories();
+      }
     });
   }
 

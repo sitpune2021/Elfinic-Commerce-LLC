@@ -1,5 +1,6 @@
 // dashboard_screen.dart
 import 'package:elfinic_commerce_llc/screens/shops_screen.dart';
+import 'package:elfinic_commerce_llc/screens/vendor_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
@@ -167,7 +168,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const ShopsScreen(),
+                        // builder: (_) => const ShopsScreen(),
+                        builder: (_) => const VendorScreen(),
                       ),
                     );
                   },
