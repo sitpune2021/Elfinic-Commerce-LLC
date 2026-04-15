@@ -35,7 +35,7 @@ dependencies:
   collection: ^1.19.0
   curved_navigation_bar: ^1.0.6
   lottie: ^3.3.1
-  razorpay_flutter: ^1.4.0
+  razorpay_flutter: ^1.4.4
   flutter_dotenv: ^6.0.0
   flutter_add_to_cart_button: ^1.2.0
   html: ^0.15.6
@@ -74,7 +74,7 @@ dev_dependencies:
 flutter_launcher_icons:
     android: true
     ios: true
-    image_path: "assets/icons/app_Icon_512.png"
+    image_path: "assets/icons/playstore.png"
     remove_alpha_ios: true
     min_sdk_android: 21
 

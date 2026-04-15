@@ -1373,7 +1373,7 @@ class _SplashScreenState extends State<SplashScreen>
     return 0;
   }
 
-  Future<void> _initFlow() async {
+  /*Future<void> _initFlow() async {
     await Future.delayed(const Duration(seconds: 2));
 
     /// 🚨 TEMP FORCE UPDATE CHECK
@@ -1406,7 +1406,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!mounted) return;
 
-  /*  Navigator.pushReplacement(
+  *//*  Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) =>
@@ -1414,7 +1414,7 @@ class _SplashScreenState extends State<SplashScreen>
             ? const DashboardScreen()
             : const LoginScreen(),
       ),
-    );*/
+    );*//*
 
     Navigator.pushReplacement(
       context,
@@ -1422,9 +1422,56 @@ class _SplashScreenState extends State<SplashScreen>
         builder: (_) => const DashboardScreen(),
       ),
     );
+  }*/
+
+  Future<void> _initFlow() async {
+    await Future.delayed(const Duration(seconds: 2));
+
+    final prefs = await SharedPreferences.getInstance();
+
+    /// 🔥 FIRST TIME CHECK
+    final isFirstTime = prefs.getBool('isFirstTime') ?? true;
+
+    /// 🔥 LOGIN CHECK
+    // final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    final token = prefs.getString("auth_token");
+
+    /// 🔥 PLATFORM CHECK
+    final isAndroid = Platform.isAndroid;
+    final isIOS = Platform.isIOS;
+
+    if (!mounted) return;
+
+    /// 🚀 LOGIC
+    if (isFirstTime) {
+      await prefs.setBool('isFirstTime', false);
+
+      if (isAndroid) {
+        /// ✅ Android → Direct Dashboard (first time)
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
+      } else if (isIOS) {
+        /// ✅ iOS → Login compulsory
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
+    } else {
+      /// 🔁 AFTER FIRST TIME (NORMAL FLOW)
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+          token != null && token.isNotEmpty
+              ? const DashboardScreen()
+              : const LoginScreen(),
+        ),
+      );
+    }
   }
-
-
   /// ❌ FORCE UPDATE (BLOCK USER)
   void _showForceUpdate() {
     showDialog(

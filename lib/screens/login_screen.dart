@@ -136,9 +136,9 @@ class LoginScreenState extends State<LoginScreen>
         child: Column(
           children: [
             Image.asset(
-              "assets/images/splash_screen_1.png",
-              height: 120,
-              width: 200,
+              "assets/icons/playstore.png",
+              height: 110,
+              width: 180,
             ),
             const SizedBox(height: 20),
             const Align(
@@ -429,11 +429,12 @@ class LoginScreenState extends State<LoginScreen>
                     _passwordController.text.trim(),
                   );
 
-                  if (authProvider.loginResponse?.status.toLowerCase() ==
-                      "success") {
+                  /*if (authProvider.loginResponse?.status.toLowerCase() == "success") {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setString(
                         "auth_token", authProvider.loginResponse!.token!);
+                    /// 🔥 ADD THIS (IMPORTANT)
+                    await prefs.setBool('isLoggedIn', true);
 
                     // if (!mounted) return;
                     // Navigator.pushReplacement(
@@ -452,7 +453,31 @@ class LoginScreenState extends State<LoginScreen>
                         ),
                       );
                     }
-                  }
+                  }*/
+            if (authProvider.loginResponse?.status.toLowerCase() == "success") {
+
+              final prefs = await SharedPreferences.getInstance();
+
+              /// 🔥 MAIN FIX
+              await prefs.setBool('isLoggedIn', true);
+
+              /// 🔥 ALSO SAVE TOKEN
+              await prefs.setString(
+                "auth_token",
+                authProvider.loginResponse?.token ?? "",
+              );
+
+              if (widget.fromAddToCart) {
+                Navigator.pop(context);
+              } else {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DashboardScreen(),
+                  ),
+                );
+              }
+            }
                 },
           child: authProvider.isLoading
               ? const CustomLoader()

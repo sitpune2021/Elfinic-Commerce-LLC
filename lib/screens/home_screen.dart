@@ -131,7 +131,8 @@ class _HomeScreenState extends State<HomeScreen>
       }
       precacheImage(const AssetImage("assets/images/home_img.png"), context);
       precacheImage(
-          const AssetImage("assets/images/splash_screen_1.png"), context);
+          const AssetImage("assets/icons/playstore.png",), context);
+          // const AssetImage("assets/images/splash_screen_1.png"), context);
       precacheImage(
           const AssetImage("assets/images/no_product_img2.png"), context);
     });
@@ -739,9 +740,10 @@ class _HomeScreenState extends State<HomeScreen>
                 ],
               ),
               child: Image.asset(
-                "assets/images/splash_screen_1.png",
-                height: 40,
-                cacheWidth: 80,
+                "assets/icons/playstore.png",
+                // "assets/images/splash_screen_1.png",
+                height: 30,
+                cacheWidth: 60,
                 filterQuality: FilterQuality.low,
               ),
             ),
