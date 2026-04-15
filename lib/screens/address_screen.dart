@@ -1,6 +1,6 @@
 import 'package:elfinic_commerce_llc/screens/review_screen.dart';
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
-
 
 import '../model/AddressModel.dart';
 import '../model/cart_models.dart';
@@ -12,6 +12,7 @@ import 'ShoppingScreen.dart';
 import 'package:provider/provider.dart';
 
 import 'delivery_screen.dart';
+
 class AddressScreen extends StatefulWidget {
   final bool fromProfile;
   final double subtotalAmount;
@@ -39,7 +40,6 @@ class _AddressScreenState extends State<AddressScreen> {
 
   double get _displaySubtotal => _updatedSubtotal ?? widget.subtotalAmount;
 
-
   @override
   void initState() {
     super.initState();
@@ -48,7 +48,8 @@ class _AddressScreenState extends State<AddressScreen> {
 
   void _loadAddresses() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+      final addressProvider =
+          Provider.of<AddressProvider>(context, listen: false);
       addressProvider.fetchAddresses();
     });
   }
@@ -57,28 +58,49 @@ class _AddressScreenState extends State<AddressScreen> {
   Widget build(BuildContext context) {
     final addressProvider = Provider.of<AddressProvider>(context);
 
-
-
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: true, // default back button
+        backgroundColor: Colors.white,
         elevation: 0,
-        surfaceTintColor: const Color(0xfffdf6ef),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_sharp, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+        surfaceTintColor: Colors.transparent,
+
+        iconTheme: const IconThemeData(
+          color: Color(0xFF050040), // back icon color
         ),
-        title: Text(widget.fromProfile ? 'My Addresses' : 'Select Address'),
-        backgroundColor: const Color(0xFF050040),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: Colors.black.withValues(alpha: 0.06),
+          ),
+        ),
+        title: Text(
+          widget.fromProfile ? 'My Addresses' : 'Select Address',
+          style: const TextStyle(
+            color: Color(0xFF050040), // title color
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
       body: addressProvider.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CustomLoader(),
+            )
           : addressProvider.addresses.isEmpty
-          ? _buildEmptyState(addressProvider)
-          : _buildAddressList(addressProvider),
+              ? _buildEmptyState(addressProvider)
+              : _buildAddressList(addressProvider),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToAddAddress(context),
-        icon: const Icon(Icons.add_location,color: Color(0xFF050040),),
-        label: const Text("Add Address",style: TextStyle(color: Color(0xFF050040)),),
+        icon: const Icon(
+          Icons.add_location,
+          color: Color(0xFF050040),
+        ),
+        label: const Text(
+          "Add Address",
+          style: TextStyle(color: Color(0xFF050040)),
+        ),
         backgroundColor: Colors.amber.shade700,
       ),
     );
@@ -120,10 +142,9 @@ class _AddressScreenState extends State<AddressScreen> {
     return Column(
       children: [
         // Order Summary (only for checkout)
-        if (!widget.fromProfile && widget.subtotalAmount != null) ...[
+        if (!widget.fromProfile) ...[
           _buildOrderSummary(),
-          if (widget.cartItems != null && widget.cartItems!.isNotEmpty)
-            _buildCartSummary(),
+          if (widget.cartItems.isNotEmpty) _buildCartSummary(),
         ],
         Expanded(
           child: ListView.builder(
@@ -179,7 +200,7 @@ class _AddressScreenState extends State<AddressScreen> {
           const Icon(Icons.shopping_cart, size: 16, color: Colors.blue),
           const SizedBox(width: 8),
           Text(
-            "${widget.cartItems!.length} item${widget.cartItems!.length != 1 ? 's' : ''} selected",
+            "${widget.cartItems.length} item${widget.cartItems.length != 1 ? 's' : ''} selected",
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -195,13 +216,13 @@ class _AddressScreenState extends State<AddressScreen> {
               color: Colors.green,
             ),
           ),
-
         ],
       ),
     );
   }
 
-  Widget _buildAddressItem(Address address, bool isSelected, AddressProvider addressProvider) {
+  Widget _buildAddressItem(
+      Address address, bool isSelected, AddressProvider addressProvider) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -223,14 +244,14 @@ class _AddressScreenState extends State<AddressScreen> {
         leading: widget.fromProfile
             ? _buildAddressTypeIcon(address.type)
             : Radio<Address>(
-          value: address,
-          groupValue: _selectedAddress,
-          onChanged: (Address? value) {
-            setState(() {
-              _selectedAddress = value;
-            });
-          },
-        ),
+                value: address,
+                groupValue: _selectedAddress,
+                onChanged: (Address? value) {
+                  setState(() {
+                    _selectedAddress = value;
+                  });
+                },
+              ),
         title: Row(
           children: [
             Expanded(
@@ -251,8 +272,8 @@ class _AddressScreenState extends State<AddressScreen> {
               ),
               child: Text(
                 address.type,
-                style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -263,8 +284,8 @@ class _AddressScreenState extends State<AddressScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-          "${address.addressLine1}, ${address.city}, ${address.state}, ${address.country.isNotEmpty ? address.country : 'India'} - ${address.postalCode}",
-          style: const TextStyle(fontSize: 14, color: Colors.grey),
+                "${address.addressLine1}, ${address.city}, ${address.state}, ${address.country.isNotEmpty ? address.country : 'India'} - ${address.postalCode}",
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 4),
               Text(
@@ -286,18 +307,19 @@ class _AddressScreenState extends State<AddressScreen> {
             ),
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () => _showDeleteConfirmationDialog(context, addressProvider, address),
+              onPressed: () => _showDeleteConfirmationDialog(
+                  context, addressProvider, address),
             ),
           ],
         ),
         onTap: widget.fromProfile
             ? null
             : () {
-          setState(() {
-            _selectedAddress = address;
-          });
-          _navigateToDelivery(context, address);
-        },
+                setState(() {
+                  _selectedAddress = address;
+                });
+                _navigateToDelivery(context, address);
+              },
       ),
     );
   }
@@ -317,7 +339,7 @@ class _AddressScreenState extends State<AddressScreen> {
         break;
       default:
         icon = Icons.location_on;
-        color =  const Color(0xFFD39841);
+        color = const Color(0xFFD39841);
     }
 
     return Icon(icon, color: color);
@@ -329,7 +351,6 @@ class _AddressScreenState extends State<AddressScreen> {
       MaterialPageRoute(
         builder: (_) => ShippingScreen(
           subtotalAmount: _displaySubtotal,
-
           cartItems: widget.cartItems ?? [],
           fromProfile: widget.fromProfile,
         ),
@@ -346,7 +367,6 @@ class _AddressScreenState extends State<AddressScreen> {
         builder: (_) => EditAddressScreen(
           address: address,
           subtotalAmount: _displaySubtotal,
-
           cartItems: widget.cartItems ?? [],
           fromProfile: widget.fromProfile,
         ),
@@ -356,7 +376,8 @@ class _AddressScreenState extends State<AddressScreen> {
     });
   }
 
-  Future<void> _navigateToDelivery(BuildContext context, Address address) async {
+  Future<void> _navigateToDelivery(
+      BuildContext context, Address address) async {
     if (widget.fromProfile) return;
 
     final result = await Navigator.push<ReviewResult>(
@@ -380,7 +401,6 @@ class _AddressScreenState extends State<AddressScreen> {
           subtotalAmount: _displaySubtotal,
           cartItems: widget.cartItems,
         ),
-
       ),
     );
 
@@ -391,18 +411,12 @@ class _AddressScreenState extends State<AddressScreen> {
           ..addAll(result.cartItems);
 
         _updatedSubtotal = result.subtotal;
-
-
       });
     }
   }
 
-
   void _showDeleteConfirmationDialog(
-      BuildContext context,
-      AddressProvider addressProvider,
-      Address address
-      ) {
+      BuildContext context, AddressProvider addressProvider, Address address) {
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -427,7 +441,8 @@ class _AddressScreenState extends State<AddressScreen> {
                     Container(
                       padding: const EdgeInsets.all(8.0),
                       decoration: BoxDecoration(
-                        color: const Color(0x20D39841), // #D39841 with 12% opacity
+                        color:
+                            const Color(0x20D39841), // #D39841 with 12% opacity
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -441,9 +456,9 @@ class _AddressScreenState extends State<AddressScreen> {
                       child: Text(
                         "Delete Address",
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade800,
-                        ),
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade800,
+                            ),
                       ),
                     ),
                   ],
@@ -455,12 +470,10 @@ class _AddressScreenState extends State<AddressScreen> {
                 Text(
                   "Are you sure you want to delete ${address.name}'s address?",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                    height: 1.4,
-                  ),
+                        color: Colors.grey.shade600,
+                        height: 1.4,
+                      ),
                 ),
-
-
 
                 const SizedBox(height: 28),
 
@@ -493,7 +506,8 @@ class _AddressScreenState extends State<AddressScreen> {
                       child: ElevatedButton(
                         onPressed: () async {
                           Navigator.of(context).pop();
-                          await _deleteAddress(context, addressProvider, address);
+                          await _deleteAddress(
+                              context, addressProvider, address);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFD39841), // #D39841
@@ -521,11 +535,12 @@ class _AddressScreenState extends State<AddressScreen> {
       },
     );
   }
+
   Future<void> _deleteAddress(
-      BuildContext context,
-      AddressProvider addressProvider,
-      Address address,
-      ) async {
+    BuildContext context,
+    AddressProvider addressProvider,
+    Address address,
+  ) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
@@ -552,7 +567,8 @@ class _AddressScreenState extends State<AddressScreen> {
       } else {
         scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: Text('Failed to delete address: ${addressProvider.errorMessage}'),
+            content: Text(
+                'Failed to delete address: ${addressProvider.errorMessage}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -566,6 +582,4 @@ class _AddressScreenState extends State<AddressScreen> {
       );
     }
   }
-
 }
-

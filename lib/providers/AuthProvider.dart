@@ -1,22 +1,13 @@
+// ignore_for_file: file_names
+
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../model/LoginResponse.dart';
 import '../services/api_service.dart';
 
-import 'package:flutter/material.dart';
-import '../model/LoginResponse.dart';
-import '../services/api_service.dart';
-
-import 'package:flutter/material.dart';
-import '../model/LoginResponse.dart';
-import '../services/api_service.dart';
-import 'package:flutter/material.dart';
-import '../model/LoginResponse.dart';
-import '../services/api_service.dart';
-
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
   final ApiService _authService = ApiService();
@@ -34,33 +25,102 @@ class AuthProvider with ChangeNotifier {
   Future<void> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
-    _loginResponse = null; // reset previous login
+    _loginResponse = null;
     notifyListeners();
 
     try {
       final response = await _authService.login(email, password);
 
-      if (response.status.toLowerCase() == "success") {
+      if (response.status.toLowerCase() == "success" &&
+          response.token != null &&
+          response.user != null) {
         _loginResponse = response;
-        _errorMessage = null;
 
-        // Save token and user details in SharedPreferences
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("auth_token", response.token);
-        await prefs.setString("user_id", response.user.id.toString());
-        await prefs.setString("user_name", response.user.name);
-        await prefs.setString("user_email", response.user.email);
 
+        // Save token
+        await prefs.setString("auth_token", response.token!);
+
+        // ✅ Save FULL USER JSON
+        await prefs.setString(
+          "user_data",
+          jsonEncode(response.user!.toJson()),
+        );
       } else {
         _loginResponse = null;
-        // Use message from API if available
-        _errorMessage = "Invalid email or password";
+        _errorMessage = response.message ?? "Invalid email or password";
       }
     } catch (e) {
       _loginResponse = null;
-      // Capture network or parsing errors
-      _errorMessage = "Something went wrong. Please try again.";
+
+      if (e is Exception) {
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      } else {
+        _errorMessage = "Something went wrong. Please try again.";
+      }
+
       debugPrint("Login error: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// ================= VERIFY OTP & LOGIN =================
+  Future<void> verifyOtpLogin(String mobile, String otp) async {
+    _isLoading = true;
+    _errorMessage = null;
+    _loginResponse = null;
+    notifyListeners();
+
+    try {
+      final response = await _authService.verifyOtp(mobile, otp);
+
+      if (response.status.toLowerCase() == "success" &&
+          response.token != null &&
+          response.user != null) {
+        _loginResponse = response;
+
+        final prefs = await SharedPreferences.getInstance();
+
+        // Save token
+        await prefs.setString("auth_token", response.token!);
+
+        // ✅ Save FULL USER JSON
+        await prefs.setString(
+          "user_data",
+          jsonEncode(response.user!.toJson()),
+        );
+      } else {
+        _loginResponse = null;
+        _errorMessage = response.message ?? "OTP login failed";
+      }
+    } catch (e) {
+      _loginResponse = null;
+      // _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      if (e is Exception) {
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      } else {
+        _errorMessage = "Something went wrong. Please try again.";
+      }
+
+      debugPrint("Login error: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// ================= SEND OTP =================
+  Future<void> sendOtp(String mobile) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authService.sendOtp(mobile);
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -80,33 +140,3 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 }
-
-/*
-class AuthProvider with ChangeNotifier {
-  final ApiService _authService = ApiService();
-
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
-
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-
-  LoginResponse? _loginResponse;
-  LoginResponse? get loginResponse => _loginResponse;
-
-  Future<void> login(String email, String password) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      _loginResponse = await _authService.login(email, password);
-    } catch (e) {
-      _errorMessage = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-}
-*/

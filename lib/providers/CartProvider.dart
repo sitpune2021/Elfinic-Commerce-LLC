@@ -1,19 +1,14 @@
-import 'dart:convert';
-import 'package:collection/collection.dart';
+// ignore_for_file: file_names
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
-import '../model/ProductsResponse.dart';
 import '../model/cart_models.dart';
 import '../screens/ProductDetailPage.dart';
 import '../services/api_service.dart';
 
-
-
-
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
+
 class CartProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
@@ -26,52 +21,43 @@ class CartProvider with ChangeNotifier {
   String? get error => _error;
   List<UserCartItem> get cartItems => List.unmodifiable(_cartItems);
   int get selectedCount => _selectedCartIds.length;
-  int get totalCartCount => _cartItems.fold(0, (sum, item) => sum + item.quantity);
+  int get totalCartCount =>
+      _cartItems.fold(0, (sum, item) => sum + item.quantity);
 
   double get subtotal => _cartItems
-      .where((item) => _selectedCartIds.contains(item.cartId))
-      .fold(0.0, (sum, item) {
-    final price = double.tryParse(item.product.discountPrice.replaceAll(',', '')) ?? 0;
-    return sum + (price * item.quantity);
-  });
+          .where((item) => _selectedCartIds.contains(item.cartId))
+          .fold(0.0, (sum, item) {
+        final price =
+            double.tryParse(item.product.discountPrice.replaceAll(',', '')) ??
+                0;
+        return sum + (price * item.quantity);
+      });
 
-  // Initialize the flag from SharedPreferences
-  CartProvider() {
-    _loadCartClearedFlag();
-  }
+  // // cart quentity
+  // int getCartQuantityForProduct({
+  //   required int productId,
+  //   int? variantId,
+  // }) {
+  //   return _cartItems
+  //       .where((item) =>
+  //           item.productId == productId &&
+  //           item.product.selectedVariantId == variantId)
+  //       .fold(0, (sum, item) => sum + item.quantity);
+  // }
 
-  // Load the flag from persistent storage
-  Future<void> _loadCartClearedFlag() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      // _cartClearedByPayment = prefs.getBool('cart_cleared_by_payment') ?? false;
-      //
-      // if (kDebugMode) {
-      //   print('🛒 Cart cleared flag loaded: $_cartClearedByPayment');
-      // }
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error loading cart cleared flag: $e');
-      }
-    }
-  }
+  // bool canAddQuantity({
+  //   required int productId,
+  //   required int availableQty,
+  //   int addQty = 1,
+  //   int? variantId,
+  // }) {
+  //   final cartQty = getCartQuantityForProduct(
+  //     productId: productId,
+  //     variantId: variantId,
+  //   );
 
-  // Save the flag to persistent storage
-  /*Future<void> _saveCartClearedFlag(bool value) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('cart_cleared_by_payment', value);
-      // _cartClearedByPayment = value;
-
-      if (kDebugMode) {
-        print('🛒 Cart cleared flag saved: $value');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('❌ Error saving cart cleared flag: $e');
-      }
-    }
-  }*/
+  //   return (cartQty + addQty) <= availableQty;
+  // }
 
   // UPDATED: Local-only cart clearance with persistent flag
   Future<void> clearCart() async {
@@ -126,7 +112,8 @@ class CartProvider with ChangeNotifier {
         print('🛒 Cart loaded from server: ${_cartItems.length} items');
       }
     } catch (e) {
-      if (e.toString().contains('404') || e.toString().contains('Cart is empty')) {
+      if (e.toString().contains('404') ||
+          e.toString().contains('Cart is empty')) {
         handleEmptyCart();
       } else {
         _error = e.toString();
@@ -139,10 +126,9 @@ class CartProvider with ChangeNotifier {
   }
 
   // NEW: Reset the flag when user adds items to cart
-  Future<void> addToCart(ProductDetail product, int quantity, {int? variantId}) async {
+  Future<void> addToCart(ProductDetail product, int quantity,
+      {int? variantId}) async {
     try {
-
-
       // Call API
       final response = await ApiService.addToCartApi(
         productId: product.id,
@@ -156,13 +142,11 @@ class CartProvider with ChangeNotifier {
 
       // 🚀 Always sync cart from backend after add
       await fetchCartItems();
-
     } catch (e) {
       debugPrint("❌ addToCart error: $e");
       rethrow;
     }
   }
-
 
   // NEW: Manual method to reset the flag if needed
   Future<void> resetCartClearedFlag() async {
@@ -197,13 +181,11 @@ class CartProvider with ChangeNotifier {
 
       // Single source of truth
       await fetchCartItems();
-
     } catch (e) {
       debugPrint("❌ updateQuantity failed: $e");
       rethrow;
     }
   }
-
 
   Future<void> removeFromCart(UserCartItem item, BuildContext? context) async {
     try {
@@ -239,7 +221,8 @@ class CartProvider with ChangeNotifier {
 
   UserCartItem? getCartItemForProduct(int productId) {
     try {
-      return _cartItems.firstWhere((item) => item.productId == productId && item.quantity > 0);
+      return _cartItems.firstWhere(
+          (item) => item.productId == productId && item.quantity > 0);
     } catch (e) {
       return null;
     }
@@ -273,7 +256,9 @@ class CartProvider with ChangeNotifier {
   }
 
   List<UserCartItem> getSelectedCartItems() {
-    return _cartItems.where((item) => _selectedCartIds.contains(item.cartId)).toList();
+    return _cartItems
+        .where((item) => _selectedCartIds.contains(item.cartId))
+        .toList();
   }
 
   void updateLocalQuantity(int cartId, int newQuantity) {
@@ -297,9 +282,3 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 }
-
-
-
-
-
-

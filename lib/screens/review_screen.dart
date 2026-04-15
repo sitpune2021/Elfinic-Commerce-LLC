@@ -1,30 +1,25 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:elfinic_commerce_llc/screens/OrdersScreen.dart';
+import 'package:elfinic_commerce_llc/screens/home_screen.dart';
+import 'package:elfinic_commerce_llc/screens/privacy_policy_screen.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../model/AddressModel.dart';
 import '../model/OrderModel.dart';
 import '../model/cart_models.dart';
-import '../model/delivery_type.dart';
 import '../providers/AuthProvider.dart';
 import '../providers/CartProvider.dart';
 import '../providers/OrderProvider.dart';
-import '../providers/ShippingProvider.dart';
-import '../providers/delivery_provider.dart';
 import '../services/api_service.dart';
 import '../utils/BaseScreen.dart';
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'DashboardScreen.dart';
-
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class ReviewScreen extends StatefulWidget {
   final Address selectedAddress;
@@ -594,7 +589,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
       },
       child: BaseScreen(
         child: Scaffold(
-          backgroundColor: const Color(0xfffdf6ef),
+          backgroundColor:  Colors.white,
           appBar: AppBar(
             surfaceTintColor: const Color(0xfffdf6ef),
             backgroundColor: const Color(0xfffdf6ef),
@@ -812,7 +807,6 @@ class _ReviewScreenState extends State<ReviewScreen> {
                     ),
                     const SizedBox(height: 20),*/
 
-                    // Terms and Conditions
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -824,38 +818,79 @@ class _ReviewScreenState extends State<ReviewScreen> {
                         children: [
                           CheckboxListTile(
                             value: _agreeToTerms,
-                            onChanged: (v) =>
-                                setState(() => _agreeToTerms = v ?? false),
-                            title: const Text.rich(
+                            onChanged: (v) => setState(() => _agreeToTerms = v ?? false),
+                            title: Text.rich(
                               TextSpan(
                                 children: [
-                                  TextSpan(text: "I agree to the "),
+                                  const TextSpan(text: "I agree to the "),
+
                                   TextSpan(
-                                      text:
-                                          "Terms & Conditions, Privacy Policy, Return Policy",
-                                      style: TextStyle(color: Colors.blue)),
-                                  TextSpan(text: " and "),
+                                    text: "Terms & Conditions",
+                                    style: const TextStyle(color: Colors.blue),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+                                        // _openWebPage("https://yourwebsite.com/terms");
+                                      },
+                                  ),
+
+                                  const TextSpan(text: ", "),
+
                                   TextSpan(
-                                      text: "Contact Seller",
-                                      style: TextStyle(color: Colors.blue)),
+                                    text: "Privacy Policy",
+                                    style: const TextStyle(color: Colors.blue),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const PrivacyPolicyScreen(),
+                                          ),
+                                        );
+                                      },
+                                  ),
+
+                                  const TextSpan(text: ", "),
+
+                                  TextSpan(
+                                    text: "Return Policy",
+                                    style: const TextStyle(color: Colors.blue),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+
+                                      },
+                                  ),
+
+                                  const TextSpan(text: " and "),
+
+                                  TextSpan(
+                                    text: "Contact Seller",
+                                    style: const TextStyle(color: Colors.blue),
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+
+                                      },
+                                  ),
                                 ],
                               ),
                             ),
                             controlAffinity: ListTileControlAffinity.leading,
                             contentPadding: EdgeInsets.zero,
                           ),
+
                           CheckboxListTile(
                             value: _agreeToMarketing,
                             onChanged: (v) =>
                                 setState(() => _agreeToMarketing = v ?? false),
                             title: const Text(
-                                "Send me marketing communications via email and SMS"),
+                              "Send me marketing communications via email and SMS",
+                            ),
                             controlAffinity: ListTileControlAffinity.leading,
                             contentPadding: EdgeInsets.zero,
                           ),
                         ],
                       ),
                     ),
+
 
                     const SizedBox(height: 20),
 
@@ -978,7 +1013,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: (product.thumb == null || product.thumb!.isEmpty)
+                        child: (product.thumb.isEmpty)
                             ? Image.asset(
                                 'assets/images/no_product_img2.png',
                                 width: 60,
@@ -1445,29 +1480,29 @@ class OrderSuccessDialog extends StatelessWidget {
             Row(
               children: [
                 // Explore More Button
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      side: const BorderSide(color: Colors.black87, width: 1.5),
-                    ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _navigateToHome(context);
-                    },
-                    child: const Text(
-                      "EXPLORE MORE",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                ),
+                // Expanded(
+                //   child: OutlinedButton(
+                //     style: OutlinedButton.styleFrom(
+                //       padding: const EdgeInsets.symmetric(vertical: 16),
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(30),
+                //       ),
+                //       side: const BorderSide(color: Colors.black87, width: 1.5),
+                //     ),
+                //     onPressed: () {
+                //       Navigator.pop(context);
+                //       _navigateToHome(context);
+                //     },
+                //     child: const Text(
+                //       "EXPLORE MORE",
+                //       style: TextStyle(
+                //         fontSize: 14,
+                //         fontWeight: FontWeight.w600,
+                //         color: Colors.black87,
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 const SizedBox(width: 12),
 
                 // View Order Button
@@ -1480,10 +1515,28 @@ class OrderSuccessDialog extends StatelessWidget {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _navigateToOrderDetails(context);
+                    onPressed: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OrdersScreen(),
+                        ),
+                      );
+
+                      if (result == "dash") {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DashboardScreen(),
+                          ),
+                        );
+                      }
                     },
+
+                    // onPressed: () {
+                    //   Navigator.pop(context);
+                    //   _navigateToOrderDetails(context);
+                    // },
                     child: const Text(
                       "VIEW ORDER",
                       style: TextStyle(
@@ -1513,7 +1566,7 @@ class OrderSuccessDialog extends StatelessWidget {
                   );
                 },
                 child: const Text(
-                  "Continue Shopping",
+                  "Continue",
                   style: TextStyle(
                     color: Colors.blue,
                     fontWeight: FontWeight.w500,

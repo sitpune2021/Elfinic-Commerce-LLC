@@ -1,25 +1,13 @@
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../model/AddressModel.dart';
 import '../model/cart_models.dart';
-import '../model/delivery_type.dart';
-import '../providers/CartProvider.dart';
 import '../providers/ShippingProvider.dart';
-import '../providers/delivery_provider.dart';
-import '../services/api_service.dart';
-import '../utils/BaseScreen.dart';
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'DashboardScreen.dart';
 import 'address_screen.dart';
-import 'delivery_screen.dart';
-
-
-
 
 // ------------------- Shipping Screen -------------------
 // Shipping Screen (Used for both adding and editing addresses)
@@ -106,7 +94,8 @@ class _ShippingScreenState extends State<ShippingScreen> {
 
   void _resetProviderState() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+      final addressProvider =
+          Provider.of<AddressProvider>(context, listen: false);
       addressProvider.resetLoading();
     });
   }
@@ -135,7 +124,8 @@ class _ShippingScreenState extends State<ShippingScreen> {
         return;
       }
 
-      final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+      final addressProvider =
+          Provider.of<AddressProvider>(context, listen: false);
 
       if (selectedAddressType == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -146,7 +136,6 @@ class _ShippingScreenState extends State<ShippingScreen> {
         );
         return;
       }
-
 
       final address = Address(
         id: _isEditMode ? widget.address!.id : null,
@@ -170,7 +159,8 @@ class _ShippingScreenState extends State<ShippingScreen> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Address ${_isEditMode ? 'updated' : 'added'} successfully!'),
+            content: Text(
+                'Address ${_isEditMode ? 'updated' : 'added'} successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -229,8 +219,6 @@ class _ShippingScreenState extends State<ShippingScreen> {
     }
   }
 
-
-
   String? _validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
       return "Full name is required";
@@ -278,17 +266,16 @@ class _ShippingScreenState extends State<ShippingScreen> {
     return null;
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Consumer<AddressProvider>(
       builder: (context, addressProvider, child) {
         return Scaffold(
-          backgroundColor: const Color(0xfffdf6ef),
+          backgroundColor: Colors.white,
           appBar: AppBar(
-            backgroundColor: const Color(0xfffdf6ef),
+            backgroundColor: Colors.white,
             elevation: 0,
-            surfaceTintColor: const Color(0xfffdf6ef),
+            surfaceTintColor: Colors.white,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_sharp, color: Colors.black),
               onPressed: () {
@@ -296,28 +283,42 @@ class _ShippingScreenState extends State<ShippingScreen> {
                 Navigator.pop(context);
               },
             ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(
+                height: 1,
+                color: Colors.black.withValues(alpha: 0.06),
+              ),
+            ),
             title: Text(
               _isEditMode ? "Edit Address" : "Add Address",
-              style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.black, fontWeight: FontWeight.bold),
             ),
-            actions: widget.fromProfile ? null : [
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "₹${widget.subtotalAmount.toStringAsFixed(2)}",
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const Text(
-                      "Estimated Total",
-                      style: TextStyle(fontSize: 12, color: Colors.black54),
-                    ),
+            actions: widget.fromProfile
+                ? null
+                : [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 16),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "₹${widget.subtotalAmount.toStringAsFixed(2)}",
+                            style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black),
+                          ),
+                          const Text(
+                            "Estimated Total",
+                            style:
+                                TextStyle(fontSize: 12, color: Colors.black54),
+                          ),
+                        ],
+                      ),
+                    )
                   ],
-                ),
-              )
-            ],
           ),
           body: LayoutBuilder(
             builder: (context, constraints) {
@@ -346,13 +347,11 @@ class _ShippingScreenState extends State<ShippingScreen> {
                           ],
 
                           // Order Summary Card (only for checkout)
-                          if (!widget.fromProfile)
-                            _buildOrderSummary(),
+                          if (!widget.fromProfile) _buildOrderSummary(),
 
                           const SizedBox(height: 16),
 
-                          if (_userId != null)
-                            _buildUserInfo(),
+                          if (_userId != null) _buildUserInfo(),
 
                           const SizedBox(height: 16),
                           _label("Address Type*"),
@@ -365,7 +364,6 @@ class _ShippingScreenState extends State<ShippingScreen> {
                             validator: _validateName,
                           ),
 
-
                           _label("Mobile Number*"),
                           _textField(
                             controller: _phoneController,
@@ -374,16 +372,15 @@ class _ShippingScreenState extends State<ShippingScreen> {
                             validator: _validatePhone,
                           ),
 
-
                           _label("Address Line 1*"),
                           _textField(
                             controller: _addressLine1Controller,
                             hint: "House no, Street name",
                             suffixIcon: const Icon(Icons.location_on_outlined),
-                            validator: (v) =>
-                            v == null || v.trim().isEmpty ? "Address is required" : null,
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? "Address is required"
+                                : null,
                           ),
-
 
                           _label("Address Line 2"),
                           _textField(
@@ -398,14 +395,12 @@ class _ShippingScreenState extends State<ShippingScreen> {
                             validator: _validateCity,
                           ),
 
-
                           _label("State*"),
                           _textField(
                             controller: _stateController,
                             hint: "Enter state name",
                             validator: _validateState,
                           ),
-
 
                           _label("Zip / Postal Code*"),
                           _textField(
@@ -415,12 +410,12 @@ class _ShippingScreenState extends State<ShippingScreen> {
                             validator: _validatePincode,
                           ),
 
-
                           Row(
                             children: [
                               Checkbox(
                                 value: useBillingAddress,
-                                onChanged: (val) => setState(() => useBillingAddress = val!),
+                                onChanged: (val) =>
+                                    setState(() => useBillingAddress = val!),
                               ),
                               const Text("Use as Billing Address"),
                             ],
@@ -429,12 +424,11 @@ class _ShippingScreenState extends State<ShippingScreen> {
                           const SizedBox(height: 20),
 
                           if (addressProvider.isLoading)
-                            const Center(child: CircularProgressIndicator())
+                            const Center(child: CustomLoader())
                           else
                             _mainButton(
                                 _isEditMode ? "UPDATE ADDRESS" : "CONTINUE",
-                                    () => _submitForm(context)
-                            ),
+                                () => _submitForm(context)),
 
                           const SizedBox(height: 40),
                         ],
@@ -532,15 +526,15 @@ class _ShippingScreenState extends State<ShippingScreen> {
   }
 
   Widget _label(String text) => Padding(
-    padding: const EdgeInsets.only(top: 16, bottom: 6),
-    child: Text(
-      text,
-      style: const TextStyle(
-        fontWeight: FontWeight.bold,
-        color: Color(0xFF160042),
-      ),
-    ),
-  );
+        padding: const EdgeInsets.only(top: 16, bottom: 6),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF160042),
+          ),
+        ),
+      );
 
   Widget _textField({
     required TextEditingController controller,
@@ -559,14 +553,14 @@ class _ShippingScreenState extends State<ShippingScreen> {
         filled: true,
         fillColor: Colors.white,
         suffixIcon: suffixIcon,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
         ),
       ),
     );
   }
-
 
   Widget _addressTypeSelector() {
     final types = ["Home", "Office", "Other"];
@@ -585,16 +579,20 @@ class _ShippingScreenState extends State<ShippingScreen> {
                 color: isSelected ? Colors.indigo.shade900 : Colors.white,
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(
-                  color: isSelected ? Colors.indigo.shade900 : Colors.grey.shade400,
+                  color: isSelected
+                      ? Colors.indigo.shade900
+                      : Colors.grey.shade400,
                   width: 1.5,
                 ),
-                boxShadow: isSelected ? [
-                  BoxShadow(
-                    color: Colors.indigo.withOpacity(0.3),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ] : [],
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: Colors.indigo.withOpacity(0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : [],
               ),
               child: Center(
                 child: Text(
@@ -642,20 +640,19 @@ class _ShippingScreenState extends State<ShippingScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.indigo.shade900,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         ),
         onPressed: onPressed,
         child: Text(
           text,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
 }
-
-
-
 
 // --- Reusable Widgets ---
 Widget stepBox(String text, bool active) {
@@ -693,7 +690,8 @@ Widget mainButton(String text, VoidCallback onPressed) {
       onPressed: onPressed,
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style:
+            const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
     ),
   );

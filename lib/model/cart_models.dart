@@ -1,4 +1,3 @@
-
 class CartProductVariant {
   final int id;
   final String variant;
@@ -83,7 +82,6 @@ extension CartVariantSelector on UserCartProduct {
   }
 }
 
-
 class UserCartItem {
   final int cartId;
   final int productId;
@@ -111,6 +109,50 @@ class UserCartItem {
 }
 
 
+class Variant {
+    int? id;
+    String? variant;
+    dynamic priceDifference;
+    String?variantPrice;
+    dynamic costOfGoods;
+    dynamic sku;
+    int? inventory;
+    dynamic shippingWeight;
+    String? status;
 
+    Variant({
+        this.id,
+        this.variant,
+        this.priceDifference,
+        this.variantPrice,
+        this.costOfGoods,
+        this.sku,
+        this.inventory,
+        this.shippingWeight,
+        this.status,
+    });
 
+    factory Variant.fromJson(Map<String, dynamic> json) => Variant(
+        id: json["id"],
+        variant: json["variant"],
+        priceDifference: json["price_difference"],
+        variantPrice: json["variant_price"],
+        costOfGoods: json["cost_of_goods"],
+        sku: json["sku"],
+        inventory: json["inventory"],
+        shippingWeight: json["shipping_weight"],
+        status: json["status"],
+    );
 
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "variant": variant,
+        "price_difference": priceDifference,
+        "variant_price": variantPrice,
+        "cost_of_goods": costOfGoods,
+        "sku": sku,
+        "inventory": inventory,
+        "shipping_weight": shippingWeight,
+        "status": status,
+    };
+}

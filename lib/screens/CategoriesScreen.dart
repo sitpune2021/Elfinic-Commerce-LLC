@@ -7,18 +7,13 @@ import 'package:elfinic_commerce_llc/providers/category_provider.dart';
 import 'package:elfinic_commerce_llc/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart' as dashboard;
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../model/CategoriesResponse.dart';
 import '../providers/SubCategoryProvider.dart';
-import '../utils/ShimmerCategoryCard.dart';
 import '../utils/lottie_overlay.dart';
 import 'SubCategoriesScreen.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -29,12 +24,25 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-  @override
+
+ /* @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = Provider.of<CategoryProvider>(context, listen: false);
       provider.fetchCategories();
+    });
+  }*/
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      final provider = context.read<CategoryProvider>();
+
+      if (provider.categories.isEmpty) {
+        provider.fetchCategories();
+      }
     });
   }
 
@@ -55,34 +63,32 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           _onPopInvoked(context);
         }
       },
-      child: LottieOverlay(
-        child: Scaffold(
-          backgroundColor: Colors.grey[50],
-          body: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                _buildHeader(),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              _buildHeader(),
 
-                // Categories List
-                Expanded(
-                  child: Consumer<CategoryProvider>(
-                    builder: (context, provider, child) {
-                      if (provider.isLoading) {
-                        return _buildShimmerList();
-                      } else if (provider.error != null) {
-                        return _buildErrorState(provider.error!);
-                      } else if (provider.categories.isEmpty) {
-                        return _buildEmptyState();
-                      } else {
-                        return _buildCategoriesList(provider.categories);
-                      }
-                    },
-                  ),
+              // Categories List
+              Expanded(
+                child: Consumer<CategoryProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.isLoading) {
+                      return _buildShimmerList();
+                    } else if (provider.error != null) {
+                      return _buildErrorState(provider.error!);
+                    } else if (provider.categories.isEmpty) {
+                      return _buildEmptyState();
+                    } else {
+                      return _buildCategoriesList(provider.categories);
+                    }
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -171,7 +177,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final cat = categories[index];
-          final imageUrl = (cat.image != null && cat.image!.isNotEmpty)
+          final imageUrl = (cat.image.isNotEmpty)
               ? "${ApiService.baseUrl}/assets/img/category-images/${cat.image}"
               : "assets/images/no_product_img2.png";
 
@@ -525,170 +531,6 @@ class CategoryItem {
 }
 
 
-/*
-class CategoriesScreen extends StatefulWidget {
-  const CategoriesScreen({super.key});
-
-  @override
-  State<CategoriesScreen> createState() => _CategoriesScreenState();
-}
-
-class _CategoriesScreenState extends State<CategoriesScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = Provider.of<CategoryProvider>(context, listen: false);
-      provider.fetchCategories(); // fetch categories safely after first frame
-    });
-  }
-
-
-  void _onPopInvoked(BuildContext context) {
-    Navigator.popUntil(context, (route) => route.isFirst);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => dashboard.DashboardScreen()),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (bool didPop, Object? result) {
-        if (!didPop) {
-          _onPopInvoked(context);
-        }
-      },
-      child: LottieOverlay(
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          body: SafeArea(
-            child: Consumer<CategoryProvider>(
-              builder: (context, provider, child) {
-                if (provider.isLoading) {
-                  return ListView.builder(
-                    itemCount: 6, // number of shimmer items
-                    itemBuilder: (context, index) => const ShimmerCategoryCard(),
-                  );
-                } else if (provider.error != null) {
-                  return Center(child: Text(provider.error!));
-                } else if (provider.categories.isEmpty) {
-                  return const Center(child: Text("No categories found"));
-                } else {
-                  return ListView.builder(
-                    itemCount: provider.categories.length,
-                    itemBuilder: (context, index) {
-                      final cat = provider.categories[index];
-                      // final imageUrl = "${ApiService.baseUrl}/assets/img/category-images/${cat.image}";
-                      final imageUrl = (cat.image != null && cat.image!.isNotEmpty)
-                          ? "${ApiService.baseUrl}/assets/img/category-images/${cat.image}"
-                          : "assets/images/no_product_img2.png"; // fallback image
-      
-                      return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ChangeNotifierProvider(
-                                      create: (_) => SubCategoryProvider(),
-                                      child: SubCategoriesScreen(
-                                        categoryId: cat.id,
-                                        categoryName: cat.name,
-                                      ),
-                                    ),
-                                  ),
-                                );
-        
-        
-                              },
-        
-        
-                        child: CategoryCard(title: cat.name, imageUrl: imageUrl!),
-                      );
-                    },
-                  );
-                }
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class CategoryItem {
-  final String title;
-  final String imagePath;
-  final Widget screen;
-
-  CategoryItem({
-    required this.title,
-    required this.imagePath,
-    required this.screen,
-  });
-}
-class CategoryCard extends StatelessWidget {
-  final String title;
-  final String imageUrl;
-
-  const CategoryCard({super.key, required this.title, required this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 150,
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        image: DecorationImage(
-          image: imageUrl.startsWith("http")
-              ? CachedNetworkImageProvider(imageUrl)
-              : AssetImage(imageUrl) as ImageProvider,
-          fit: BoxFit.cover,
-          onError: (error, stackTrace) {
-            // fallback in case of error
-            debugPrint("Failed to load image: $error");
-          },
-        ),
-      ),
-      child: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [
-                  Colors.black.withOpacity(0.6),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomLeft,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-*/
 
 
 

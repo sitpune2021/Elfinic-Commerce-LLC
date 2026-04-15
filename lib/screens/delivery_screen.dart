@@ -1,22 +1,15 @@
 
 import 'package:elfinic_commerce_llc/screens/review_screen.dart';
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../model/AddressModel.dart';
 import '../model/cart_models.dart';
 import '../model/delivery_type.dart';
-import '../providers/CartProvider.dart';
-import '../providers/ShippingProvider.dart';
 import '../providers/delivery_provider.dart';
-import '../services/api_service.dart';
 import '../utils/BaseScreen.dart';
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'DashboardScreen.dart';
 import 'ShoppingScreen.dart';
 
 class DeliveryScreen extends StatefulWidget {
@@ -91,7 +84,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
       },
       child: BaseScreen(
         child: Scaffold(
-          backgroundColor: const Color(0xfffdf6ef),
+          backgroundColor:  Colors.white,
           appBar: AppBar(
             backgroundColor: const Color(0xfffdf6ef),
             elevation: 0,
@@ -131,7 +124,7 @@ class _DeliveryScreenState extends State<DeliveryScreen> {
             ],
           ),
           body: provider.isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: CustomLoader())
               : provider.errorMessage != null
               ? Center(child: Text(provider.errorMessage!))
               : SingleChildScrollView(

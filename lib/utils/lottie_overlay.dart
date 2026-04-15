@@ -3,7 +3,7 @@ import 'package:lottie/lottie.dart';
 class LottieOverlay extends StatefulWidget {
   final Widget child;
 
-  const LottieOverlay({Key? key, required this.child}) : super(key: key);
+  const LottieOverlay({super.key, required this.child});
 
   @override
   State<LottieOverlay> createState() => _LottieOverlayState();
@@ -18,7 +18,7 @@ class _LottieOverlayState extends State<LottieOverlay> with SingleTickerProvider
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3), // Exactly 2 seconds
+      duration: const Duration(milliseconds: 1500), // Exactly 2 seconds
     );
 
     // Start animation and hide after 2 seconds

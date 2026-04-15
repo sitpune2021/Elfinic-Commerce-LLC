@@ -4,13 +4,7 @@ import 'dart:convert';
 
 import '../model/ProductsResponse.dart';
 
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/api_service.dart';
@@ -103,9 +97,15 @@ class RecentViewProvider with ChangeNotifier {
 
     _currentPage = 1;
 
-    final String url =
+   /* final String url =
         "${ApiService.baseUrl}/api/getProductByType?user_id=$userId&type=RecentlyViewed&page=$_currentPage";
-
+*/
+    final String url =
+        "${ApiService.baseUrl}/api/getProductByType"
+        "?user_id=$userId"
+        "&type=RecentlyViewed"
+        "&per_page=150" // ✅ ADD THIS
+        "&page=$_currentPage";
     try {
       if (kDebugMode) {
         print("➡️ RECENT VIEWS API");

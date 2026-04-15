@@ -3,23 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 // providers/order_provider.dart
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
 import '../model/OrderModel.dart';
 
 
 // providers/order_provider.dart
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 import '../model/VerifyPaymentModels.dart';
 import '../model/cart_models.dart';
@@ -83,6 +74,10 @@ class OrderProvider with ChangeNotifier {
     );
 
     final url = Uri.parse("${ApiService.baseUrl}/api/product-order/place");
+
+    _printDebugInfo("🌐 CREATE ORDER URL", {
+      "url": url.toString(),
+    });
 
     _logPaymentFlow('Sending order request', extra: {
       'url': url.toString(),
@@ -176,6 +171,10 @@ class OrderProvider with ChangeNotifier {
     notifyListeners();
 
     final url = Uri.parse("${ApiService.baseUrl}/api/product-order/verify-payment");
+
+    _printDebugInfo("🌐 VERIFY PAYMENT URL", {
+      "url": url.toString(),
+    });
 
     final request = VerifyPaymentRequest(
       orderId: razorpayOrderId,

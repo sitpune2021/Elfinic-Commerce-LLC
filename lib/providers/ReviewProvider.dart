@@ -1,251 +1,264 @@
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+// ignore_for_file: file_names
 
-import '../model/Review.dart';
-import '../services/api_service.dart';
+import 'dart:io';
+import 'package:async/async.dart';
+import 'package:elfinic_commerce_llc/model/get_review_model.dart';
+import 'package:elfinic_commerce_llc/services/review_service.dart';
+import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 class ReviewProvider with ChangeNotifier {
-  List<Review> _reviews = [];
+  // List<Review> _reviews = [];
   bool _isLoading = false;
   String _error = '';
 
-  List<Review> get reviews => _reviews;
+  // List<Review> get reviews => _reviews;
   bool get isLoading => _isLoading;
   String get error => _error;
 
-  // Add review method
-  Future<bool> addReview({
-    required int productId,
-    required int rating,
-    required String review,
-  }) async {
+  int rating = 0;
+  bool isUploading = false;
+  double uploadProgress = 0;
+
+  CancelableOperation? _uploadTask;
+
+  //add eligibility
+  bool _eligible = false;
+  bool _loading = false;
+
+  bool get eligible => _eligible;
+  bool get loading => _loading;
+
+  List<File> images = [];
+  List<File> videos = [];
+
+  File? videoThumbnail;
+  bool isVideoThumbLoading = false;
+  bool _isVideoProcessing = false;
+  bool get isVideoProcessing => _isVideoProcessing;
+
+  bool submitSuccess = false;
+
+  GetReviewModel? _reviewModel;
+
+  GetReviewModel? get reviewModel => _reviewModel;
+
+  /// ---------------- RATING ----------------
+  void setRating(int value) {
+    rating = value;
+    debugPrint('⭐ Provider Rating: $rating');
+    notifyListeners();
+  }
+
+  /// ---------------- IMAGES ----------------
+
+  void addImages(List<File> files) {
+    final remaining = 5 - images.length;
+    if (remaining <= 0) {
+      debugPrint('❌ Image limit reached (5)');
+      return;
+    }
+
+    // 🔒 Only take allowed number
+    final limitedFiles = files.take(remaining);
+
+    images.addAll(limitedFiles);
+
+    debugPrint('🖼️ Provider Images Count: ${images.length}');
+    notifyListeners();
+  }
+
+  /// ✅ NEW: Set video processing state
+  void setVideoProcessing(bool value) {
+    _isVideoProcessing = value;
+    notifyListeners();
+  }
+
+  /// ---------------- VIDEOS ----------------
+  Future<void> addVideo(File file) async {
+    videos.clear(); // 🔒 only 1 video allowed
+    videoThumbnail = null;
+    isVideoThumbLoading = true;
+    notifyListeners();
+
+    videos.add(file);
+
     try {
-      _isLoading = true;
-      _error = '';
-      notifyListeners();
-
-      final prefs = await SharedPreferences.getInstance();
-      final userIdString = prefs.getString('user_id');
-      final userId = int.tryParse(userIdString ?? '0') ?? 0;
-
-      if (userId == 0) {
-        _error = 'Please login to add a review';
-        _isLoading = false;
-        notifyListeners();
-        return false;
-      }
-
-      final url = ApiService.addReview;
-
-      final requestBody = {
-        "product_id": productId,
-        "user_id": userId,
-        "rating": rating,
-        "review": review,
-      };
-
-      // ✅ LOG REQUEST
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('🟡 ADD REVIEW API');
-      print('URL: $url');
-      print('BODY: ${jsonEncode(requestBody)}');
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode(requestBody),
+      final tempDir = await getTemporaryDirectory();
+      final thumbPath = await VideoThumbnail.thumbnailFile(
+        video: file.path,
+        thumbnailPath: tempDir.path,
+        imageFormat: ImageFormat.JPEG,
+        maxHeight: 200,
+        quality: 75,
       );
 
-      // ✅ LOG RESPONSE
-      print('🟢 STATUS: ${response.statusCode}');
-      print('🟢 BODY: ${response.body}');
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-      _isLoading = false;
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        if (data['status'] == 'success') {
-          print('✅ Review submitted successfully');
-
-          // 🔥 Re-fetch reviews so real data comes from backend
-          await fetchProductReviews(productId);
-
-          return true;
-        } else {
-          _error = data['message'] ?? 'Failed to submit review';
-          notifyListeners();
-          return false;
-        }
-      } else {
-        _error = 'Server error ${response.statusCode}';
-        notifyListeners();
-        return false;
+      if (thumbPath != null) {
+        videoThumbnail = File(thumbPath);
       }
     } catch (e) {
-      _isLoading = false;
-      _error = 'Network error: $e';
+      debugPrint('❌ Video thumbnail error: $e');
+    }
+
+    isVideoThumbLoading = false;
+    notifyListeners();
+  }
+
+  void removeImage(File file) {
+    images.remove(file);
+    notifyListeners();
+  }
+
+  void removeVideo(File file) {
+    videos.clear();
+    videoThumbnail = null;
+    isVideoThumbLoading = false;
+    _isVideoProcessing = false;
+    notifyListeners();
+  }
+
+  /// ---------------- RESET ----------------
+  void resetForm() {
+    rating = 0;
+    images.clear();
+    videos.clear();
+    _error = '';
+    videoThumbnail = null;
+    isVideoThumbLoading = false;
+    _isVideoProcessing = false;
+    notifyListeners();
+    debugPrint('🔄 Provider Form Reset');
+  }
+
+  Future<void> loadEligibility(int productId) async {
+    debugPrint('🟣 ReviewProvider → loadEligibility START');
+    _loading = true;
+    notifyListeners();
+
+    _eligible = await ReviewService.checkEligibility(productId: productId);
+
+    debugPrint('🟣 ReviewProvider → eligible = $_eligible');
+
+    _loading = false;
+    notifyListeners();
+    debugPrint('🟣 ReviewProvider → loadEligibility END');
+  }
+
+  void reset() {
+    debugPrint('🟣 ReviewProvider → reset');
+    _eligible = false;
+    _loading = false;
+    notifyListeners();
+  }
+
+  // add product review
+  Future<bool> submitReview({
+    required int productId,
+    required String title,
+    required String content,
+  }) async {
+    debugPrint('━━━━━━━━━━━━━━━━━━━━━━');
+    debugPrint('🟢 PROVIDER SUBMIT START');
+
+    if (rating == 0) {
+      _error = 'Please select rating';
       notifyListeners();
       return false;
     }
-  }
 
-
-  // Fetch product reviews with detailed information
-  Future<Map<String, dynamic>?> fetchProductReviews(int productId) async {
-    try {
-      _isLoading = true;
-      _error = '';
-      notifyListeners();
-
-      final url = ApiService.productReviews;
-
-      // ✅ FULL REQUEST LOG
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('🟡 PRODUCT REVIEWS API REQUEST');
-      print('🟡 URL: $url');
-      print('🟡 METHOD: POST');
-      print('🟡 HEADERS: { Content-Type: application/json }');
-      print('🟡 BODY: ${jsonEncode({"product_id": productId})}');
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'product_id': productId,
-        }),
-      );
-
-      // ✅ FULL RESPONSE LOG
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('🟢 PRODUCT REVIEWS API RESPONSE');
-      print('🟢 STATUS CODE: ${response.statusCode}');
-      print('🟢 BODY: ${response.body}');
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-      _isLoading = false;
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        if (data['status'] == 'success') {
-          _reviews = (data['reviews'] as List? ?? [])
-              .map((e) => Review.fromJson(e))
-              .toList();
-
-          notifyListeners();
-          return data;
-        } else {
-          _error = data['message'] ?? 'Failed to fetch product reviews';
-          notifyListeners();
-          return null;
-        }
-      } else {
-        _error = 'Server error: ${response.statusCode}';
-        notifyListeners();
-        return null;
-      }
-    } catch (e) {
-      _isLoading = false;
-      _error = 'Network error: $e';
-      notifyListeners();
-      return null;
-    }
-  }
-
-
-
-  // Clear all reviews
-  void clearReviews() {
-    _reviews.clear();
-    notifyListeners();
-  }
-
-  void clearError() {
+    isUploading = true;
+    submitSuccess = false;
+    uploadProgress = 0;
     _error = '';
     notifyListeners();
-  }
 
-  // Get reviews for specific product
-  List<Review> getReviewsForProduct(int productId) {
-    return _reviews.where((review) => review.productId == productId).toList();
-  }
-
-  // Check if user has already reviewed this product
-  Future<bool> hasUserReviewed(int productId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final userIdString = prefs.getString('user_id');
-    final userId = int.tryParse(userIdString ?? '0') ?? 0;
-
-    if (userId == 0) return false;
-
-    return _reviews.any((review) =>
-    review.productId == productId && review.userId == userId
+    _uploadTask = CancelableOperation.fromFuture(
+      ReviewService.addReview(
+        productId: productId,
+        rating: rating,
+        title: title,
+        content: content,
+        images: images,
+        videos: videos,
+        onProgress: (p) {
+          uploadProgress = p;
+          debugPrint(
+            '📊 PROVIDER PROGRESS: ${(p * 100).toStringAsFixed(1)}%',
+          );
+          notifyListeners();
+        },
+      ),
     );
+
+    final success = await _uploadTask!.valueOrCancellation(false);
+
+    isUploading = false;
+    uploadProgress = 0;
+
+    if (success) {
+      submitSuccess = true;
+      debugPrint('✅ UPLOAD SUCCESS');
+      resetForm();
+    } else {
+      submitSuccess = false;
+      debugPrint('❌ UPLOAD FAILED / CANCELED');
+      _error = 'Upload failed or canceled';
+    }
+
+    notifyListeners();
+    debugPrint('🟢 PROVIDER SUBMIT END');
+    debugPrint('━━━━━━━━━━━━━━━━━━━━━━');
+
+    return success;
   }
 
-  // Alternative synchronous version
-  bool hasUserReviewedSync(int productId, int userId) {
-    if (userId == 0) return false;
-
-    return _reviews.any((review) =>
-    review.productId == productId && review.userId == userId
-    );
+  void cancelUpload() {
+    debugPrint('⛔ CANCEL UPLOAD');
+    _uploadTask?.cancel();
+    isUploading = false;
+    uploadProgress = 0;
+    notifyListeners();
   }
 
-  // Calculate average rating and distribution
-  Map<String, dynamic> calculateRatingStats(List<Review> reviews) {
-    if (reviews.isEmpty) {
+  //
+  Future<void> loadProductReviews(int productId) async {
+    debugPrint('🟣 Provider → loadProductReviews START');
+
+    _isLoading = true;
+    _error = '';
+    notifyListeners();
+
+    final result = await ReviewService.getReviewsByProduct(productId);
+
+    if (result != null) {
+      _reviewModel = result;
+      debugPrint('✅ Reviews Loaded: ${result.data.reviews.length}');
+    } else {
+      _error = 'Failed to load reviews';
+    }
+
+    _isLoading = false;
+    notifyListeners();
+
+    debugPrint('🟣 Provider → loadProductReviews END');
+  }
+
+/* ================== REVIEW STATS ================== */
+
+  Map<String, dynamic> getProductReviewStats() {
+    if (_reviewModel == null) {
       return {
         'averageRating': 0.0,
         'totalReviews': 0,
-        'ratingDistribution': {5: 0, 4: 0, 3: 0, 2: 0, 1: 0},
-        'percentageDistribution': {5: 0.0, 4: 0.0, 3: 0.0, 2: 0.0, 1: 0.0},
       };
     }
 
-    int totalReviews = reviews.length;
-    double totalRating = 0;
-    Map<int, int> ratingDistribution = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
-
-    for (var review in reviews) {
-      totalRating += review.rating;
-      ratingDistribution[review.rating] = (ratingDistribution[review.rating] ?? 0) + 1;
-    }
-
-    double averageRating = totalRating / totalReviews;
-
-    Map<int, double> percentageDistribution = {};
-    ratingDistribution.forEach((rating, count) {
-      percentageDistribution[rating] = (count / totalReviews) * 100;
-    });
+    final summary = _reviewModel!.data.ratingSummary;
 
     return {
-      'averageRating': double.parse(averageRating.toStringAsFixed(1)),
-      'totalReviews': totalReviews,
-      'ratingDistribution': ratingDistribution,
-      'percentageDistribution': percentageDistribution,
-    };
-  }
-
-  // Get reviews for specific product with stats
-  Map<String, dynamic> getProductReviewStats(int productId) {
-    final productReviews = _reviews.where((review) => review.productId == productId).toList();
-    final stats = calculateRatingStats(productReviews);
-
-    return {
-      ...stats,
-      'reviews': productReviews,
+      'averageRating': summary.averageRating,
+      'totalReviews': summary.totalReviews,
     };
   }
 }

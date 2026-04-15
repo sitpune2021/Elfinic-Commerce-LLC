@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="igGradient" cx="30%" cy="107%" r="140%">
+      <stop offset="0%" stop-color="#fdf497"/>
+      <stop offset="5%" stop-color="#fdf497"/>
+      <stop offset="45%" stop-color="#fd5949"/>
+      <stop offset="60%" stop-color="#d6249f"/>
+      <stop offset="90%" stop-color="#285AEB"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Circle Background -->
+  <circle cx="256" cy="256" r="256" fill="url(#igGradient)"/>
+
+  <!-- Camera Outline -->
+  <rect x="144" y="144" width="224" height="224" rx="56" ry="56"
+        fill="none" stroke="#ffffff" stroke-width="24"/>
+
+  <!-- Camera Lens -->
+  <circle cx="256" cy="256" r="56"
+          fill="none" stroke="#ffffff" stroke-width="24"/>
+
+  <!-- Camera Dot -->
+  <circle cx="320" cy="192" r="16" fill="#ffffff"/>
+</svg>

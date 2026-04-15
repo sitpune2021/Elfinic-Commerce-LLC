@@ -1,13 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../model/AddressModel.dart';
 import '../model/cart_models.dart';
 import '../providers/ShippingProvider.dart';
-import 'AddressListScreen.dart';
-import 'ShoppingScreen.dart';
-
 
 class EditAddressScreen extends StatefulWidget {
   final Address address;
@@ -42,7 +39,6 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
   String? selectedAddressType;
   bool useBillingAddress = false;
 
-
   String? _validateName(String? v) {
     if (v == null || v.trim().isEmpty) return "Full name is required";
     if (v.trim().length < 3) return "Enter a valid name";
@@ -74,7 +70,6 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
     return null;
   }
 
-
   @override
   void initState() {
     super.initState();
@@ -82,11 +77,14 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
     // Initialize controllers with existing address data
     _fullNameController = TextEditingController(text: widget.address.name);
     _phoneController = TextEditingController(text: widget.address.phone);
-    _addressLine1Controller = TextEditingController(text: widget.address.addressLine1);
-    _addressLine2Controller = TextEditingController(text: widget.address.addressLine2);
+    _addressLine1Controller =
+        TextEditingController(text: widget.address.addressLine1);
+    _addressLine2Controller =
+        TextEditingController(text: widget.address.addressLine2);
     _cityController = TextEditingController(text: widget.address.city);
     _stateController = TextEditingController(text: widget.address.state);
-    _postalCodeController = TextEditingController(text: widget.address.postalCode);
+    _postalCodeController =
+        TextEditingController(text: widget.address.postalCode);
 
     selectedAddressType = widget.address.type;
     useBillingAddress = widget.address.isDefault == 1;
@@ -106,7 +104,8 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
 
   Future<void> _updateAddress(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      final addressProvider = Provider.of<AddressProvider>(context, listen: false);
+      final addressProvider =
+          Provider.of<AddressProvider>(context, listen: false);
 
       final updatedAddress = Address(
         id: widget.address.id,
@@ -165,18 +164,26 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
     return Consumer<AddressProvider>(
       builder: (context, addressProvider, child) {
         return Scaffold(
-          backgroundColor: const Color(0xfffdf6ef),
+          backgroundColor: Colors.white,
           appBar: AppBar(
-            backgroundColor: const Color(0xfffdf6ef),
+            backgroundColor: Colors.white,
             elevation: 0,
-            surfaceTintColor: const Color(0xfffdf6ef),
+            surfaceTintColor: Colors.transparent,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_sharp, color: Colors.black),
               onPressed: () => Navigator.pop(context),
             ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(
+                height: 1,
+                color: Colors.black.withValues(alpha: 0.06),
+              ),
+            ),
             title: Text(
               widget.fromProfile ? "Edit Address" : "Edit Shipping Address",
-              style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.black, fontWeight: FontWeight.bold),
             ),
             actions: [
               // Only show subtotal if not from profile (i.e., from checkout)
@@ -189,9 +196,9 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                       Text(
                         "₹${widget.subtotalAmount.toStringAsFixed(2)}",
                         style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
                       ),
                       const Text(
                         "Order Subtotal",
@@ -210,8 +217,7 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Order Summary Card - Only show for checkout, not for profile
-                  if (!widget.fromProfile)
-                    _buildOrderSummary(),
+                  if (!widget.fromProfile) _buildOrderSummary(),
 
                   if (!widget.fromProfile) const SizedBox(height: 20),
 
@@ -234,20 +240,21 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                   ),
 
                   _label("Address Line 1*"),
-        _textField(
-        controller: _addressLine1Controller,
-        hint: "House no, Street name",
-        suffixIcon: const Icon(Icons.location_on_outlined),
-        validator: (v) => v == null || v.trim().isEmpty ? "Address is required" : null,
-        ),
+                  _textField(
+                    controller: _addressLine1Controller,
+                    hint: "House no, Street name",
+                    suffixIcon: const Icon(Icons.location_on_outlined),
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? "Address is required"
+                        : null,
+                  ),
 
                   _label("Address Line 2"),
                   _textField(
                     controller: _addressLine2Controller,
                     hint: "Apartment, suite, etc. (optional)",
-                    validator: (_) => null,   // 👈 no validation = optional
+                    validator: (_) => null, // 👈 no validation = optional
                   ),
-
 
                   _label("City*"),
                   _textField(
@@ -275,7 +282,8 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                     children: [
                       Checkbox(
                         value: useBillingAddress,
-                        onChanged: (val) => setState(() => useBillingAddress = val!),
+                        onChanged: (val) =>
+                            setState(() => useBillingAddress = val!),
                       ),
                       const Text("Use as Billing Address"),
                     ],
@@ -284,9 +292,10 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                   const SizedBox(height: 20),
 
                   if (addressProvider.isLoading)
-                    const Center(child: CircularProgressIndicator())
+                    const Center(child: CustomLoader())
                   else
-                    _updateButton("UPDATE ADDRESS", () => _updateAddress(context)),
+                    _updateButton(
+                        "UPDATE ADDRESS", () => _updateAddress(context)),
 
                   const SizedBox(height: 10),
 
@@ -370,15 +379,15 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
   // Helper Widgets
 
   Widget _label(String text) => Padding(
-    padding: const EdgeInsets.only(top: 16, bottom: 6),
-    child: Text(
-      text,
-      style: const TextStyle(
-        fontWeight: FontWeight.bold,
-        color: Color(0xFF160042),
-      ),
-    ),
-  );
+        padding: const EdgeInsets.only(top: 16, bottom: 6),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF160042),
+          ),
+        ),
+      );
 
   Widget _textField({
     required TextEditingController controller,
@@ -391,20 +400,21 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
-      autovalidateMode: AutovalidateMode.onUserInteraction, // 🔥 real-time validation
+      autovalidateMode:
+          AutovalidateMode.onUserInteraction, // 🔥 real-time validation
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
         fillColor: Colors.white,
         suffixIcon: suffixIcon,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
         ),
       ),
     );
   }
-
 
   Widget _addressTypeSelector() {
     final types = ["Home", "Office", "Other"];
@@ -425,17 +435,19 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
                 color: isSelected ? Colors.indigo.shade900 : Colors.white,
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(
-                  color: isSelected ? Colors.indigo.shade900 : Colors.grey.shade400,
+                  color: isSelected
+                      ? Colors.indigo.shade900
+                      : Colors.grey.shade400,
                   width: 1.5,
                 ),
                 boxShadow: isSelected
                     ? [
-                  BoxShadow(
-                    color: Colors.indigo.withOpacity(0.3),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
+                        BoxShadow(
+                          color: Colors.indigo.withOpacity(0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
                     : [],
               ),
               child: Center(
@@ -461,12 +473,14 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.green,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         ),
         onPressed: onPressed,
         child: Text(
           text,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -479,12 +493,14 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.grey,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         ),
         onPressed: onPressed,
         child: Text(
           text,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -920,4 +936,3 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
   }
 }
 */
-

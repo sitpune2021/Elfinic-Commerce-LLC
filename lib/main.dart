@@ -13,18 +13,23 @@ import 'package:elfinic_commerce_llc/providers/SimilarProductProvider.dart';
 import 'package:elfinic_commerce_llc/providers/SubCategoryProvider.dart';
 import 'package:elfinic_commerce_llc/providers/WishlistProvider.dart';
 import 'package:elfinic_commerce_llc/providers/category_provider.dart';
+import 'package:elfinic_commerce_llc/providers/delete_%20Account/delete_account_provider.dart';
 import 'package:elfinic_commerce_llc/providers/delivery_provider.dart';
+import 'package:elfinic_commerce_llc/providers/forgot%20password/forgot_password_provider.dart';
+import 'package:elfinic_commerce_llc/providers/order/order_invoice_provider.dart';
+import 'package:elfinic_commerce_llc/providers/product/product_search_provider.dart';
 import 'package:elfinic_commerce_llc/providers/product_provider.dart';
+import 'package:elfinic_commerce_llc/providers/profile_provider.dart';
 import 'package:elfinic_commerce_llc/screens/CartScreen.dart';
 import 'package:elfinic_commerce_llc/screens/DashboardScreen.dart';
-import 'package:elfinic_commerce_llc/screens/review_screen.dart';
+import 'package:elfinic_commerce_llc/screens/VendorDetailScreen.dart';
 import 'package:elfinic_commerce_llc/screens/splash_screen.dart';
+import 'package:elfinic_commerce_llc/screens/vendor_screen.dart';
 import 'package:elfinic_commerce_llc/utils/NoInternetOverlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-
 
 import 'package:elfinic_commerce_llc/screens/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,6 +38,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // Screens
 import 'screens/register_screen.dart';
+
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -67,11 +76,15 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => RecentViewProvider()),
         ChangeNotifierProvider(create: (_) => ArrivalProductProvider()),
         ChangeNotifierProvider(create: (_) => SimilarProductProvider()),
-
-
-
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => DeleteAccountProvider()),
+        ChangeNotifierProvider(create: (_) => ForgotPasswordProvider()),
         ChangeNotifierProvider(create: (_) => CouponProvider()),
         // ChangeNotifierProvider(create: (_) => ShippingProvider()),
+        ChangeNotifierProvider(create: (_) => OrderInvoiceProvider()),
+        ChangeNotifierProvider(create: (_) => ProductSearchProvider()),
+        ChangeNotifierProvider(create: (_) => VendorProvider()),
+        ChangeNotifierProvider(create: (_) => VendorDetailProvider()),
       ],
       child: const MyApp(),
     ),
@@ -81,6 +94,9 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+
+
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ConnectivityProvider>(
@@ -88,12 +104,14 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Elfinic Commerce LLC',
+
+          navigatorObservers: [routeObserver], // 🔥 ADD THIS LINE
           theme: ThemeData(
             primaryTextTheme: GoogleFonts.robotoTextTheme(),
             primaryColor: Color(0xFFD39841), // ✅ App primary color
             appBarTheme: const AppBarTheme(
               backgroundColor: Color(0xFFD39841), // ✅ AppBar color
-              foregroundColor: Colors.white,  // ✅ Text/Icon color
+              foregroundColor: Colors.white, // ✅ Text/Icon color
             ),
           ),
           routes: {
@@ -115,8 +133,4 @@ class MyApp extends StatelessWidget {
       },
     );
   }
-  
 }
-
-
-

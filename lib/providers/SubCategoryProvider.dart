@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 import '../model/SubcategoriesResponse.dart';
 import '../services/api_service.dart';

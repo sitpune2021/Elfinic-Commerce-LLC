@@ -5,18 +5,10 @@ import 'package:http/http.dart' as http;
 import '../model/BannersResponse.dart';
 
 
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 
 import '../services/api_service.dart';
 
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 
-import '../model/BannersResponse.dart';
-import '../services/api_service.dart';
 
 class BannerProvider with ChangeNotifier {
   List<BannerData> _banners = [];

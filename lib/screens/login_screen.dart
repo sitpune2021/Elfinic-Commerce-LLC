@@ -1,43 +1,67 @@
 
+import 'dart:async';
+
+import 'package:elfinic_commerce_llc/screens/privacy_policy_screen.dart';
 import 'package:elfinic_commerce_llc/screens/register_screen.dart';
+import 'package:elfinic_commerce_llc/widget/custom_loading.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-
 
 import '../providers/AuthProvider.dart';
 import 'DashboardScreen.dart';
 import 'forgot_password.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+
+  final bool fromAddToCart; // 👈 ADD THIS
+  const LoginScreen({super.key,
+  this.fromAddToCart = false, // 👈 DEFAULT VALUE
+  });
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  LoginScreenState createState() => LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
+class LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
+  /// ================= FORM KEYS =================
+  final _emailFormKey = GlobalKey<FormState>();
+  final _mobileFormKey = GlobalKey<FormState>();
 
+  /// ================= CONTROLLERS =================
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _mobileController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
 
+  final FocusNode _otpFocusNode = FocusNode();
+
+  late TabController _tabController;
+  bool _agreeToTerms = false;
   bool _isPasswordVisible = false;
   bool _rememberMe = false;
 
-  bool _isLengthValid = false;
-  bool _hasUppercaseAndNumber = false;
-  bool _hasSpecialChar = false;
+  /// ================= OTP STATE =================
+  bool _otpSent = false;
+  int _secondsRemaining = 60;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _loadSavedEmail();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _otpFocusNode.dispose();
+    _tabController.dispose();
+    super.dispose();
   }
 
   void _loadSavedEmail() async {
@@ -45,483 +69,488 @@ class _LoginScreenState extends State<LoginScreen> {
     final savedEmail = prefs.getString("saved_email");
     if (savedEmail != null) {
       _emailController.text = savedEmail;
-      setState(() {
-        _rememberMe = true;
-      });
+      setState(() => _rememberMe = true);
     }
   }
 
-  void _validatePassword(String value) {
-    _isLengthValid = value.length >= 6;
-    _hasUppercaseAndNumber =
-        value.contains(RegExp(r'[A-Z]')) && value.contains(RegExp(r'[0-9]'));
-    _hasSpecialChar = value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+  void _validatePassword(String value) {}
+
+  /// ================= OTP TIMER =================
+  void _startOtpTimer() {
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      _otpSent = true;
+      _secondsRemaining = 60;
+      _otpController.clear();
+    });
+
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsRemaining == 0) {
+        timer.cancel();
+      } else {
+        setState(() => _secondsRemaining--);
+      }
+    });
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      FocusScope.of(context).requestFocus(_otpFocusNode);
+    });
   }
 
-  bool get _isFormValid {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}').hasMatch(_emailController.text.trim()) &&
-        _isLengthValid &&
-        _hasUppercaseAndNumber &&
-        _hasSpecialChar;
+  /// ================= UI HELPERS =================
+  InputDecoration _decoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      filled: true,
+      fillColor: Colors.blue.shade50,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30),
+        borderSide: BorderSide.none,
+      ),
+    );
+  }
+
+  ButtonStyle _buttonStyle() {
+    return ElevatedButton.styleFrom(
+      minimumSize: const Size(double.infinity, 50),
+      backgroundColor: Colors.indigo.shade900,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
+    bool _agreeToMarketing = false;
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.topLeft,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.indigo),
-                  onPressed: () {},
-                ),
+        child: Column(
+          children: [
+            Image.asset(
+              "assets/icons/playstore.png",
+              height: 110,
+              width: 180,
+            ),
+            const SizedBox(height: 20),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Login to your Account",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
-              Image.asset(
-                "assets/images/splash_screen_1.png",
-                height: 120,
-                width: 200,
+            ),
+            const SizedBox(height: 5),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Sign in to track your orders, manage your wishlist, and shop your favourite items anytime.",
+                style: TextStyle(color: Colors.black54, fontSize: 14),
               ),
-              const SizedBox(height: 30),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Login to your Account",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 5),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Sign in to track your orders, manage your wishlist, and shop your favourite items anytime.",
-                  style: TextStyle(color: Colors.black54, fontSize: 14),
-                ),
-              ),
-              const SizedBox(height: 20),
+            ),
+            const SizedBox(height: 15),
 
-              // Email Field
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text("Email",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.indigo,
-                    )),
-              ),
-              const SizedBox(height: 5),
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  hintText: "Enter your email",
-                  filled: true,
-                  fillColor: Colors.blue.shade50,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Email is required';
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}').hasMatch(value)) {
-                    return 'Enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 15),
+            TabBar(
+              controller: _tabController,
+              isScrollable: false, // 👈 IMPORTANT
+              labelColor: Colors.indigo,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: Colors.indigo,
+              indicatorWeight: 3,
+              tabs: const [
+                Tab(text: "Email Login"),
+                Tab(text: "Mobile Number Login"),
+              ],
+            ),
 
-              // Password Field
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text("Password",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.indigo,
-                    )),
-              ),
-              const SizedBox(height: 5),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: !_isPasswordVisible,
-                decoration: InputDecoration(
-                  hintText: "Password",
-                  filled: true,
-                  fillColor: Colors.blue.shade50,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.grey),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
-                    },
-                  ),
-                ),
-                onChanged: _validatePassword,
-                validator: (value) {
-                  _validatePassword(value ?? '');
-                  if (value == null || value.isEmpty) return 'Password is required';
-                  if (!_isLengthValid || !_hasUppercaseAndNumber || !_hasSpecialChar) {
-                    return 'Password does not meet requirements';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-
-              // Remember Me & Forgot Password
-              Row(
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 320,
+              child: TabBarView(
+                controller: _tabController,
                 children: [
-                  Checkbox(
-                    value: _rememberMe,
-                    onChanged: (value) {
-                      setState(() {
-                        _rememberMe = value ?? false;
-                      });
-                    },
+                  Form(
+                    key: _emailFormKey,
+                    child: _emailLoginUI(authProvider),
                   ),
-                  const Text("Remember me"),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ForgotPasswordScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Forgot Password",
-                      style: TextStyle(color: Colors.orange),
-                    ),
+                  Form(
+                    key: _mobileFormKey,
+                    child: _mobileOtpUI(),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-
-              // Login Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  backgroundColor: Colors.indigo.shade900,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+            ),
+            // const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Don’t have account yet? "),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RegisterScreen()),
+                    );
+                  },
+                  child: const Text(
+                    "Sign Up",
+                    style: TextStyle(color: Colors.orange),
                   ),
                 ),
-                onPressed: authProvider.isLoading
-                    ? null
-                    : () async {
-                  if (!_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please fill all required fields")),
-                    );
-                    return;
-                  }
+              ],
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Column(
+                children: [
+                  CheckboxListTile(
+                    value: _agreeToTerms,
+
+                    activeColor: Colors.indigo,
+                    onChanged: (v) => setState(() => _agreeToTerms = v ?? false),
+                    title: Text.rich(
+                      TextSpan(
+                        style: AppTextStyles.normal,
+                        children: [
+                          const TextSpan(text: "I agree to the "),
+
+                          TextSpan(
+                            text: "Terms & Conditions",
+                            style: AppTextStyles.link,
+                            recognizer: TapGestureRecognizer()..onTap = () {},
+                          ),
+
+                          const TextSpan(text: ", "),
+
+                          TextSpan(
+                            text: "Privacy Policy",
+                            style: AppTextStyles.link,
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const PrivacyPolicyScreen(),
+                                  ),
+                                );
+                              },
+                          ),
+
+                          const TextSpan(text: ", "),
+
+                          TextSpan(
+                            text: "Return Policy",
+                            style: AppTextStyles.link,
+                            recognizer: TapGestureRecognizer()..onTap = () {},
+                          ),
+
+                          const TextSpan(text: " and "),
+
+                          TextSpan(
+                            text: "Contact Seller",
+                            style: AppTextStyles.link,
+                            recognizer: TapGestureRecognizer()..onTap = () {},
+                          ),
+                        ],
+                      ),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+
+               /*   CheckboxListTile(
+                    value: _agreeToMarketing,
+                    onChanged: (v) =>
+                        setState(() => _agreeToMarketing = v ?? false),
+                    title: const Text(
+                      "Send me marketing communications via email and SMS",
+                      style: AppTextStyles.checkboxText,
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),*/
+                ],
+              ),
+            ),
+            Row(
+              children: const [
+                Expanded(child: Divider()),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: Text("Or Log In with"),
+                ),
+                Expanded(child: Divider()),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                // ElevatedButton(
+                //   onPressed: () {},
+                //   style: ElevatedButton.styleFrom(
+                //     shape: const CircleBorder(),
+                //     padding: const EdgeInsets.all(15),
+                //     backgroundColor: Colors.blue,
+                //   ),
+                //   child: const Icon(Icons.facebook, color: Colors.white),
+                // ),
+                ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    shape: const CircleBorder(),
+                    padding: const EdgeInsets.all(15),
+                    backgroundColor: Colors.black,
+                  ),
+                  child: const Icon(Icons.apple, color: Colors.white),
+                ),
+                ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    shape: const CircleBorder(),
+                    padding: const EdgeInsets.all(15),
+                    backgroundColor: Colors.white,
+                  ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      "assets/icons/google.png",
+                      width: 22,
+                      height: 22,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// ================= EMAIL LOGIN =================
+  Widget _emailLoginUI(AuthProvider authProvider) {
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text("Email",
+              style:
+                  TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo)),
+        ),
+        const SizedBox(height: 5),
+        TextFormField(
+          controller: _emailController,
+          decoration: _decoration("Enter your email"),
+          validator: (value) =>
+              value == null || value.isEmpty ? "Email required" : null,
+        ),
+        const SizedBox(height: 15),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text("Password",
+              style:
+                  TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo)),
+        ),
+        const SizedBox(height: 5),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: !_isPasswordVisible,
+          decoration: _decoration("Password").copyWith(
+            suffixIcon: IconButton(
+              icon: Icon(
+                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+              onPressed: () {
+                setState(() => _isPasswordVisible = !_isPasswordVisible);
+              },
+            ),
+          ),
+          onChanged: _validatePassword,
+        ),
+        Row(
+          children: [
+            Checkbox(
+              value: _rememberMe,
+              onChanged: (v) => setState(() => _rememberMe = v ?? false),
+            ),
+            const Text("Remember me"),
+            const Spacer(),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ForgotPasswordScreen()),
+                );
+              },
+              child: const Text(
+                "Forgot Password",
+                style: TextStyle(color: Colors.orange),
+              ),
+            ),
+          ],
+        ),
+        ElevatedButton(
+          style: _buttonStyle(),
+          onPressed: authProvider.isLoading
+              ? null
+              : () async {
+
+
+            /// ✅ CHECK TERMS FIRST
+            if (!_agreeToTerms) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Please accept Terms & Conditions"),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
+
+            if (!_emailFormKey.currentState!.validate()) return;
 
                   await authProvider.login(
                     _emailController.text.trim(),
                     _passwordController.text.trim(),
                   );
 
-                  if (authProvider.loginResponse != null &&
-                      authProvider.loginResponse!.status.toLowerCase() == "success") {
+                  /*if (authProvider.loginResponse?.status.toLowerCase() == "success") {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setString(
-                        "auth_token", authProvider.loginResponse!.token);
-                    if (_rememberMe) {
-                      await prefs.setString(
-                          "saved_email", _emailController.text.trim());
-                    }
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DashboardScreen(),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(
-                              authProvider.errorMessage ?? "Login failed")),
-                    );
-                  }
-                },
-                child: authProvider.isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                  "LOGIN",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
+                        "auth_token", authProvider.loginResponse!.token!);
+                    /// 🔥 ADD THIS (IMPORTANT)
+                    await prefs.setBool('isLoggedIn', true);
 
-              const SizedBox(height: 20),
-
-              // Sign Up
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Don’t have account yet? "),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
+                    // if (!mounted) return;
+                    // Navigator.pushReplacement(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (_) => const DashboardScreen(),
+                    //   ),
+                    // );
+                    if (widget.fromAddToCart) {
+                      Navigator.pop(context); // 🔥 go back to product page
+                    } else {
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => RegisterScreen(),
+                          builder: (_) => const DashboardScreen(),
                         ),
                       );
-                    },
-                    child: const Text(
-                      "Sign Up",
-                      style: TextStyle(color: Colors.orange),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 30),
+                    }
+                  }*/
+            if (authProvider.loginResponse?.status.toLowerCase() == "success") {
 
-              // Divider
-              Row(
-                children: const [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text("Or Log In with"),
-                  ),
-                  Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: 20),
+              final prefs = await SharedPreferences.getInstance();
 
-              // Social Login Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(15),
-                      backgroundColor: Colors.blue,
-                    ),
-                    child: const Icon(Icons.facebook, color: Colors.white),
+              /// 🔥 MAIN FIX
+              await prefs.setBool('isLoggedIn', true);
+
+              /// 🔥 ALSO SAVE TOKEN
+              await prefs.setString(
+                "auth_token",
+                authProvider.loginResponse?.token ?? "",
+              );
+
+              if (widget.fromAddToCart) {
+                Navigator.pop(context);
+              } else {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DashboardScreen(),
                   ),
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(15),
-                      backgroundColor: Colors.black,
-                    ),
-                    child: const Icon(Icons.apple, color: Colors.white),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(15),
-                      backgroundColor: Colors.white,
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        "assets/icons/google.png",
-                        width: 22,
-                        height: 22,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                );
+              }
+            }
+                },
+          child: authProvider.isLoading
+              ? const CustomLoader()
+              : const Text(
+                  "LOGIN",
+                  style: TextStyle(color: Colors.white),
+                ),
         ),
-      ),
-    );
-  }
-}
-
-
-/*
-
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
-
-  @override
-  _LoginScreenState createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-
-  final _formKey = GlobalKey<FormState>();
-
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  bool _isPasswordVisible = false;
-  bool _rememberMe = false;
-
-
-  String? _emailError;
-  String? _passwordError;
-
-
-
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSavedEmail();
-  }
-
-  void _loadSavedEmail() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedEmail = prefs.getString("saved_email");
-    if (savedEmail != null) {
-      _emailController.text = savedEmail;
-      setState(() {
-        _rememberMe = true;
-      });
-    }
-  }
-
-  void _validateEmail(String value) {
-    if (value.isEmpty) {
-      setState(() => _emailError = 'Email is required');
-    } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}').hasMatch(value)) {
-      setState(() => _emailError = 'Enter a valid email');
-    } else {
-      setState(() => _emailError = null);
-    }
-  }
-// Inside _LoginScreenState
-  bool _isLengthValid = false;
-  bool _hasUppercaseAndNumber = false;
-  bool _hasSpecialChar = false;
-  void _validatePassword(String value) {
-    _isLengthValid = value.length >= 8;
-    _hasUppercaseAndNumber =
-        value.contains(RegExp(r'[A-Z]')) && value.contains(RegExp(r'[0-9]'));
-    _hasSpecialChar = value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
-
-    if (value.isEmpty) {
-      setState(() => _passwordError = 'Password is required');
-    } else if (!_isLengthValid || !_hasUppercaseAndNumber || !_hasSpecialChar) {
-      setState(() => _passwordError = 'Password does not meet requirements');
-    } else {
-      setState(() => _passwordError = null);
-    }
-  }
-
-  Widget _passwordCheck(bool condition, String text) {
-    return Row(
-      children: [
-        Icon(
-          condition ? Icons.check_circle : Icons.cancel,
-          color: condition ? Colors.green : Colors.red,
-          size: 16,
-        ),
-        const SizedBox(width: 5),
-        Text(text, style: TextStyle(fontSize: 12, color: Colors.black54)),
       ],
     );
   }
 
-  bool get _isFormValid => _emailError == null && _passwordError == null;
+  /// ================= MOBILE OTP =================
 
-  Widget _passwordRequirement(String text, bool valid) {
-    return Row(
-      children: [
-        Icon(
-          valid ? Icons.check_circle : Icons.cancel,
-          color: valid ? Colors.green : Colors.red,
-          size: 16,
-        ),
-        const SizedBox(width: 5),
-        Text(text, style: TextStyle(fontSize: 12, color: Colors.black54)),
-      ],
-    );
-  }
+  Widget _mobileOtpUI() {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        void showError(String message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
 
-  @override
-  Widget build(BuildContext context) {
+        void showSuccess(String message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
 
-    final authProvider = Provider.of<AuthProvider>(context);
+        return Column(
+          children: [
+            /// ================= MOBILE NUMBER =================
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Mobile Number",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.indigo,
+                ),
+              ),
+            ),
+            const SizedBox(height: 5),
+            IntlPhoneField(
+              controller: _mobileController,
+              decoration: InputDecoration(
+                hintText: "Mobile Number",
+                filled: true,
+                counterText: "",
+                fillColor: Colors.blue.shade50,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 15),
+              ),
+              initialCountryCode: 'IN',
+            ),
 
-    return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 10),
+            const SizedBox(height: 20),
 
-              // Back Button
+            /// ================= OTP FIELD =================
+            if (_otpSent) ...[
               Align(
-                alignment: Alignment.topLeft,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.indigo),
-                  onPressed: () {},
-                ),
-              ),
-
-              // Logo
-              Image.asset(
-                "assets/images/splash_screen_1.png", // your logo
-                height: 120,
-                width: 200,
-              ),
-              const SizedBox(height: 30),
-
-
-              // Login Title
-              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "Login to your Account",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 5),
-
-              // Subtext
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Sign in to track your orders, manage your wishlist, and shop your favourite items anytime.",
-                  style: TextStyle(color: Colors.black54, fontSize: 14),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Email Field
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Email",
+                  "OTP",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.indigo,
@@ -530,316 +559,146 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 5),
               TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  hintText: "Enter your email",
-                  filled: true,
-                  fillColor: Colors.blue.shade50,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                  errorText: _emailError,
+                controller: _otpController,
+                focusNode: _otpFocusNode,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                decoration: _decoration("Enter 6 digit OTP").copyWith(
+                  counterText: "",
                 ),
-                onChanged: _validateEmail,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Email is required';
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}').hasMatch(value)) return 'Enter a valid email';
-                  return null;
-                },
+                onChanged: (_) => setState(() {}),
               ),
-              const SizedBox(height: 15),
-
-              // Password Field
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Password",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 5),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: !_isPasswordVisible,
-                decoration: InputDecoration(
-                  hintText: "Password",
-                  filled: true,
-                  fillColor: Colors.blue.shade50,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                      color: Colors.grey,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
-                    },
-                  ),
-                  errorText: _passwordError,
-                ),
-                onChanged: _validatePassword,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Password is required';
-                  if (!_isLengthValid || !_hasUppercaseAndNumber || !_hasSpecialChar)
-                    return 'Password does not meet requirements';
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 5),
-
-// Password Requirements
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // _passwordCheck(_isLengthValid, "Password Must Be At Least 8 Characters"),
-                  // _passwordCheck(_hasUppercaseAndNumber, "At Least One Uppercase & One Number"),
-                  // _passwordCheck(_hasSpecialChar, "At Least One Special Character"),
-                ],
-              ),
-
               const SizedBox(height: 10),
-
-              // Remember Me & Forgot Password
-              // Remember Me & Forgot Password
-              Row(
-                children: [
-                  Checkbox(
-                    value: _rememberMe,
-                    onChanged: (value) {
-                      setState(() {
-                        _rememberMe = value ?? false;
-                      });
-                    },
-                  ),
-                  const Text("Remember me"),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ForgotPasswordScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Forgot Password",
-                      style: TextStyle(color: Colors.orange),
-                    ),
-                  ),
-                ],
+              Text(
+                _secondsRemaining > 0
+                    ? "Resend OTP in $_secondsRemaining sec"
+                    : "Didn’t receive OTP?",
+                style: const TextStyle(color: Colors.grey),
               ),
-              const SizedBox(height: 20),
-
-              /// Login Button
-              // ElevatedButton(
-              //   style: ElevatedButton.styleFrom(
-              //     minimumSize: const Size(double.infinity, 50),
-              //     backgroundColor: Colors.indigo.shade900,
-              //     shape: RoundedRectangleBorder(
-              //       borderRadius: BorderRadius.circular(30),
-              //     ),
-              //   ),
-              //   onPressed: authProvider.isLoading
-              //       ? null
-              //       : () async {
-              //     await authProvider.login(
-              //       _emailController.text.trim(),
-              //       _passwordController.text.trim(),
-              //     );
-              //
-              //     if (authProvider.loginResponse != null &&
-              //         authProvider.loginResponse!.status == "success") {
-              //       // ✅ Save token
-              //       final prefs = await SharedPreferences.getInstance();
-              //       await prefs.setString(
-              //           "auth_token", authProvider.loginResponse!.token);
-              //
-              //       // ✅ Navigate
-              //       Navigator.pushReplacement(
-              //         context,
-              //         MaterialPageRoute(
-              //           builder: (context) => const DashboardScreen(),
-              //         ),
-              //       );
-              //     } else {
-              //       ScaffoldMessenger.of(context).showSnackBar(
-              //         SnackBar(
-              //           content: Text(
-              //               authProvider.errorMessage ?? "Login failed"),
-              //         ),
-              //       );
-              //     }
-              //   },
-              //   child: authProvider.isLoading
-              //       ? const CircularProgressIndicator(color: Colors.white)
-              //       : const Text(
-              //     "LOGIN",
-              //     style: TextStyle(color: Colors.white, fontSize: 16),
-              //   ),
-              // ),
-              // Login Button
-              // Login Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  backgroundColor: Colors.indigo.shade900,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                onPressed: authProvider.isLoading
+              TextButton(
+                onPressed: _secondsRemaining > 0
                     ? null
                     : () async {
-                  // ✅ Validate the form
-                  if (!_formKey.currentState!.validate()) {
-                    // Show a SnackBar if form is invalid
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text("Please fill all required fields")),
-                    );
-                    return; // Stop login if invalid
-                  }
-
-                  // If validation passed, login
-                  await authProvider.login(
-                    _emailController.text.trim(),
-                    _passwordController.text.trim(),
-                  );
-
-                  if (authProvider.loginResponse != null &&
-                      authProvider.loginResponse!.status == "success") {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setString(
-                        "auth_token", authProvider.loginResponse!.token);
-
-                    if (_rememberMe) {
-                      await prefs.setString(
-                          "saved_email", _emailController.text.trim());
-                    }
-
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DashboardScreen(),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Login failed")),
-                    );
-                  }
-                },
-                child: authProvider.isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                  "LOGIN",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
-
-
-              const SizedBox(height: 20),
-
-              // Sign Up
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Don’t have account yet? "),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RegisterScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Sign Up",
-                      style: TextStyle(color: Colors.orange),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 30),
-
-              // Divider
-              Row(
-                children: const [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text("Or Log In with"),
-                  ),
-                  Expanded(child: Divider()),
-                ],
+                        await authProvider
+                            .sendOtp(_mobileController.text.trim());
+                        if (authProvider.errorMessage != null) {
+                          showError(authProvider.errorMessage!);
+                        } else {
+                          showSuccess("OTP sent successfully");
+                          _startOtpTimer();
+                        }
+                      },
+                child: const Text("Resend OTP"),
               ),
               const SizedBox(height: 20),
-
-              // Social Login Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Facebook
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(15),
-                      backgroundColor: Colors.blue,
-                    ),
-                    child: const Icon(Icons.facebook, color: Colors.white),
-                  ),
-                  // Apple
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(15),
-                      backgroundColor: Colors.black,
-                    ),
-                    child: const Icon(Icons.apple, color: Colors.white),
-                  ),
-
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(15),
-                      backgroundColor: Colors.white,
-                    ),
-                    child:   ClipOval(
-                      child: Image.asset(
-                        "assets/icons/google.png",
-                        width: 22,
-                        height: 22,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  ),
-                ],
-              ),
             ],
-          ),
-        ),
-      ),
+
+            /// ================= BUTTON =================
+            ElevatedButton(
+              style: _buttonStyle(),
+              onPressed: authProvider.isLoading
+                  ? null
+                  : () async {
+
+                /// ✅ CHECK TERMS FIRST
+                if (!_agreeToTerms) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Please accept Terms & Conditions"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                final mobile = _mobileController.text.trim();
+
+                      /// ---------- SEND OTP ----------
+                      if (!_otpSent) {
+                        if (mobile.length < 10) {
+                          showError("Please enter a valid mobile number");
+                          return;
+                        }
+
+                        await authProvider.sendOtp(mobile);
+
+                        if (authProvider.errorMessage != null) {
+                          showError(authProvider.errorMessage!);
+                        } else {
+                          showSuccess("OTP sent successfully");
+                          _startOtpTimer();
+                        }
+                      }
+
+                      /// ---------- VERIFY OTP ----------
+                      else {
+                        final otp = _otpController.text.trim();
+
+                        if (otp.length != 6) {
+                          showError("Please enter a valid 6 digit OTP");
+                          return;
+                        }
+
+                        await authProvider.verifyOtpLogin(mobile, otp);
+
+                        if (authProvider.errorMessage != null) {
+                          showError(authProvider.errorMessage!);
+                          return;
+                        }
+
+                        if (authProvider.loginResponse?.status.toLowerCase() ==
+                            "success") {
+
+                          if (widget.fromAddToCart) {
+                            Navigator.pop(context);
+                          } else {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const DashboardScreen(),
+                              ),
+                            );
+                          }
+                         /* if (!context.mounted) return;
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const DashboardScreen(),
+                            ),
+                          );*/
+                        }
+                      }
+                    },
+              child: authProvider.isLoading
+                  ? const CustomLoader()
+                  : Text(
+                      _otpSent ? "VERIFY & LOGIN" : "SEND OTP",
+                      style: const TextStyle(color: Colors.white),
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
-*/
 
+class AppTextStyles {
+  static const TextStyle normal = TextStyle(
+    fontSize: 13,
+    color: Colors.black87,
+    height: 1.4,
+  );
 
+  static const TextStyle link = TextStyle(
+    fontSize: 13,
+    color: Colors.indigo,
+    fontWeight: FontWeight.w500,
+    decoration: TextDecoration.underline,
+  );
+
+  static const TextStyle checkboxText = TextStyle(
+    fontSize: 13,
+    color: Colors.black87,
+  );
+}

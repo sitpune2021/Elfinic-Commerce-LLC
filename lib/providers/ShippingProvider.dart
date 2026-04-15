@@ -5,25 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../model/AddressModel.dart';
 // providers/address_provider.dart (Enhanced logging version)
-import 'dart:convert';
 
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import '../model/AddressModel.dart';
 
 // providers/address_provider.dart
-import 'dart:convert';
-
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import '../model/AddressModel.dart';
 
 
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+
 import 'package:shared_preferences/shared_preferences.dart';
-import '../model/AddressModel.dart';
 import '../services/api_service.dart';
 
 class AddressProvider with ChangeNotifier {

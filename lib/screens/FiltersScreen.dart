@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 
 class FiltersScreen extends StatefulWidget {
   const FiltersScreen({super.key});
@@ -30,6 +29,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -86,9 +86,9 @@ class _FiltersScreenState extends State<FiltersScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(6), // ✅ rounded checkbox
                               ),
-                              fillColor: MaterialStateProperty.resolveWith<Color>(
+                              fillColor: WidgetStateProperty.resolveWith<Color>(
                                     (states) {
-                                  if (states.contains(MaterialState.selected)) {
+                                  if (states.contains(WidgetState.selected)) {
                                     return const Color(0xFFFF6B57); // ✅ background when checked
                                   }
                                   return Colors.white; // background when unchecked
@@ -190,15 +190,15 @@ class _FiltersScreenState extends State<FiltersScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(6), // ✅ rounded checkbox
                               ),
-                              fillColor: MaterialStateProperty.resolveWith<Color>(
+                              fillColor: WidgetStateProperty.resolveWith<Color>(
                                     (states) {
-                                  if (states.contains(MaterialState.selected)) {
+                                  if (states.contains(WidgetState.selected)) {
                                     return const Color(0xFFFF6B57); // ✅ background when checked
                                   }
                                   return Colors.white; // background when unchecked
                                 },
                               ),
-                              checkColor: MaterialStateProperty.all<Color>(Colors.white), // ✅ white tick
+                              checkColor: WidgetStateProperty.all<Color>(Colors.white), // ✅ white tick
                             ),
                           ),
                           child: CheckboxListTile(
@@ -381,15 +381,15 @@ class _FiltersScreenState extends State<FiltersScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(6), // ✅ rounded checkbox
                               ),
-                              fillColor: MaterialStateProperty.resolveWith<Color>(
+                              fillColor: WidgetStateProperty.resolveWith<Color>(
                                     (states) {
-                                  if (states.contains(MaterialState.selected)) {
+                                  if (states.contains(WidgetState.selected)) {
                                     return const Color(0xFFFF6B57); // ✅ background when checked
                                   }
                                   return Colors.white; // background when unchecked
                                 },
                               ),
-                              checkColor: MaterialStateProperty.all<Color>(Colors.white), // ✅ white tick
+                              checkColor: WidgetStateProperty.all<Color>(Colors.white), // ✅ white tick
                             ),
                           ),
                           child: CheckboxListTile(
@@ -469,7 +469,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
                       },
                       child: const Text(
                         "APPLY FILTER",
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white, // ✅ white text
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
