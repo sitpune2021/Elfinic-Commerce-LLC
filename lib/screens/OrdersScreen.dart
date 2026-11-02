@@ -1449,7 +1449,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       return cleanPath;
     }
 
-    return 'https://admin.elfinic.com/$cleanPath';
+    return 'elfinic.com/$cleanPath';
   }
 
   double _calculateSavedAmountFromModel(Datum order) {

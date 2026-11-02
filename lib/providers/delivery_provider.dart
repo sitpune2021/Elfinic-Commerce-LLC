@@ -69,7 +69,7 @@ class DeliveryProvider with ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    // const url = 'https://admin.elfinic.com/api/delivery-charges/getallDeliveryType';
+    // const url = 'elfinic.com/api/delivery-charges/getallDeliveryType';
 
     final url = '${ApiService.baseUrl}/api/delivery-charges/getallDeliveryType';
 

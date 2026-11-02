@@ -21,7 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController mobileController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
-      TextEditingController();
+  TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -87,7 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       isValid = false;
     } else if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(usernameController.text)) {
       setState(() => _usernameError =
-          "Username can only contain letters, numbers and underscore");
+      "Username can only contain letters, numbers and underscore");
       isValid = false;
     }
 
@@ -174,205 +174,226 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true, // This ensures the UI resizes when keyboard appears
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.indigo),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  "Welcome to Elfinic.com",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 5),
-                const Text(
-                  "Enter your details to register",
-                  style: TextStyle(color: Colors.black54, fontSize: 16),
-                ),
-                const SizedBox(height: 25),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              // Remove NeverScrollableScrollPhysics to allow scrolling when keyboard appears
+              physics: const BouncingScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back, color: Colors.indigo),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            "Welcome to Elfinic.com",
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            "Enter your details to register",
+                            style: TextStyle(color: Colors.black54, fontSize: 16),
+                          ),
+                          const SizedBox(height: 16),
 
-                // Full Name
-                _buildLabel("Full Name"),
-                TextField(
-                  controller: nameController,
-                  decoration: _inputDecoration("Enter your full name").copyWith(
-                    errorText: _nameError,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
-                    LengthLimitingTextInputFormatter(50),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                          // Full Name
+                          _buildLabel("Full Name"),
+                          TextField(
+                            controller: nameController,
+                            decoration: _inputDecoration("Enter your full name").copyWith(
+                              errorText: _nameError,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
+                              LengthLimitingTextInputFormatter(50),
+                            ],
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 12),
 
-                // Username
-                _buildLabel("Username"),
-                TextField(
-                  controller: usernameController,
-                  decoration: _inputDecoration("Choose a username").copyWith(
-                    errorText: _usernameError,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
-                    LengthLimitingTextInputFormatter(20),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                          // Username
+                          _buildLabel("Username"),
+                          TextField(
+                            controller: usernameController,
+                            decoration: _inputDecoration("Choose a username").copyWith(
+                              errorText: _usernameError,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')),
+                              LengthLimitingTextInputFormatter(20),
+                            ],
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 12),
 
-                // Email
-                _buildLabel("Email"),
-                TextField(
-                  controller: emailController,
-                  decoration: _inputDecoration("Enter your email").copyWith(
-                    errorText: _emailError,
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(100),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                          // Email
+                          _buildLabel("Email"),
+                          TextField(
+                            controller: emailController,
+                            decoration: _inputDecoration("Enter your email").copyWith(
+                              errorText: _emailError,
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(100),
+                            ],
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 12),
 
-                // Mobile Number
-                _buildLabel("Mobile Number"),
-                IntlPhoneField(
-                  controller: mobileController,
-                  initialCountryCode: 'IN',
-                  decoration:
-                      _inputDecoration("Enter your mobile number").copyWith(
-                    errorText: _mobileError,
-                  ),
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  onChanged: (phone) {
-                    // You can access complete phone number with country code
-                    // phone.completeNumber
-                  },
-                ),
+                          // Mobile Number
+                          _buildLabel("Mobile Number"),
+                          IntlPhoneField(
+                            controller: mobileController,
+                            initialCountryCode: 'IN',
+                            decoration: _inputDecoration("Enter your mobile number").copyWith(
+                              errorText: _mobileError,
+                            ),
+                            keyboardType: TextInputType.phone,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            onChanged: (phone) {
+                              // You can access complete phone number with country code
+                              // phone.completeNumber
+                            },
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 12),
 
-                const SizedBox(height: 20),
+                          // Password
+                          _buildLabel("Password"),
+                          TextField(
+                            controller: passwordController,
+                            obscureText: !_isPasswordVisible,
+                            onChanged: (value) {
+                              _validatePassword(value);
+                              setState(() => _passwordError = null);
+                            },
+                            decoration: _inputDecoration("Password").copyWith(
+                              errorText: _passwordError,
+                              suffixIcon: IconButton(
+                                icon: Icon(_isPasswordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off),
+                                onPressed: () => setState(
+                                        () => _isPasswordVisible = !_isPasswordVisible),
+                              ),
+                            ),
+                            textInputAction: TextInputAction.next,
+                          ),
+                          _buildPasswordChecks(),
+                          const SizedBox(height: 12),
 
-                // Password
-                _buildLabel("Password"),
-                TextField(
-                  controller: passwordController,
-                  obscureText: !_isPasswordVisible,
-                  onChanged: (value) {
-                    _validatePassword(value);
-                    setState(() => _passwordError = null);
-                  },
-                  decoration: _inputDecoration("Password").copyWith(
-                    errorText: _passwordError,
-                    suffixIcon: IconButton(
-                      icon: Icon(_isPasswordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off),
-                      onPressed: () => setState(
-                          () => _isPasswordVisible = !_isPasswordVisible),
-                    ),
-                  ),
-                ),
-                _buildPasswordChecks(),
-                const SizedBox(height: 20),
+                          // Confirm Password
+                          _buildLabel("Confirm Password"),
+                          TextField(
+                            controller: confirmPasswordController,
+                            obscureText: _obscureConfirmPassword,
+                            onChanged: (value) {
+                              setState(() => _confirmPasswordError = null);
+                            },
+                            decoration: _inputDecoration("Confirm Password").copyWith(
+                              errorText: _confirmPasswordError,
+                              suffixIcon: IconButton(
+                                icon: Icon(_obscureConfirmPassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility),
+                                onPressed: () => setState(() =>
+                                _obscureConfirmPassword = !_obscureConfirmPassword),
+                              ),
+                            ),
+                            textInputAction: TextInputAction.done,
+                            onEditingComplete: () => _submitForm(context),
+                          ),
+                          const SizedBox(height: 20),
 
-                // Confirm Password
-                _buildLabel("Confirm Password"),
-                TextField(
-                  controller: confirmPasswordController,
-                  obscureText: _obscureConfirmPassword,
-                  onChanged: (value) {
-                    setState(() => _confirmPasswordError = null);
-                  },
-                  decoration: _inputDecoration("Confirm Password").copyWith(
-                    errorText: _confirmPasswordError,
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscureConfirmPassword
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () => setState(() =>
-                          _obscureConfirmPassword = !_obscureConfirmPassword),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 30),
-
-                // Continue Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed:
-                        provider.isLoading ? null : () => _submitForm(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo[900],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                          // Continue Button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 45,
+                            child: ElevatedButton(
+                              onPressed:
+                              provider.isLoading ? null : () => _submitForm(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.indigo[900],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                              child: provider.isLoading
+                                  ? const CustomLoader()
+                                  : const Text("CONTINUE",
+                                  style:
+                                  TextStyle(fontSize: 18, color: Colors.white)),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                       ),
                     ),
-                    child: provider.isLoading
-                        ? const CustomLoader()
-                        : const Text("CONTINUE",
-                            style:
-                                TextStyle(fontSize: 18, color: Colors.white)),
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
   Widget _buildLabel(String text) => Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          text,
-          style: const TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.indigo),
-        ),
-      );
+    alignment: Alignment.centerLeft,
+    child: Text(
+      text,
+      style: const TextStyle(
+          fontWeight: FontWeight.bold, color: Colors.indigo),
+    ),
+  );
 
   InputDecoration _inputDecoration(String hint) => InputDecoration(
-        hintText: hint,
-        filled: true,
-        fillColor: Colors.blue.shade50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 15),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Colors.red),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Colors.red),
-        ),
-      );
+    hintText: hint,
+    filled: true,
+    fillColor: Colors.blue.shade50,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(30),
+      borderSide: BorderSide.none,
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(30),
+      borderSide: const BorderSide(color: Colors.red),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(30),
+      borderSide: const BorderSide(color: Colors.red),
+    ),
+  );
 
   Widget _buildPasswordChecks() {
     return Padding(
-      padding: const EdgeInsets.only(top: 8.0),
+      padding: const EdgeInsets.only(top: 6.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _passwordCheck(
               _isLengthValid, "Password Must Be At Least 8 Characters"),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           _passwordCheck(
               _hasUppercaseAndNumber, "At Least One Uppercase & One Number"),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           _passwordCheck(_hasSpecialChar, "At Least One Special Character"),
         ],
       ),
@@ -383,12 +404,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Row(
       children: [
         Icon(valid ? Icons.check_circle : Icons.cancel,
-            color: valid ? Colors.green : Colors.red, size: 16),
+            color: valid ? Colors.green : Colors.red, size: 14),
         const SizedBox(width: 5),
         Text(
           text,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             color: valid ? Colors.green : Colors.red,
           ),
         ),

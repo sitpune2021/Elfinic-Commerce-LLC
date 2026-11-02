@@ -262,7 +262,7 @@ class WishlistProvider with ChangeNotifier {
 }
 
 class WishlistService {
-  static const String baseUrl = 'https://admin.elfinic.com/api/wishlist';
+  static const String baseUrl = 'elfinic.com/api/wishlist';
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();

@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 // import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../model/CategoriesResponse.dart';
 import '../model/ProductsResponse.dart';
 import '../providers/ArrivalProductProvider.dart';
 import '../providers/BannerProvider.dart';
@@ -286,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     // ✅ Shareable URL (debug / future share feature)
     final shareableUrl =
-        'https://admin.elfinic.com/api/productDetails/${product.slug}';
+        'elfinic.com/api/productDetails/${product.slug}';
     if (kDebugMode) {
       print('🔗 Shareable URL: $shareableUrl');
     }
@@ -740,8 +741,8 @@ class _HomeScreenState extends State<HomeScreen>
                 ],
               ),
               child: Image.asset(
-                "assets/icons/playstore.png",
-                // "assets/images/splash_screen_1.png",
+                // "assets/icons/playstore.png",
+                "assets/images/splash_screen_1.png",
                 height: 30,
                 cacheWidth: 60,
                 filterQuality: FilterQuality.low,
@@ -816,29 +817,65 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildCategoriesSection() {
     return Consumer<CategoryProvider>(
       builder: (context, categoryProvider, child) {
+
+        /// COPY CATEGORY LIST
+        List<CategoryModel> sortedCategories =
+        List.from(categoryProvider.categories);
+
+        /// SORT CATEGORY NAME A-Z
+        sortedCategories.sort(
+              (a, b) => a.name
+              .toLowerCase()
+              .compareTo(
+            b.name.toLowerCase(),
+          ),
+        );
+
         return SizedBox(
           height: 80,
+
           child: categoryProvider.isLoading
               ? _buildCategoryShimmer()
               : categoryProvider.error != null
-                  ? Center(child: Text(categoryProvider.error!))
-                  : ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      itemCount: categoryProvider.categories.length > 5
-                          ? 6
-                          : categoryProvider.categories.length,
-                      itemBuilder: (context, index) {
-                        if (categoryProvider.categories.length > 5 &&
-                            index == 5) {
-                          return _buildViewAllCategoryButton();
-                        }
-                        final cat = categoryProvider.categories[index];
-                        final imageUrl =
-                            "${ApiService.baseUrl}/assets/img/category-images/${cat.image}";
-                        return _buildCategory(cat.name, imageUrl, cat.id);
-                      },
-                    ),
+              ? Center(
+            child: Text(
+              categoryProvider.error!,
+            ),
+          )
+              : ListView.builder(
+            scrollDirection: Axis.horizontal,
+
+            padding:
+            const EdgeInsets.symmetric(
+              horizontal: 10,
+            ),
+
+            itemCount:
+            sortedCategories.length > 5
+                ? 6
+                : sortedCategories.length,
+
+            itemBuilder: (context, index) {
+
+              /// VIEW ALL
+              if (sortedCategories.length > 5 &&
+                  index == 5) {
+                return _buildViewAllCategoryButton();
+              }
+
+              final cat =
+              sortedCategories[index];
+
+              final imageUrl =
+                  "${ApiService.baseUrl}/assets/img/category-images/${cat.image}";
+
+              return _buildCategory(
+                cat.name,
+                imageUrl,
+                cat.id,
+              );
+            },
+          ),
         );
       },
     );
@@ -1083,7 +1120,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 items: images.map((img) {
                   final imageUrl =
-                      "https://admin.elfinic.com/assets/img/banners/$img";
+                      "elfinic.com/assets/img/banners/$img";
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),

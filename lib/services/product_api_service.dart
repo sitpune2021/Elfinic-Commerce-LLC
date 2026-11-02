@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 class ProductApiService {
   static const String _baseUrl =
-      'https://admin.elfinic.com/api/getProductsFilterList';
+      'elfinic.com/api/getProductsFilterList';
 
   Future<SearchProductFilterListModel> getProducts({
     required String name,

@@ -20,7 +20,7 @@ import '../screens/ProductDetailPage.dart';
 
 class ApiService {
   // static const String _baseUrl = 'https://business.elfinic.com';
-  static const String _baseUrl = 'https://admin.elfinic.com';
+  static const String _baseUrl = 'elfinic.com';
   // static const String _baseUrl = 'https://elfinic.thecanatech.com';
 
   static String get baseUrl => _baseUrl; // public getter
@@ -92,7 +92,7 @@ class ApiService {
   static String get orderHistoryDetails => '$_baseUrl/api/OrdersHistoryDetails';
 
   String getProductBySlugUrl(String slug) {
-    return 'https://admin.elfinic.com/api/productDetails/${Uri.encodeComponent(slug)}';
+    return 'elfinic.com/api/productDetails/${Uri.encodeComponent(slug)}';
   }
 
   static String get productImagePath => '$baseUrl/assets/img/products-thumbs/';
@@ -221,7 +221,7 @@ class ApiService {
   Future<ProductDetailResponse> getProductBySlug(String slug) async {
     try {
       final encodedSlug = Uri.encodeComponent(slug);
-      final url = 'https://admin.elfinic.com/api/productDetails/$encodedSlug';
+      final url = 'elfinic.com/api/productDetails/$encodedSlug';
 
       debugPrint('🔄 Calling API: $url');
 

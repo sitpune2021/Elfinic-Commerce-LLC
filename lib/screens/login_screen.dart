@@ -128,214 +128,260 @@ class LoginScreenState extends State<LoginScreen>
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
 
-    bool _agreeToMarketing = false;
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
-        child: Column(
-          children: [
-            Image.asset(
-              "assets/icons/playstore.png",
-              height: 110,
-              width: 180,
-            ),
-            const SizedBox(height: 20),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Login to your Account",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 5),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Sign in to track your orders, manage your wishlist, and shop your favourite items anytime.",
-                style: TextStyle(color: Colors.black54, fontSize: 14),
-              ),
-            ),
-            const SizedBox(height: 15),
+      resizeToAvoidBottomInset: false,
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: size.width * 0.05,
+            vertical: size.height * 0.015,
+          ),
+          child: Column(
+            children: [
 
-            TabBar(
-              controller: _tabController,
-              isScrollable: false, // 👈 IMPORTANT
-              labelColor: Colors.indigo,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: Colors.indigo,
-              indicatorWeight: 3,
-              tabs: const [
-                Tab(text: "Email Login"),
-                Tab(text: "Mobile Number Login"),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 320,
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  Form(
-                    key: _emailFormKey,
-                    child: _emailLoginUI(authProvider),
-                  ),
-                  Form(
-                    key: _mobileFormKey,
-                    child: _mobileOtpUI(),
-                  ),
-                ],
+              /// LOGO
+              SizedBox(
+                height: size.height * 0.10,
+                child: Image.asset(
+                  "assets/icons/playstore.png",
+                  fit: BoxFit.contain,
+                ),
               ),
-            ),
-            // const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text("Don’t have account yet? "),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => RegisterScreen()),
-                    );
-                  },
-                  child: const Text(
-                    "Sign Up",
-                    style: TextStyle(color: Colors.orange),
+
+              SizedBox(height: size.height * 0.015),
+
+              /// TITLE
+              Align(
+                alignment: Alignment.center,
+                child: Text(
+                  "Login to your Account",
+                  style: TextStyle(
+                    fontSize: size.width * 0.06,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
               ),
-              child: Column(
-                children: [
-                  CheckboxListTile(
-                    value: _agreeToTerms,
 
-                    activeColor: Colors.indigo,
-                    onChanged: (v) => setState(() => _agreeToTerms = v ?? false),
-                    title: Text.rich(
-                      TextSpan(
-                        style: AppTextStyles.normal,
-                        children: [
-                          const TextSpan(text: "I agree to the "),
+              SizedBox(height: size.height * 0.005),
 
-                          TextSpan(
-                            text: "Terms & Conditions",
-                            style: AppTextStyles.link,
-                            recognizer: TapGestureRecognizer()..onTap = () {},
-                          ),
+              /// SUBTITLE
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Sign in to track your orders, manage your wishlist, and shop your favourite items anytime.",
+                  style: TextStyle(
+                    color: Colors.black54,
+                    fontSize: size.width * 0.033,
+                  ),
+                ),
+              ),
 
-                          const TextSpan(text: ", "),
+              SizedBox(height: size.height * 0.02),
 
-                          TextSpan(
-                            text: "Privacy Policy",
-                            style: AppTextStyles.link,
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const PrivacyPolicyScreen(),
-                                  ),
-                                );
-                              },
-                          ),
+              /// TAB BAR
+              Container(
+                height: size.height * 0.06,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TabBar(
+                  controller: _tabController,
 
-                          const TextSpan(text: ", "),
+                  /// IMPORTANT
+                  indicatorSize: TabBarIndicatorSize.tab,
 
-                          TextSpan(
-                            text: "Return Policy",
-                            style: AppTextStyles.link,
-                            recognizer: TapGestureRecognizer()..onTap = () {},
-                          ),
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.black54,
 
-                          const TextSpan(text: " and "),
+                  indicator: BoxDecoration(
+                    color: Colors.indigo,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
 
-                          TextSpan(
-                            text: "Contact Seller",
-                            style: AppTextStyles.link,
-                            recognizer: TapGestureRecognizer()..onTap = () {},
-                          ),
-                        ],
+                  dividerColor: Colors.transparent,
+
+                  tabs: [
+                    Tab(
+                      child: Text(
+                        "Email Login",
+                        style: TextStyle(
+                          fontSize: size.width * 0.033,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                  ),
 
-               /*   CheckboxListTile(
-                    value: _agreeToMarketing,
-                    onChanged: (v) =>
-                        setState(() => _agreeToMarketing = v ?? false),
-                    title: const Text(
-                      "Send me marketing communications via email and SMS",
-                      style: AppTextStyles.checkboxText,
+                    Tab(
+                      child: Text(
+                        "Mobile Login",
+                        style: TextStyle(
+                          fontSize: size.width * 0.033,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                  ),*/
+                  ],
+                ),
+              ),
+
+              SizedBox(height: size.height * 0.02),
+
+              /// LOGIN FORMS
+              Expanded(
+                flex: 4,
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    Form(
+                      key: _emailFormKey,
+                      child: _emailLoginUI(authProvider),
+                    ),
+                    Form(
+                      key: _mobileFormKey,
+                      child: _mobileOtpUI(),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: size.height * 0.01),
+
+              /// SIGNUP
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Don’t have account yet? ",
+                    style: TextStyle(
+                      fontSize: size.width * 0.033,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RegisterScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "Sign Up",
+                      style: TextStyle(
+                        color: Colors.orange,
+                        fontSize: size.width * 0.035,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            ),
-            Row(
-              children: const [
-                Expanded(child: Divider()),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Text("Or Log In with"),
-                ),
-                Expanded(child: Divider()),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                // ElevatedButton(
-                //   onPressed: () {},
-                //   style: ElevatedButton.styleFrom(
-                //     shape: const CircleBorder(),
-                //     padding: const EdgeInsets.all(15),
-                //     backgroundColor: Colors.blue,
-                //   ),
-                //   child: const Icon(Icons.facebook, color: Colors.white),
-                // ),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(15),
-                    backgroundColor: Colors.black,
+
+              SizedBox(height: size.height * 0.01),
+
+              /// TERMS
+              Container(
+                padding: EdgeInsets.all(size.width * 0.025),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.grey.shade300,
                   ),
-                  child: const Icon(Icons.apple, color: Colors.white),
                 ),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    shape: const CircleBorder(),
-                    padding: const EdgeInsets.all(15),
-                    backgroundColor: Colors.white,
-                  ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      "assets/icons/google.png",
-                      width: 22,
-                      height: 22,
+                child: CheckboxListTile(
+                  dense: true,
+                  value: _agreeToTerms,
+                  activeColor: Colors.indigo,
+                  onChanged: (v) =>
+                      setState(() => _agreeToTerms = v ?? false),
+                  title: Text.rich(
+                    TextSpan(
+                      style: TextStyle(
+                        fontSize: size.width * 0.028,
+                        color: Colors.black87,
+                      ),
+                      children: [
+                        const TextSpan(text: "I agree to the "),
+                        TextSpan(
+                          text: "Terms & Conditions",
+                          style: TextStyle(
+                            color: Colors.indigo,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                        const TextSpan(text: " & "),
+                        TextSpan(
+                          text: "Privacy Policy",
+                          style: TextStyle(
+                            color: Colors.indigo,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                  controlAffinity:
+                  ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
                 ),
-              ],
-            ),
-          ],
+              ),
+
+              SizedBox(height: size.height * 0.01),
+
+              /// DIVIDER
+              Row(
+                children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      "Or Login with",
+                      style: TextStyle(
+                        fontSize: size.width * 0.032,
+                      ),
+                    ),
+                  ),
+                  const Expanded(child: Divider()),
+                ],
+              ),
+
+              SizedBox(height: size.height * 0.015),
+
+              /// SOCIAL BUTTONS
+              Row(
+                mainAxisAlignment:
+                MainAxisAlignment.spaceEvenly,
+                children: [
+                  CircleAvatar(
+                    radius: size.width * 0.06,
+                    backgroundColor: Colors.black,
+                    child: Icon(
+                      Icons.apple,
+                      color: Colors.white,
+                      size: size.width * 0.06,
+                    ),
+                  ),
+
+                  CircleAvatar(
+                    radius: size.width * 0.06,
+                    backgroundColor: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Image.asset(
+                        "assets/icons/google.png",
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: size.height * 0.01),
+            ],
+          ),
         ),
       ),
     );

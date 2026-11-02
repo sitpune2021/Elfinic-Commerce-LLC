@@ -483,7 +483,7 @@ class VendorDetailProvider with ChangeNotifier {
 
     final res = await http.get(
       Uri.parse(
-          "https://admin.elfinic.com/api/getVendorDetails?vendor_id=$vendorId"),
+          "elfinic.com/api/getVendorDetails?vendor_id=$vendorId"),
     );
 
     if (res.statusCode == 200) {
@@ -500,7 +500,7 @@ class VendorDetailProvider with ChangeNotifier {
     notifyListeners();
 
     final url =
-        "https://admin.elfinic.com/api/categories-by-vendor?vendor_id=$vendorId";
+        "elfinic.com/api/categories-by-vendor?vendor_id=$vendorId";
 
     print("📡 CATEGORY API URL: $url");
 
@@ -555,7 +555,7 @@ class VendorDetailProvider with ChangeNotifier {
     notifyListeners();
 
     final url =
-        "https://admin.elfinic.com/api/products-by-vendor-category"
+        "elfinic.com/api/products-by-vendor-category"
         "?vendor_id=$vendorId"
         "&category_id=$categoryId"
         "&per_page=10"

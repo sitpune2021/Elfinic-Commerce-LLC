@@ -15,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 
 class AddressProvider with ChangeNotifier {
-  static const String _baseUrl = 'https://admin.elfinic.com/api';
+  static const String _baseUrl = 'elfinic.com/api';
   // static String _baseUrl = ApiService.baseUrl;
 
   bool _isLoading = false;

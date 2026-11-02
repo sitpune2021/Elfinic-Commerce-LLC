@@ -312,15 +312,7 @@ class _VendorScreenState extends State<VendorScreen> {
   }
 }
 
-Future<void> _makePhoneCall(String phone) async {
-  final Uri url = Uri(scheme: 'tel', path: phone);
 
-  if (await canLaunchUrl(url)) {
-    await launchUrl(url);
-  } else {
-    debugPrint("Could not launch dialer");
-  }
-}
 
 
 
@@ -355,7 +347,7 @@ class VendorProvider with ChangeNotifier {
     try {
       final response = await http.get(
         Uri.parse(
-          "https://admin.elfinic.com/api/vendor/getAllVendors?page=$currentPage&per_page=$perPage",
+          "elfinic.com/api/vendor/getAllVendors?page=$currentPage&per_page=$perPage",
         ),
       );
 
@@ -399,12 +391,56 @@ class VendorProvider with ChangeNotifier {
   }
 
   List<Vendor> get filteredVendors {
-    if (searchQuery.isEmpty) return vendors;
 
-    return vendors.where((v) {
-      return v.companyName.toLowerCase().contains(searchQuery) ||
-          v.name.toLowerCase().contains(searchQuery);
-    }).toList();
+    List<Vendor> filtered;
+
+    if (searchQuery.isEmpty) {
+      filtered = List.from(vendors);
+    } else {
+      filtered = vendors.where((v) {
+        return v.companyName
+            .toLowerCase()
+            .contains(searchQuery) ||
+            v.name
+                .toLowerCase()
+                .contains(searchQuery);
+      }).toList();
+    }
+
+    /// SORT ALPHABETICALLY
+    /// SORT ALPHABETICALLY
+    /// NO COMPANY SHOW LAST
+    filtered.sort((a, b) {
+
+      final aName = a.companyName.trim();
+      final bName = b.companyName.trim();
+
+      final aEmpty =
+          aName.isEmpty ||
+              aName.toLowerCase() == "no company";
+
+      final bEmpty =
+          bName.isEmpty ||
+              bName.toLowerCase() == "no company";
+
+      /// BOTH EMPTY
+      if (aEmpty && bEmpty) return 0;
+
+      /// A EMPTY → LAST
+      if (aEmpty) return 1;
+
+      /// B EMPTY → LAST
+      if (bEmpty) return -1;
+
+      /// NORMAL A-Z SORT
+      return aName
+          .toLowerCase()
+          .compareTo(
+        bName.toLowerCase(),
+      );
+    });
+
+    return filtered;
   }
 }
 

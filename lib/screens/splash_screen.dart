@@ -270,7 +270,7 @@ class VersionModel {
 }
 
 class VersionService {
-  static const String baseUrl = "https://admin.elfinic.com/api";
+  static const String baseUrl = "elfinic.com/api";
 
   static Future<VersionModel> checkVersion(String currentVersion) async {
     final url = Uri.parse("$baseUrl/check-version");
@@ -886,7 +886,7 @@ class _UpdateVersionScreenState extends State<UpdateVersionScreen> {
 //     required String minSupportedVersion,
 //     required String storeUrl,
 //   }) async {
-//     final url = Uri.parse("https://admin.elfinic.com/api/StoreVersions");
+//     final url = Uri.parse("elfinic.com/api/StoreVersions");
 //
 //     final response = await http.post(
 //       url,
@@ -916,7 +916,7 @@ class _UpdateVersionScreenState extends State<UpdateVersionScreen> {
 //
 //
 //   static Future<VersionModel> checkVersion(String currentVersion) async {
-//     final url = Uri.parse("https://admin.elfinic.com/api/check-version");
+//     final url = Uri.parse("elfinic.com/api/check-version");
 //
 //     final response = await http.post(
 //       url,
@@ -954,7 +954,7 @@ class _UpdateVersionScreenState extends State<UpdateVersionScreen> {
 //     required String minSupportedVersion,
 //     required String storeUrl,
 //   }) async {
-//     final url = Uri.parse("https://admin.elfinic.com/api/UpdateVersions");
+//     final url = Uri.parse("elfinic.com/api/UpdateVersions");
 //
 //     final response = await http.put(
 //       url,
@@ -1582,7 +1582,7 @@ class StoreVersion {
 
 
 // class VersionApiService {
-//   static const String baseUrl = "https://admin.elfinic.com/api";
+//   static const String baseUrl = "elfinic.com/api";
 //
 //   static Future<StoreVersion?> getVersion(String platform) async {
 //     final response = await http.post(
@@ -1604,7 +1604,7 @@ class StoreVersion {
 //   }
 // }
 class VersionApiService {
-  static const String baseUrl = "https://admin.elfinic.com/api";
+  static const String baseUrl = "elfinic.com/api";
 
   static Future<StoreVersion?> getVersion(String platform) async {
     try {
